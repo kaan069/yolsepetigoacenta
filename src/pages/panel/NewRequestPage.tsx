@@ -3,12 +3,12 @@ import {
   Typography, Card, CardContent, Box, TextField, Button, Alert,
   MenuItem, IconButton, Tooltip, CircularProgress,
 } from '@mui/material';
-import { ContentCopy, MyLocation, LocationOn, Close } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { MyLocation, LocationOn, Close } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { createInsuranceRequest } from '../../api';
 import { ServiceType, ServiceTypeLabels } from '../../types';
-import type { ServiceTypeValue, InsuranceRequestCreatePayload, InsuranceRequestCreateResponse } from '../../types';
+import type { ServiceTypeValue, InsuranceRequestCreatePayload } from '../../types';
 import MapPickerDialog, { type LocationResult } from '../../components/MapPickerDialog';
 
 const serviceTypeOptions = Object.entries(ServiceTypeLabels).map(([value, label]) => ({ value, label }));
@@ -29,10 +29,9 @@ export default function NewRequestPage() {
     estimated_km: 0,
     service_details: '',
   });
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<InsuranceRequestCreateResponse | null>(null);
-  const [copied, setCopied] = useState(false);
   const [pickupDialogOpen, setPickupDialogOpen] = useState(false);
   const [dropoffDialogOpen, setDropoffDialogOpen] = useState(false);
   const [distanceLoading, setDistanceLoading] = useState(false);
@@ -150,7 +149,9 @@ export default function NewRequestPage() {
       if (form.service_details) payload.service_details = form.service_details;
 
       const response = await createInsuranceRequest(payload);
-      setSuccess(response);
+      navigate(`/panel/requests/${response.request_id}`, {
+        state: { trackingToken: response.tracking_token },
+      });
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const axiosErr = err as { response?: { data?: { error?: string } } };
@@ -162,68 +163,6 @@ export default function NewRequestPage() {
       setLoading(false);
     }
   };
-
-  const resetForm = () => {
-    setSuccess(null);
-    setForm({
-      service_type: ServiceType.TowTruck as ServiceTypeValue,
-      insured_name: '',
-      insured_phone: '',
-      insured_plate: '',
-      policy_number: '',
-      pickup_address: '',
-      pickup_latitude: 0,
-      pickup_longitude: 0,
-      dropoff_address: '',
-      dropoff_latitude: 0,
-      dropoff_longitude: 0,
-      estimated_km: 0,
-      service_details: '',
-    });
-  };
-
-  const copyTrackingUrl = () => {
-    if (success?.tracking_url) {
-      navigator.clipboard.writeText(success.tracking_url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  if (success) {
-    return (
-      <Box sx={{ maxWidth: 560, mx: 'auto' }}>
-        <Card>
-          <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: 'success.main' }}>
-              Talep Olusturuldu!
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Talep ID: <strong>#{success.request_id}</strong>
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 3, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                {success.tracking_url}
-              </Typography>
-              <Tooltip title={copied ? 'Kopyalandi!' : 'Kopyala'}>
-                <IconButton size="small" onClick={copyTrackingUrl}>
-                  <ContentCopy fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-              <Button variant="contained" component={Link} to={`/panel/requests/${success.request_id}`}>
-                Detay Gor
-              </Button>
-              <Button variant="outlined" onClick={resetForm}>
-                Yeni Talep Olustur
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>

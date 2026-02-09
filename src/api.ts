@@ -15,6 +15,8 @@ import {
   CancelRequestResponse,
   PricingEstimatePayload,
   PricingEstimateResponse,
+  OffersResponse,
+  AcceptOfferResponse,
 } from './types';
 
 const API_BASE_URL = 'https://api.yolpaketi.com';
@@ -245,5 +247,29 @@ export const estimatePrice = async (payload: PricingEstimatePayload): Promise<Pr
   const response = await insuranceApi.post('/pricing/estimate/', payload, {
     headers: authHeader(),
   });
+  return response.data;
+};
+
+// ==========================================
+// Tracking Token & Teklifler (Ana API)
+// ==========================================
+
+const mainApi = axios.create({
+  baseURL: 'https://api.yolsepetigo.com',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export const extractTrackingToken = (trackingUrl: string): string => {
+  const parts = trackingUrl.replace(/\/$/, '').split('/');
+  return parts[parts.length - 1];
+};
+
+export const getRequestOffers = async (trackingToken: string): Promise<OffersResponse> => {
+  const response = await mainApi.get(`/requests/location/${trackingToken}/offers/`);
+  return response.data;
+};
+
+export const acceptOffer = async (trackingToken: string, offerId: number): Promise<AcceptOfferResponse> => {
+  const response = await mainApi.post(`/requests/location/${trackingToken}/accept-offer/${offerId}/`);
   return response.data;
 };

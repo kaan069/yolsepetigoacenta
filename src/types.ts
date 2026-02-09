@@ -287,6 +287,48 @@ export interface CancelRequestResponse {
   message: string;
 }
 
+// --- Surucu Teklifleri ---
+
+export interface DriverOfferInfo {
+  id: number;
+  driver_info: {
+    id: number;
+    name: string;
+    phone: string;
+    average_rating: number | null;
+    total_ratings: number;
+  };
+  vehicle_info: {
+    id: number;
+    brand: string;
+    model: string;
+    plate_number: string;
+    vehicle_type: string;
+  } | null;
+  estimated_price: number;
+  driver_earnings: number;
+  platform_commission: number;
+  pricing_breakdown: Record<string, unknown>;
+  offer_details: Record<string, unknown>;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at: string;
+}
+
+export interface OffersResponse {
+  request_id: number;
+  request_status: string;
+  offers_count: number;
+  offers: DriverOfferInfo[];
+}
+
+export interface AcceptOfferResponse {
+  message: string;
+  request_id: number;
+  status: string;
+  driver_name: string;
+  driver_phone: string;
+}
+
 // --- Fiyatlandirma ---
 
 export interface PricingEstimatePayload {
