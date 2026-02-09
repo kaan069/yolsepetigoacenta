@@ -193,7 +193,7 @@ export default function PricingPage() {
                       {pickupAddress}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
-                      {form.pickup_latitude.toFixed(6)}, {form.pickup_longitude.toFixed(6)}
+                      {form.pickup_latitude.toFixed(4)}, {form.pickup_longitude.toFixed(4)}
                     </Typography>
                   </>
                 ) : (
@@ -252,7 +252,7 @@ export default function PricingPage() {
                       {dropoffAddress}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
-                      {(form.dropoff_latitude || 0).toFixed(6)}, {(form.dropoff_longitude || 0).toFixed(6)}
+                      {(form.dropoff_latitude || 0).toFixed(4)}, {(form.dropoff_longitude || 0).toFixed(4)}
                     </Typography>
                   </>
                 ) : (

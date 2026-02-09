@@ -142,8 +142,8 @@ export default function MapPickerDialog({
         status: google.maps.places.PlacesServiceStatus,
       ) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
+          const lat = parseFloat(place.geometry.location.lat().toFixed(4));
+          const lng = parseFloat(place.geometry.location.lng().toFixed(4));
           const address = place.formatted_address || prediction.description;
           setSelectedLocation({ address, latitude: lat, longitude: lng });
           setSearchText(address);
@@ -158,8 +158,8 @@ export default function MapPickerDialog({
     const latLng = event.detail.latLng;
     if (!latLng) return;
 
-    const lat = latLng.lat;
-    const lng = latLng.lng;
+    const lat = parseFloat(latLng.lat.toFixed(4));
+    const lng = parseFloat(latLng.lng.toFixed(4));
 
     if (geocoder.current) {
       geocoder.current.geocode(
@@ -174,22 +174,22 @@ export default function MapPickerDialog({
             setSearchText(address);
           } else {
             setSelectedLocation({
-              address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+              address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
               latitude: lat,
               longitude: lng,
             });
-            setSearchText(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            setSearchText(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
           }
           setPredictions([]);
         }
       );
     } else {
       setSelectedLocation({
-        address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
         latitude: lat,
         longitude: lng,
       });
-      setSearchText(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      setSearchText(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
       setPredictions([]);
     }
   }, []);
@@ -368,7 +368,7 @@ export default function MapPickerDialog({
               </Typography>
             </Box>
             <Typography sx={{ fontSize: 12, color: '#64748b', pl: 3.5 }}>
-              Enlem: {selectedLocation.latitude.toFixed(6)} | Boylam: {selectedLocation.longitude.toFixed(6)}
+              Enlem: {selectedLocation.latitude.toFixed(4)} | Boylam: {selectedLocation.longitude.toFixed(4)}
             </Typography>
           </Box>
         )}
