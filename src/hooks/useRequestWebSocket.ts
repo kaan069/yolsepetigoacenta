@@ -82,6 +82,7 @@ export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
           const cb = callbacksRef.current;
           switch (data.type) {
             case 'connection_established':
+              cb.onStatusChange();
               break;
             case 'new_offer':
               cb.onNewOffer(mapWsOfferToDriverOfferInfo(data.offer));

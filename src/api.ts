@@ -284,7 +284,7 @@ export const createPaymentLink = async (
   payload: CreatePaymentLinkPayload,
 ): Promise<CreatePaymentLinkResponse> => {
   const response = await insuranceApi.post(
-    `/requests/${requestId}/create-payment-link/`,
+    `/requests/${requestId}/resend-sms/`,
     payload,
     { headers: authHeader() },
   );

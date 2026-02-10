@@ -605,8 +605,10 @@ export default function RequestDetailPage() {
         )}
       </Box>
 
-      {request.status === 'pending' && <MatchingView request={request} />}
-      {request.status === 'awaiting_approval' && (
+      {request.status === 'pending' && offers.filter(o => o.status === 'pending').length === 0 && (
+        <MatchingView request={request} />
+      )}
+      {(request.status === 'awaiting_approval' || (request.status === 'pending' && offers.filter(o => o.status === 'pending').length > 0)) && (
         <OffersView request={request} offers={offers} onAccept={openAcceptDialog} />
       )}
       {(request.status === 'awaiting_payment' || request.status === 'in_progress') && (
