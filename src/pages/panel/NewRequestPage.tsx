@@ -49,6 +49,7 @@ interface RequestFormState {
   insured_phone: string;
   insured_plate: string;
   policy_number: string;
+  insurance_name: string;
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
@@ -102,6 +103,7 @@ const initialFormState: RequestFormState = {
   insured_phone: '',
   insured_plate: '',
   policy_number: '',
+  insurance_name: '',
   pickup_address: '',
   pickup_latitude: 0,
   pickup_longitude: 0,
@@ -346,6 +348,7 @@ export default function NewRequestPage() {
         pickup_longitude: form.pickup_longitude,
       };
       if (form.insured_plate) payload.insured_plate = form.insured_plate;
+      if (form.insurance_name) payload.insurance_name = form.insurance_name;
 
       if (needsDropoff) {
         if (form.dropoff_address) payload.dropoff_address = form.dropoff_address;
@@ -581,6 +584,7 @@ export default function NewRequestPage() {
               <TextField fullWidth label="Sigortali Telefon *" value={form.insured_phone} onChange={handleChange('insured_phone')} />
               <TextField fullWidth label="Plaka" value={form.insured_plate} onChange={handleChange('insured_plate')} />
               <TextField fullWidth label="Police Numarasi *" value={form.policy_number} onChange={handleChange('policy_number')} />
+              <TextField fullWidth label="Sigorta Sirketi" value={form.insurance_name} onChange={handleChange('insurance_name')} placeholder="Orn: Axa, Allianz, Anadolu Sigorta" />
             </Box>
 
             <SectionLabel>Alis Konumu</SectionLabel>

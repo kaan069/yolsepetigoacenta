@@ -222,6 +222,7 @@ export interface InsuranceRequestCreatePayload {
   insured_phone: string;
   insured_plate?: string;
   policy_number: string;
+  insurance_name?: string;
   external_reference?: string;
   pickup_address: string;
   pickup_latitude: number;
