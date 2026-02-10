@@ -230,7 +230,7 @@ export interface InsuranceRequestCreatePayload {
   dropoff_latitude?: number;
   dropoff_longitude?: number;
   estimated_km?: number;
-  service_details?: string;
+  service_details?: Record<string, unknown>;
 }
 
 export interface InsuranceRequestCreateResponse {

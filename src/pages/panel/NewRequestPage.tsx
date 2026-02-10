@@ -13,8 +13,24 @@ import MapPickerDialog, { type LocationResult } from '../../components/MapPicker
 
 const serviceTypeOptions = Object.entries(ServiceTypeLabels).map(([value, label]) => ({ value, label }));
 
+interface RequestFormState {
+  service_type: ServiceTypeValue;
+  insured_name: string;
+  insured_phone: string;
+  insured_plate: string;
+  policy_number: string;
+  pickup_address: string;
+  pickup_latitude: number;
+  pickup_longitude: number;
+  dropoff_address: string;
+  dropoff_latitude: number;
+  dropoff_longitude: number;
+  estimated_km: number;
+  service_details: string;
+}
+
 export default function NewRequestPage() {
-  const [form, setForm] = useState<InsuranceRequestCreatePayload>({
+  const [form, setForm] = useState<RequestFormState>({
     service_type: ServiceType.TowTruck as ServiceTypeValue,
     insured_name: '',
     insured_phone: '',
@@ -114,7 +130,7 @@ export default function NewRequestPage() {
     }));
   };
 
-  const handleChange = (field: keyof InsuranceRequestCreatePayload) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (field: keyof RequestFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = ['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'estimated_km'].includes(field)
       ? Number(e.target.value) || 0
       : e.target.value;
@@ -146,7 +162,7 @@ export default function NewRequestPage() {
       if (form.dropoff_latitude) payload.dropoff_latitude = form.dropoff_latitude;
       if (form.dropoff_longitude) payload.dropoff_longitude = form.dropoff_longitude;
       if (form.estimated_km) payload.estimated_km = form.estimated_km;
-      if (form.service_details) payload.service_details = form.service_details;
+      if (form.service_details) payload.service_details = { additional_notes: form.service_details };
 
       const response = await createInsuranceRequest(payload);
       navigate(`/panel/requests/${response.request_id}`, {
