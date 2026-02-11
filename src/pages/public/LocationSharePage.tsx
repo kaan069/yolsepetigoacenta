@@ -2,63 +2,14 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
 import { MyLocation, CheckCircle } from '@mui/icons-material';
+import { submitSharedLocation } from '../../api';
 
 type Status = 'idle' | 'locating' | 'submitting' | 'success' | 'error';
-
-const WS_BASE = 'wss://api.yolsepetigo.com';
 
 export default function LocationSharePage() {
   const { token } = useParams<{ token: string }>();
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-
-  const sendViaWebSocket = (latitude: number, longitude: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`${WS_BASE}/ws/location-share/${token}/`);
-      const timeout = setTimeout(() => {
-        ws.close();
-        reject(new Error('timeout'));
-      }, 10000);
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({
-          action: 'share_location',
-          latitude,
-          longitude,
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'location_received') {
-            clearTimeout(timeout);
-            ws.close();
-            resolve();
-          } else if (data.type === 'error') {
-            clearTimeout(timeout);
-            ws.close();
-            reject(new Error(data.message || 'Hata olustu'));
-          }
-        } catch {
-          // ignore malformed messages
-        }
-      };
-
-      ws.onerror = () => {
-        clearTimeout(timeout);
-        reject(new Error('ws_error'));
-      };
-
-      ws.onclose = (e) => {
-        clearTimeout(timeout);
-        // 1000 = normal close, resolve zaten cagrilmis olabilir
-        if (e.code !== 1000) {
-          reject(new Error('ws_closed'));
-        }
-      };
-    });
-  };
 
   const handleShare = async () => {
     if (!token) {
@@ -81,7 +32,7 @@ export default function LocationSharePage() {
         const { latitude, longitude } = position.coords;
         setStatus('submitting');
         try {
-          await sendViaWebSocket(latitude, longitude);
+          await submitSharedLocation(token, { latitude, longitude });
           setStatus('success');
         } catch {
           setErrorMsg('Konum gonderilemedi. Lutfen tekrar deneyin.');

@@ -239,6 +239,14 @@ export default function NewRequestPage() {
     setLocationSmsLoading(true);
     setLocationSmsError('');
     setLocationReceived(false);
+
+    // WS ping testi
+    const pingSocket = new WebSocket('wss://api.yolsepetigo.com/ws/insurance-ping/');
+    pingSocket.onopen = () => { console.log('✅ PING Baglandi!'); pingSocket.send(JSON.stringify({ type: 'ping' })); };
+    pingSocket.onmessage = (e) => { console.log('📩 PING Cevap:', JSON.parse(e.data)); pingSocket.close(); };
+    pingSocket.onerror = (e) => { console.error('❌ PING Hata:', e); };
+    pingSocket.onclose = (e) => { console.warn('🔒 PING Kapandi:', e.code); };
+
     try {
       if (!locationToken) {
         // Ilk kez: init + sms
@@ -247,6 +255,7 @@ export default function NewRequestPage() {
         // Backend relative ws_url donuyor, full URL olustur + JWT auth ekle
         const accessToken = localStorage.getItem('access_token') || '';
         const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}?auth=${accessToken}`;
+        console.log('🔗 Location WS URL:', fullWsUrl);
         setLocationWsUrl(fullWsUrl);
         await sendLocationSms({ token: initRes.token });
       } else {
