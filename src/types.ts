@@ -97,6 +97,7 @@ export const ServiceTypeLabels: Record<ServiceTypeValue, string> = {
 
 // Talep durumu
 export const RequestStatus = {
+  PendingLocation: 'pending_location',
   Pending: 'pending',
   AwaitingApproval: 'awaiting_approval',
   AwaitingPayment: 'awaiting_payment',
@@ -108,6 +109,7 @@ export const RequestStatus = {
 export type RequestStatusValue = (typeof RequestStatus)[keyof typeof RequestStatus];
 
 export const RequestStatusLabels: Record<RequestStatusValue, string> = {
+  [RequestStatus.PendingLocation]: 'Konum Bekleniyor',
   [RequestStatus.Pending]: 'Beklemede',
   [RequestStatus.AwaitingApproval]: 'Onay Bekleniyor',
   [RequestStatus.AwaitingPayment]: 'Odeme Bekleniyor',
@@ -117,6 +119,7 @@ export const RequestStatusLabels: Record<RequestStatusValue, string> = {
 };
 
 export const RequestStatusColors: Record<RequestStatusValue, 'default' | 'warning' | 'info' | 'primary' | 'success' | 'error'> = {
+  pending_location: 'warning',
   pending: 'default',
   awaiting_approval: 'warning',
   awaiting_payment: 'info',
@@ -224,9 +227,10 @@ export interface InsuranceRequestCreatePayload {
   policy_number: string;
   insurance_name?: string;
   external_reference?: string;
-  pickup_address: string;
-  pickup_latitude: number;
-  pickup_longitude: number;
+  location_method?: 'manual' | 'customer_share';
+  pickup_address?: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
   dropoff_address?: string;
   dropoff_latitude?: number;
   dropoff_longitude?: number;
@@ -236,9 +240,11 @@ export interface InsuranceRequestCreatePayload {
 
 export interface InsuranceRequestCreateResponse {
   request_id: number;
-  status: 'pending';
+  status: 'pending' | 'pending_location';
   tracking_token: string;
   tracking_url: string;
+  location_share_url?: string;
+  ws_token?: string;
   created_at: string;
 }
 
@@ -433,4 +439,13 @@ export interface CreatePaymentLinkResponse {
     amount: number;
     sms_sent_to: string;
   };
+}
+
+// --- Konum Paylasimi ---
+
+export interface WsLocationReceived {
+  type: 'location_received';
+  latitude: string;
+  longitude: string;
+  address: string;
 }
