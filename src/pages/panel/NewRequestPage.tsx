@@ -5,7 +5,6 @@ import {
 } from '@mui/material';
 import { MyLocation, LocationOn, Close, Sms, CheckCircle } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { createInsuranceRequest, initLocationShare, sendLocationSms } from '../../api';
 import { ServiceType, ServiceTypeLabels } from '../../types';
 import type { ServiceTypeValue, InsuranceRequestCreatePayload } from '../../types';
@@ -245,8 +244,9 @@ export default function NewRequestPage() {
         // Ilk kez: init + sms
         const initRes = await initLocationShare({ insured_phone: form.insured_phone });
         setLocationToken(initRes.token);
-        // Backend relative ws_url donuyor, full URL olustur
-        const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}`;
+        // Backend relative ws_url donuyor, full URL olustur + JWT auth ekle
+        const accessToken = localStorage.getItem('access_token') || '';
+        const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}?auth=${accessToken}`;
         setLocationWsUrl(fullWsUrl);
         await sendLocationSms({ token: initRes.token });
       } else {
@@ -262,15 +262,13 @@ export default function NewRequestPage() {
 
   const needsDropoff = NEEDS_DROPOFF.includes(form.service_type);
 
-  const routesLib = useMapsLibrary('routes');
-
   const calculateDistance = useCallback((
     pickup: { lat: number; lng: number },
     dropoff: { lat: number; lng: number },
   ) => {
-    if (!routesLib) return;
+    if (typeof google === 'undefined' || !google.maps) return;
     setDistanceLoading(true);
-    const service = new routesLib.DistanceMatrixService();
+    const service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
       {
         origins: [pickup],
@@ -292,7 +290,7 @@ export default function NewRequestPage() {
         }
       }
     );
-  }, [routesLib]);
+  }, []);
 
   const handlePickupLocationSelect = (loc: LocationResult) => {
     setForm((prev) => {

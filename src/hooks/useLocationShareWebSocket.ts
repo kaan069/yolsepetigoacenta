@@ -22,11 +22,13 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reconnectDelayRef = useRef(1000);
   const mountedRef = useRef(true);
+  const receivedRef = useRef(false);
   const callbacksRef = useRef(options);
   callbacksRef.current = options;
 
   useEffect(() => {
     mountedRef.current = true;
+    receivedRef.current = false;
 
     if (!options.wsUrl) {
       if (wsRef.current) {
@@ -43,7 +45,7 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
     setIsWaiting(true);
 
     function connect() {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || receivedRef.current) return;
 
       const ws = new WebSocket(url);
       wsRef.current = ws;
@@ -60,6 +62,7 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
           const data = JSON.parse(event.data);
           if (data.type === 'location_received') {
             const loc = data as WsLocationReceived;
+            receivedRef.current = true;
             callbacksRef.current.onLocationReceived({
               latitude: parseFloat(loc.latitude),
               longitude: parseFloat(loc.longitude),
@@ -79,6 +82,8 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
         if (!mountedRef.current) return;
         setIsConnected(false);
         wsRef.current = null;
+        // Konum alindiysa reconnect etme
+        if (receivedRef.current) return;
         // Sadece hala bekliyorsak reconnect et
         if (callbacksRef.current.wsUrl) {
           scheduleReconnect();
@@ -92,9 +97,9 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
     }
 
     function scheduleReconnect() {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || receivedRef.current) return;
       reconnectTimeoutRef.current = setTimeout(() => {
-        if (mountedRef.current && callbacksRef.current.wsUrl) {
+        if (mountedRef.current && !receivedRef.current && callbacksRef.current.wsUrl) {
           connect();
         }
       }, reconnectDelayRef.current);

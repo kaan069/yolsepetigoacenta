@@ -7,7 +7,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Close, Search, LocationOn, MyLocation } from '@mui/icons-material';
-import { Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 export interface LocationResult {
   address: string;
@@ -37,6 +37,41 @@ export default function MapPickerDialog({
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen={fullScreen}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: fullScreen ? 0 : 3,
+          height: fullScreen ? '100%' : '80vh',
+          overflow: 'hidden',
+        },
+      }}
+    >
+      {open && (
+        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+          <MapPickerDialogContent
+            onClose={onClose}
+            onSelect={onSelect}
+            initialLocation={initialLocation}
+            title={title}
+          />
+        </APIProvider>
+      )}
+    </Dialog>
+  );
+}
+
+function MapPickerDialogContent({
+  onClose,
+  onSelect,
+  initialLocation,
+  title,
+}: Omit<MapPickerDialogProps, 'open'>) {
   const [searchText, setSearchText] = useState('');
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(null);
@@ -65,23 +100,21 @@ export default function MapPickerDialog({
     }
   }, [geocodingLib]);
 
-  // Reset on open
+  // Reset on mount
   useEffect(() => {
-    if (open) {
-      if (initialLocation && initialLocation.latitude !== 0) {
-        setSelectedLocation(initialLocation);
-        setSearchText(initialLocation.address);
-      } else {
-        setSelectedLocation(null);
-        setSearchText('');
-      }
-      setPredictions([]);
+    if (initialLocation && initialLocation.latitude !== 0) {
+      setSelectedLocation(initialLocation);
+      setSearchText(initialLocation.address);
+    } else {
+      setSelectedLocation(null);
+      setSearchText('');
     }
-  }, [open, initialLocation]);
+    setPredictions([]);
+  }, [initialLocation]);
 
   // Center map when location changes
   useEffect(() => {
-    if (!map || !open) return;
+    if (!map) return;
     if (selectedLocation && selectedLocation.latitude !== 0) {
       map.panTo({ lat: selectedLocation.latitude, lng: selectedLocation.longitude });
       map.setZoom(SELECTED_ZOOM);
@@ -89,7 +122,7 @@ export default function MapPickerDialog({
       map.panTo(TURKEY_CENTER);
       map.setZoom(DEFAULT_ZOOM);
     }
-  }, [map, open, selectedLocation]);
+  }, [map, selectedLocation]);
 
   // Cleanup
   useEffect(() => {
@@ -202,20 +235,7 @@ export default function MapPickerDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullScreen={fullScreen}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: fullScreen ? 0 : 3,
-          height: fullScreen ? '100%' : '80vh',
-          overflow: 'hidden',
-        },
-      }}
-    >
+    <>
       {/* Title */}
       <DialogTitle
         sx={{
@@ -403,6 +423,6 @@ export default function MapPickerDialog({
           Sec
         </Button>
       </DialogActions>
-    </Dialog>
+    </>
   );
 }
