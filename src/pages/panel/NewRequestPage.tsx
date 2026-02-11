@@ -2,15 +2,15 @@ import { useState, useCallback } from 'react';
 import {
   Typography, Card, CardContent, Box, TextField, Button, Alert,
   MenuItem, IconButton, CircularProgress, Checkbox, FormControlLabel, Chip,
-  ToggleButtonGroup, ToggleButton,
 } from '@mui/material';
-import { MyLocation, LocationOn, Close, PhoneAndroid } from '@mui/icons-material';
+import { MyLocation, LocationOn, Close, Sms, CheckCircle } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
-import { createInsuranceRequest } from '../../api';
+import { createInsuranceRequest, sendLocationSms } from '../../api';
 import { ServiceType, ServiceTypeLabels } from '../../types';
 import type { ServiceTypeValue, InsuranceRequestCreatePayload } from '../../types';
 import MapPickerDialog, { type LocationResult } from '../../components/MapPickerDialog';
+import { useLocationShareWebSocket } from '../../hooks/useLocationShareWebSocket';
 
 const serviceTypeOptions = Object.entries(ServiceTypeLabels).map(([value, label]) => ({ value, label }));
 
@@ -211,8 +211,43 @@ export default function NewRequestPage() {
   const [dropoffDialogOpen, setDropoffDialogOpen] = useState(false);
   const [distanceLoading, setDistanceLoading] = useState(false);
 
-  // Konum yontemi
-  const [locationMethod, setLocationMethod] = useState<'manual' | 'customer_share'>('manual');
+  // Konum paylasimi
+  const [locationSmsLoading, setLocationSmsLoading] = useState(false);
+  const [locationSessionId, setLocationSessionId] = useState<string | null>(null);
+  const [locationReceived, setLocationReceived] = useState(false);
+  const [locationSmsError, setLocationSmsError] = useState('');
+
+  const { isWaiting: locationWaiting } = useLocationShareWebSocket({
+    sessionId: locationSessionId,
+    onLocationReceived: useCallback((loc: { latitude: number; longitude: number; address: string }) => {
+      setForm(prev => ({
+        ...prev,
+        pickup_address: loc.address,
+        pickup_latitude: loc.latitude,
+        pickup_longitude: loc.longitude,
+      }));
+      setLocationReceived(true);
+      setLocationSessionId(null);
+    }, []),
+  });
+
+  const handleSendLocationSms = async () => {
+    if (!form.insured_phone) {
+      setLocationSmsError('Lutfen once sigortali telefon numarasini girin');
+      return;
+    }
+    setLocationSmsLoading(true);
+    setLocationSmsError('');
+    setLocationReceived(false);
+    try {
+      const res = await sendLocationSms({ phone: form.insured_phone });
+      setLocationSessionId(res.session_id);
+    } catch {
+      setLocationSmsError('SMS gonderilemedi');
+    } finally {
+      setLocationSmsLoading(false);
+    }
+  };
 
   const needsDropoff = NEEDS_DROPOFF.includes(form.service_type);
 
@@ -335,18 +370,8 @@ export default function NewRequestPage() {
     e.preventDefault();
     setError('');
 
-    if (!form.insured_name || !form.insured_phone || !form.policy_number) {
+    if (!form.insured_name || !form.insured_phone || !form.policy_number || !form.pickup_address || !form.pickup_latitude || !form.pickup_longitude) {
       setError('Lutfen zorunlu alanlari doldurun');
-      return;
-    }
-
-    if (locationMethod === 'manual' && (!form.pickup_address || !form.pickup_latitude || !form.pickup_longitude)) {
-      setError('Lutfen alis konumunu secin');
-      return;
-    }
-
-    if (locationMethod === 'customer_share' && !form.insured_phone) {
-      setError('Musteriden konum almak icin telefon numarasi gereklidir');
       return;
     }
 
@@ -357,14 +382,10 @@ export default function NewRequestPage() {
         insured_name: form.insured_name,
         insured_phone: form.insured_phone,
         policy_number: form.policy_number,
-        location_method: locationMethod,
+        pickup_address: form.pickup_address,
+        pickup_latitude: form.pickup_latitude,
+        pickup_longitude: form.pickup_longitude,
       };
-
-      if (locationMethod === 'manual') {
-        payload.pickup_address = form.pickup_address;
-        payload.pickup_latitude = form.pickup_latitude;
-        payload.pickup_longitude = form.pickup_longitude;
-      }
 
       if (form.insured_plate) payload.insured_plate = form.insured_plate;
       if (form.insurance_name) payload.insurance_name = form.insurance_name;
@@ -380,10 +401,7 @@ export default function NewRequestPage() {
 
       const response = await createInsuranceRequest(payload);
       navigate(`/panel/requests/${response.request_id}`, {
-        state: {
-          trackingToken: response.tracking_token,
-          wsToken: response.ws_token,
-        },
+        state: { trackingToken: response.tracking_token },
       });
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
@@ -611,97 +629,107 @@ export default function NewRequestPage() {
 
             <SectionLabel>Alis Konumu</SectionLabel>
 
-            <ToggleButtonGroup
-              value={locationMethod}
-              exclusive
-              onChange={(_e, val) => { if (val) setLocationMethod(val); }}
-              size="small"
-              sx={{ mb: 2 }}
+            <Box
+              onClick={() => setPickupDialogOpen(true)}
+              sx={{
+                mb: 2, p: 2, border: '1px solid',
+                borderColor: form.pickup_address ? '#0ea5e9' : '#e2e8f0',
+                borderRadius: 2, cursor: 'pointer',
+                bgcolor: form.pickup_address ? '#f0f9ff' : 'transparent',
+                display: 'flex', alignItems: 'flex-start', gap: 1.5,
+                transition: 'all 0.2s ease',
+                '&:hover': { borderColor: '#0ea5e9', bgcolor: '#f0f9ff' },
+              }}
             >
-              <ToggleButton value="manual" sx={{ textTransform: 'none', fontWeight: 600, fontSize: 13, px: 2 }}>
-                <MyLocation sx={{ fontSize: 18, mr: 0.75 }} />
-                Haritadan Sec
-              </ToggleButton>
-              <ToggleButton value="customer_share" sx={{ textTransform: 'none', fontWeight: 600, fontSize: 13, px: 2 }}>
-                <PhoneAndroid sx={{ fontSize: 18, mr: 0.75 }} />
-                Musteriden Al
-              </ToggleButton>
-            </ToggleButtonGroup>
-
-            {locationMethod === 'manual' ? (
-              <>
-                <Box
-                  onClick={() => setPickupDialogOpen(true)}
-                  sx={{
-                    mb: 2, p: 2, border: '1px solid',
-                    borderColor: form.pickup_address ? '#0ea5e9' : '#e2e8f0',
-                    borderRadius: 2, cursor: 'pointer',
-                    bgcolor: form.pickup_address ? '#f0f9ff' : 'transparent',
-                    display: 'flex', alignItems: 'flex-start', gap: 1.5,
-                    transition: 'all 0.2s ease',
-                    '&:hover': { borderColor: '#0ea5e9', bgcolor: '#f0f9ff' },
-                  }}
-                >
-                  <Box sx={{
-                    width: 40, height: 40, borderRadius: 2, flexShrink: 0, mt: 0.25,
-                    bgcolor: form.pickup_address ? '#0ea5e9' : '#f1f5f9',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <MyLocation sx={{ color: form.pickup_address ? 'white' : '#94a3b8', fontSize: 20 }} />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    {form.pickup_address ? (
-                      <>
-                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
-                          Alis Adresi
-                        </Typography>
-                        <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a', lineHeight: 1.4 }}>
-                          {form.pickup_address}
-                        </Typography>
-                        <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
-                          {form.pickup_latitude.toFixed(4)}, {form.pickup_longitude.toFixed(4)}
-                        </Typography>
-                      </>
-                    ) : (
-                      <>
-                        <Typography sx={{ fontSize: 14, color: '#94a3b8' }}>
-                          Alis konumunu secmek icin tiklayin
-                        </Typography>
-                        <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.25 }}>
-                          Haritadan konum secin veya adres arayin
-                        </Typography>
-                      </>
-                    )}
-                  </Box>
-                </Box>
-                <MapPickerDialog
-                  open={pickupDialogOpen}
-                  onClose={() => setPickupDialogOpen(false)}
-                  onSelect={handlePickupLocationSelect}
-                  initialLocation={
-                    form.pickup_latitude !== 0
-                      ? { address: form.pickup_address, latitude: form.pickup_latitude, longitude: form.pickup_longitude }
-                      : null
-                  }
-                  title="Alis Konumu Sec"
-                />
-              </>
-            ) : (
               <Box sx={{
-                mb: 2, p: 2, border: '1px solid #e2e8f0', borderRadius: 2,
-                bgcolor: '#f8fafc',
+                width: 40, height: 40, borderRadius: 2, flexShrink: 0, mt: 0.25,
+                bgcolor: form.pickup_address ? '#0ea5e9' : '#f1f5f9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <PhoneAndroid sx={{ fontSize: 22, color: '#0ea5e9' }} />
-                  <Box>
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
-                      Musteri konumu paylasilacak
+                <MyLocation sx={{ color: form.pickup_address ? 'white' : '#94a3b8', fontSize: 20 }} />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                {form.pickup_address ? (
+                  <>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
+                      Alis Adresi
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: '#64748b' }}>
-                      Talep olusturuldugunda musteriye SMS gonderilecek ve konumunu paylasmasi istenecek
+                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a', lineHeight: 1.4 }}>
+                      {form.pickup_address}
                     </Typography>
-                  </Box>
+                    <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
+                      {form.pickup_latitude.toFixed(4)}, {form.pickup_longitude.toFixed(4)}
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <Typography sx={{ fontSize: 14, color: '#94a3b8' }}>
+                      Alis konumunu secmek icin tiklayin
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.25 }}>
+                      Haritadan konum secin veya adres arayin
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            </Box>
+            <MapPickerDialog
+              open={pickupDialogOpen}
+              onClose={() => setPickupDialogOpen(false)}
+              onSelect={handlePickupLocationSelect}
+              initialLocation={
+                form.pickup_latitude !== 0
+                  ? { address: form.pickup_address, latitude: form.pickup_latitude, longitude: form.pickup_longitude }
+                  : null
+              }
+              title="Alis Konumu Sec"
+            />
+
+            {/* Musteriden konum al */}
+            {locationWaiting ? (
+              <Box sx={{ mb: 2, p: 2, border: '1px solid #f59e0b', borderRadius: 2, bgcolor: '#fffbeb' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                  <CircularProgress size={18} sx={{ color: '#f59e0b' }} />
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#92400e' }}>
+                    Musteri konumu bekleniyor...
+                  </Typography>
                 </Box>
+                <Typography sx={{ fontSize: 12, color: '#a16207' }}>
+                  {form.insured_phone} numarasina SMS gonderildi
+                </Typography>
+                <Button
+                  size="small" variant="text"
+                  onClick={handleSendLocationSms}
+                  disabled={locationSmsLoading}
+                  sx={{ mt: 1, fontSize: 12, color: '#92400e', fontWeight: 600 }}
+                >
+                  Tekrar Gonder
+                </Button>
+              </Box>
+            ) : locationReceived ? (
+              <Box sx={{ mb: 2, p: 2, border: '1px solid #10b981', borderRadius: 2, bgcolor: '#ecfdf5' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#065f46' }}>
+                    Musteri konumu alindi
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <Box sx={{ mb: 2 }}>
+                {locationSmsError && (
+                  <Alert severity="error" sx={{ mb: 1, borderRadius: 2 }}>{locationSmsError}</Alert>
+                )}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleSendLocationSms}
+                  disabled={locationSmsLoading}
+                  startIcon={locationSmsLoading ? <CircularProgress size={16} /> : <Sms />}
+                  sx={{ borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600, borderRadius: 2 }}
+                >
+                  {locationSmsLoading ? 'Gonderiliyor...' : 'Musteriden Konum Al'}
+                </Button>
               </Box>
             )}
 

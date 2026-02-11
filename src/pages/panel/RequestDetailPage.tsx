@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
   ArrowBack, ContentCopy, Person, Schedule, LocalShipping,
-  Star, CheckCircle, Cancel, Phone, Sms, PhoneAndroid,
+  Star, CheckCircle, Cancel, Phone, Sms,
 } from '@mui/icons-material';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import {
@@ -17,7 +17,6 @@ import {
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
 import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse } from '../../types';
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
-import { useLocationShareWebSocket } from '../../hooks/useLocationShareWebSocket';
 
 // --- Animasyonlar ---
 
@@ -99,43 +98,6 @@ function MatchingView({ request }: { request: InsuranceRequestDetail }) {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f8fafc', px: 2.5, py: 1, borderRadius: 2 }}>
           <Schedule sx={{ fontSize: 16, color: '#94a3b8' }} />
-          <ElapsedTimer since={request.timeline.created_at} />
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
-
-// --- PendingLocationView (pending_location) ---
-
-function PendingLocationView({ request }: { request: InsuranceRequestDetail }) {
-  return (
-    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 3 }}>
-      <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Box sx={{ position: 'relative', width: 100, height: 100, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {[0, 0.5, 1].map((delay, i) => (
-            <Box key={i} sx={{
-              position: 'absolute', width: 100, height: 100, borderRadius: '50%',
-              bgcolor: '#f59e0b', animation: `${pulse} 2s ease-out infinite ${delay}s`,
-            }} />
-          ))}
-          <Box sx={{
-            position: 'relative', width: 64, height: 64, borderRadius: '50%',
-            bgcolor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
-          }}>
-            <PhoneAndroid sx={{ color: 'white', fontSize: 32 }} />
-          </Box>
-        </Box>
-
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#0f172a', mb: 1 }}>
-          Musteri Konumu Bekleniyor...
-        </Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b', mb: 3, maxWidth: 350 }}>
-          Musteriye konum paylasim SMS'i gonderildi. Musteri konumunu paylastiginda otomatik olarak guncellenecek.
-        </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#fffbeb', px: 2.5, py: 1, borderRadius: 2, border: '1px solid #fde68a' }}>
-          <Schedule sx={{ fontSize: 16, color: '#f59e0b' }} />
           <ElapsedTimer since={request.timeline.created_at} />
         </Box>
       </CardContent>
@@ -431,9 +393,7 @@ function RequestInfoCard({ request, copied, onCopy }: {
 export default function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const locationState = location.state as { trackingToken?: string; wsToken?: string } | null;
-  const stateToken = locationState?.trackingToken;
-  const stateWsToken = locationState?.wsToken;
+  const stateToken = (location.state as { trackingToken?: string } | null)?.trackingToken;
 
   const [request, setRequest] = useState<InsuranceRequestDetail | null>(null);
   const [offers, setOffers] = useState<DriverOfferInfo[]>([]);
@@ -517,17 +477,6 @@ export default function RequestDetailPage() {
       fetchRequest();
       if (trackingToken) fetchOffers(trackingToken);
     }, [fetchRequest, fetchOffers, trackingToken]),
-  });
-
-  // --- Location share WebSocket (pending_location) ---
-
-  const locationWsSessionId = request?.status === 'pending_location' ? stateWsToken ?? null : null;
-
-  useLocationShareWebSocket({
-    sessionId: locationWsSessionId,
-    onLocationReceived: useCallback(() => {
-      fetchRequest();
-    }, [fetchRequest]),
   });
 
   // --- Handlers ---
@@ -657,9 +606,6 @@ export default function RequestDetailPage() {
         )}
       </Box>
 
-      {request.status === 'pending_location' && (
-        <PendingLocationView request={request} />
-      )}
       {request.status === 'pending' && offers.filter(o => o.status === 'pending').length === 0 && (
         <MatchingView request={request} />
       )}

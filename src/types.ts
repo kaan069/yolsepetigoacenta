@@ -443,6 +443,16 @@ export interface CreatePaymentLinkResponse {
 
 // --- Konum Paylasimi ---
 
+export interface SendLocationSmsPayload {
+  phone: string;
+}
+
+export interface SendLocationSmsResponse {
+  success: boolean;
+  message: string;
+  session_id: string;
+}
+
 export interface WsLocationReceived {
   type: 'location_received';
   latitude: string;

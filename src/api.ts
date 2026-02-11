@@ -19,6 +19,8 @@ import {
   AcceptOfferResponse,
   CreatePaymentLinkPayload,
   CreatePaymentLinkResponse,
+  SendLocationSmsPayload,
+  SendLocationSmsResponse,
 } from './types';
 
 const API_BASE_URL = 'https://api.yolpaketi.com';
@@ -288,6 +290,16 @@ export const createPaymentLink = async (
     payload,
     { headers: authHeader() },
   );
+  return response.data;
+};
+
+/**
+ * Musteriye konum paylasim SMS'i gonder
+ */
+export const sendLocationSms = async (payload: SendLocationSmsPayload): Promise<SendLocationSmsResponse> => {
+  const response = await insuranceApi.post('/location-share/send-sms/', payload, {
+    headers: authHeader(),
+  });
   return response.data;
 };
 
