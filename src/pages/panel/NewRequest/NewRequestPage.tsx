@@ -302,7 +302,9 @@ export default function NewRequestPage() {
               <TextField fullWidth label="Sigortali Adi *" value={form.insured_name} onChange={handleChange('insured_name')} />
               <TextField fullWidth label="Sigorta Sirketi" value={form.insurance_name} onChange={handleChange('insurance_name')} placeholder="Orn: Axa, Allianz, Anadolu Sigorta" />
               <TextField fullWidth label="Sigortali Telefon *" value={form.insured_phone} onChange={handleChange('insured_phone')} />
-              <TextField fullWidth label="Plaka" value={form.insured_plate} onChange={handleChange('insured_plate')} />
+              {form.service_type !== ServiceType.Crane && (
+                <TextField fullWidth label="Plaka" value={form.insured_plate} onChange={handleChange('insured_plate')} />
+              )}
               <TextField fullWidth label="Police Numarasi" value={form.policy_number} onChange={handleChange('policy_number')} />
             </Box>
 

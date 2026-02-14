@@ -26,6 +26,7 @@ export interface RequestFormState {
   cr_floor: string;
   cr_has_obstacles: boolean;
   cr_obstacle_note: string;
+  cr_duration: string;
 
   // roadAssistance
   ra_vehicle_type: string;
@@ -78,8 +79,9 @@ export const initialFormState: RequestFormState = {
   cr_floor: '',
   cr_has_obstacles: false,
   cr_obstacle_note: '',
+  cr_duration: '',
 
-  ra_vehicle_type: '',
+  ra_vehicle_type: 'sedan',
   ra_problem_types: [],
   ra_problem_description: '',
 

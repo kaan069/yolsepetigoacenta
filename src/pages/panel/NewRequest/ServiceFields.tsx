@@ -3,7 +3,7 @@ import {
 } from '@mui/material';
 import { ServiceType } from '../../../types';
 import type { RequestFormState } from './types';
-import { towTruckVehicleTypes, problemTypeOptions, timeSlotOptions } from './constants';
+import { towTruckVehicleTypes, craneDurationOptions, problemTypeOptions, timeSlotOptions } from './constants';
 import SectionLabel from './SectionLabel';
 
 interface ServiceFieldsProps {
@@ -39,6 +39,15 @@ function CraneFields({ form, onChange, onCheckboxChange }: Pick<ServiceFieldsPro
         <TextField fullWidth label="Kaldirma Yuksekligi (m)" value={form.cr_lift_height} onChange={onChange('cr_lift_height')} type="number" />
         <TextField fullWidth label="Kat" value={form.cr_floor} onChange={onChange('cr_floor')} type="number" />
       </Box>
+      <TextField
+        select fullWidth label="Islem Suresi" value={form.cr_duration}
+        onChange={onChange('cr_duration')} sx={{ mb: 2 }}
+      >
+        <MenuItem value="">Seciniz</MenuItem>
+        {craneDurationOptions.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+        ))}
+      </TextField>
       <FormControlLabel
         control={<Checkbox checked={form.cr_has_obstacles} onChange={onCheckboxChange('cr_has_obstacles')} />}
         label="Cevrede engel var"
@@ -60,10 +69,13 @@ function RoadAssistanceFields({ form, onChange, onToggleProblemType }: Pick<Serv
     <>
       <SectionLabel>Yol Yardimi Detaylari</SectionLabel>
       <TextField
-        fullWidth label="Arac Tipi" value={form.ra_vehicle_type}
+        select fullWidth label="Arac Tipi" value={form.ra_vehicle_type}
         onChange={onChange('ra_vehicle_type')} sx={{ mb: 2 }}
-        placeholder="Orn: Sedan, SUV"
-      />
+      >
+        {towTruckVehicleTypes.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+        ))}
+      </TextField>
       <Typography sx={{ fontSize: 13, color: '#64748b', mb: 1 }}>Sorun Tipi (birden fazla secilebilir)</Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
         {problemTypeOptions.map((opt) => (

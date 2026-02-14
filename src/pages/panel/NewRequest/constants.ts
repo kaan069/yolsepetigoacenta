@@ -13,6 +13,21 @@ export const towTruckVehicleTypes = [
   { value: 'bus', label: 'Otobus' },
 ];
 
+export const craneDurationOptions = [
+  { value: '1', label: '1 Saat' },
+  { value: '2', label: '2 Saat' },
+  { value: '3', label: '3 Saat' },
+  { value: '4', label: '4 Saat' },
+  { value: '5', label: '5 Saat' },
+  { value: '6', label: '6 Saat' },
+  { value: '7', label: '7 Saat' },
+  { value: '8', label: '8 Saat' },
+  { value: '9', label: '9 Saat' },
+  { value: '10', label: '10 Saat' },
+  { value: '11', label: '11 Saat' },
+  { value: '12', label: '12 Saat' },
+];
+
 export const problemTypeOptions = [
   { value: 'tire_change', label: 'Lastik Degisimi' },
   { value: 'battery_boost', label: 'Aku Takviye' },

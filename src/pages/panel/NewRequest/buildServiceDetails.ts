@@ -12,6 +12,7 @@ export function buildServiceDetails(form: RequestFormState): Record<string, unkn
         ...(form.cr_floor && { floor: Number(form.cr_floor) }),
         has_obstacles: form.cr_has_obstacles,
         ...(form.cr_obstacle_note && { obstacle_note: form.cr_obstacle_note }),
+        ...(form.cr_duration && { duration: Number(form.cr_duration) }),
       };
     case 'roadAssistance':
       return {
