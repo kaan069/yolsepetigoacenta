@@ -181,9 +181,18 @@ export default function NewRequestPage() {
   };
 
   const handleChange = (field: keyof RequestFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = ['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'estimated_km'].includes(field)
-      ? Number(e.target.value) || 0
-      : e.target.value;
+    let value: string | number = e.target.value;
+
+    if (['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'estimated_km'].includes(field)) {
+      value = Number(value) || 0;
+    } else if (field === 'insured_name' || field === 'insurance_name') {
+      value = value.replace(/[^a-zA-ZğüşıöçĞÜŞİÖÇ\s]/g, '');
+    } else if (field === 'insured_phone') {
+      value = value.replace(/[^0-9]/g, '');
+    } else if (field === 'insured_plate') {
+      value = value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+    }
+
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
