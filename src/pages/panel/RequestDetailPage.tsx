@@ -306,9 +306,9 @@ function CompletedView({ request, onViewInvoice, invoiceLoading }: {
             <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{request.driver.name}</Typography>
           </Box>
         )}
-        {request.pricing?.estimated_price && (
+        {request.pricing && (request.pricing.total_with_vat || request.pricing.estimated_price) && (
           <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a', mb: 2 }}>
-            {request.pricing.estimated_price} {request.pricing.currency}
+            {request.pricing.total_with_vat || request.pricing.estimated_price} {request.pricing.currency}
           </Typography>
         )}
         <Button
@@ -384,6 +384,25 @@ function RequestInfoCard({ request, trackingToken }: {
           <InfoItem label="Tamamlanma" value={formatDate(request.timeline.completed_at)} />
         </CardContent>
       </Card>
+      {request.pricing && request.pricing.base_price && (
+        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 2 }}>
+          <CardContent sx={{ p: 2.5 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+              Fiyatlandirma
+            </Typography>
+            <InfoItem label="Taban Fiyat" value={`${request.pricing.base_price} ${request.pricing.currency}`} />
+            <InfoItem label="Platform Komisyonu" value={request.pricing.platform_commission ? `${request.pricing.platform_commission} ${request.pricing.currency}` : null} />
+            <InfoItem label="Acente Komisyonu" value={request.pricing.insurance_commission ? `${request.pricing.insurance_commission} ${request.pricing.currency}` : null} />
+            <InfoItem label="Toplam (KDV Haric)" value={request.pricing.total_amount ? `${request.pricing.total_amount} ${request.pricing.currency}` : null} />
+            {request.pricing.vat_rate != null && request.pricing.total_with_vat && (
+              <InfoItem label={`KDV (%${request.pricing.vat_rate})`} value={`${(parseFloat(request.pricing.total_with_vat) - parseFloat(request.pricing.total_amount || '0')).toFixed(2)} ${request.pricing.currency}`} />
+            )}
+            <Box sx={{ borderTop: '1px solid #e2e8f0', mt: 1, pt: 1 }}>
+              <InfoItem label="Toplam (KDV Dahil)" value={request.pricing.total_with_vat ? `${request.pricing.total_with_vat} ${request.pricing.currency}` : null} />
+            </Box>
+          </CardContent>
+        </Card>
+      )}
       {trackingToken && (
         <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
           <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, '&:last-child': { pb: 2 } }}>

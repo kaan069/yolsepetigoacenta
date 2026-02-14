@@ -280,6 +280,17 @@ export interface InsuranceRequestDetail {
   } | null;
   pricing: {
     estimated_price: string | null;
+    base_price: string | null;
+    platform_commission: string | null;
+    insurance_commission: string | null;
+    total_amount: string | null;
+    total_with_vat: string | null;
+    vat_rate: number | null;
+    commission_rates: {
+      total: number;
+      agency: number;
+      platform: number;
+    } | null;
     currency: string;
   } | null;
   timeline: {
