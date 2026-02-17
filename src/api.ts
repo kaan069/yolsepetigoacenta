@@ -25,6 +25,7 @@ import {
   SendLocationSmsResponse,
   PricingQuestionsResponse,
   InvoiceResponse,
+  HakedisListResponse,
 } from './types';
 
 const API_BASE_URL = 'https://api.yolpaketi.com';
@@ -348,5 +349,49 @@ export const getInvoice = async (requestId: number): Promise<InvoiceResponse> =>
     headers: authHeader(),
   });
   return response.data;
+};
+
+// --- Hakedisler ---
+
+// Mock data - backend hazir olunca asagidaki gercek API fonksiyonuyla degistirilecek
+const MOCK_HAKEDIS_DATA: HakedisListResponse = {
+  count: 8,
+  page: 1,
+  page_size: 20,
+  results: [
+    { request_id: 1042, service_type: 'towTruck', insured_name: 'Ahmet Yilmaz', status: 'completed', completed_at: '2026-02-15T14:30:00+03:00', estimated_price: '2500.00', insurance_commission: '250.00', currency: 'TRY' },
+    { request_id: 1038, service_type: 'crane', insured_name: 'Fatma Demir', status: 'completed', completed_at: '2026-02-14T11:20:00+03:00', estimated_price: '4200.00', insurance_commission: '420.00', currency: 'TRY' },
+    { request_id: 1035, service_type: 'roadAssistance', insured_name: 'Mehmet Kaya', status: 'completed', completed_at: '2026-02-13T09:45:00+03:00', estimated_price: '800.00', insurance_commission: '80.00', currency: 'TRY' },
+    { request_id: 1029, service_type: 'towTruck', insured_name: 'Ayse Ozturk', status: 'completed', completed_at: '2026-02-12T16:00:00+03:00', estimated_price: '1800.00', insurance_commission: '180.00', currency: 'TRY' },
+    { request_id: 1024, service_type: 'homeToHomeMoving', insured_name: 'Ali Celik', status: 'completed', completed_at: '2026-02-10T13:15:00+03:00', estimated_price: '6500.00', insurance_commission: '650.00', currency: 'TRY' },
+    { request_id: 1019, service_type: 'towTruck', insured_name: 'Zeynep Arslan', status: 'completed', completed_at: '2026-02-08T10:30:00+03:00', estimated_price: '2200.00', insurance_commission: '220.00', currency: 'TRY' },
+    { request_id: 1015, service_type: 'crane', insured_name: 'Hasan Yildiz', status: 'completed', completed_at: '2026-02-05T15:45:00+03:00', estimated_price: '3800.00', insurance_commission: '380.00', currency: 'TRY' },
+    { request_id: 1010, service_type: 'roadAssistance', insured_name: 'Elif Sahin', status: 'completed', completed_at: '2026-02-03T08:20:00+03:00', estimated_price: '950.00', insurance_commission: '95.00', currency: 'TRY' },
+  ],
+  summary: {
+    total_earnings: '2275.00',
+    total_completed: 8,
+    this_month_earnings: '2275.00',
+    this_month_completed: 8,
+    commission_rate: 10,
+  },
+};
+
+export const listHakedisler = async (_params?: {
+  page?: number;
+  page_size?: number;
+  date_from?: string;
+  date_to?: string;
+}): Promise<HakedisListResponse> => {
+  // TODO: Backend hazir olunca asagidaki gercek API cagrisini aktif et
+  // const response = await insuranceApi.get('/hakedisler/', {
+  //   params,
+  //   headers: authHeader(),
+  // });
+  // return response.data;
+
+  // Mock: 300ms gecikme simule et
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return MOCK_HAKEDIS_DATA;
 };
 

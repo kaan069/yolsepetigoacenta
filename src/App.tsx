@@ -12,6 +12,7 @@ import RequestsPage from './pages/panel/RequestsPage';
 import RequestDetailPage from './pages/panel/RequestDetailPage';
 import NewRequestPage from './pages/panel/NewRequest';
 import PricingPage from './pages/panel/PricingPage';
+import HakedislerPage from './pages/panel/HakedislerPage';
 import SettingsPage from './pages/panel/SettingsPage';
 import LocationSharePage from './pages/public/LocationSharePage';
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="requests/new" element={<NewRequestPage />} />
             <Route path="requests/:id" element={<RequestDetailPage />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="hakedisler" element={<HakedislerPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

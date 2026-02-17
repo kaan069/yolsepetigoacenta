@@ -511,3 +511,30 @@ export interface InvoiceResponse {
   pdf_url?: string;
   message?: string;
 }
+
+// --- Hakedisler ---
+
+export interface HakedisListItem {
+  request_id: number;
+  service_type: ServiceTypeValue;
+  insured_name: string;
+  status: RequestStatusValue;
+  completed_at: string;
+  estimated_price: string;
+  insurance_commission: string;
+  currency: string;
+}
+
+export interface HakedisListResponse {
+  count: number;
+  page: number;
+  page_size: number;
+  results: HakedisListItem[];
+  summary: {
+    total_earnings: string;
+    total_completed: number;
+    this_month_earnings: string;
+    this_month_completed: number;
+    commission_rate: number;
+  };
+}
