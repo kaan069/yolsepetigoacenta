@@ -1,6 +1,7 @@
 import { ThemeProvider, CssBaseline, Box, IconButton } from '@mui/material';
 import { WhatsApp, Email } from '@mui/icons-material';
 import { Routes, Route } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
 import { theme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 import PublicLayout from './layouts/PublicLayout';
@@ -21,6 +22,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <SnackbarProvider
+        maxSnack={3}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        autoHideDuration={4000}
+      >
       <AuthProvider>
         <Routes>
           {/* Public */}
@@ -75,6 +81,7 @@ function App() {
           </IconButton>
         </Box>
       </AuthProvider>
+      </SnackbarProvider>
     </ThemeProvider>
   );
 }

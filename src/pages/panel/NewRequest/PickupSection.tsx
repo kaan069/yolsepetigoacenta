@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, Alert, CircularProgress,
 } from '@mui/material';
-import { MyLocation, Sms, CheckCircle } from '@mui/icons-material';
+import { MyLocation, Sms, CheckCircle, PhotoLibrary, WarningAmber } from '@mui/icons-material';
 import MapPickerDialog, { type LocationResult } from '../../../components/MapPickerDialog';
+import ImageLightbox from '../../../components/ImageLightbox';
+import type { LocationShareImage } from '../../../types';
 
 interface PickupSectionProps {
   pickupAddress: string;
@@ -19,6 +22,13 @@ interface PickupSectionProps {
   locationSmsError: string;
   insuredPhone: string;
   onSendLocationSms: () => void;
+  // Arac gorselleri & durum
+  images: LocationShareImage[];
+  imageCount: number;
+  maxImages: number;
+  isSubmitted: boolean;
+  isExpired: boolean;
+  onResendLink: () => void;
 }
 
 export default function PickupSection({
@@ -26,7 +36,24 @@ export default function PickupSection({
   dialogOpen, onDialogOpen, onDialogClose, onLocationSelect,
   locationWaiting, locationReceived, locationSmsLoading, locationSmsError,
   insuredPhone, onSendLocationSms,
+  images, imageCount, maxImages, isSubmitted, isExpired, onResendLink,
 }: PickupSectionProps) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Acik lightbox index'i, gorsel silindiyse sinirla / bossa kapat
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    if (images.length === 0) {
+      setLightboxIndex(null);
+    } else if (lightboxIndex > images.length - 1) {
+      setLightboxIndex(images.length - 1);
+    }
+  }, [images.length, lightboxIndex]);
+
+  const sessionActive =
+    locationWaiting || locationReceived || isSubmitted || isExpired ||
+    images.length > 0 || maxImages > 0;
+
   return (
     <>
       <Box
@@ -143,6 +170,82 @@ export default function PickupSection({
           </Button>
         </Box>
       )}
+
+      {/* Arac gorselleri galerisi */}
+      {sessionActive && (
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <PhotoLibrary sx={{ fontSize: 18, color: '#0ea5e9' }} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+              Araç Görselleri {maxImages > 0 ? `(${imageCount}/${maxImages})` : `(${imageCount})`}
+            </Typography>
+          </Box>
+          {images.length === 0 ? (
+            <Box sx={{ p: 2, border: '1px dashed #cbd5e1', borderRadius: 2, textAlign: 'center' }}>
+              <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>
+                Müşteri henüz görsel yüklemedi
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1 }}>
+              {images.map((img, i) => (
+                <Box
+                  key={img.id}
+                  onClick={() => setLightboxIndex(i)}
+                  sx={{
+                    aspectRatio: '1', borderRadius: 2, overflow: 'hidden',
+                    border: '1px solid #e2e8f0', cursor: 'pointer',
+                    transition: 'border-color 0.2s ease',
+                    '&:hover': { borderColor: '#0ea5e9' },
+                  }}
+                >
+                  <img
+                    src={img.url}
+                    alt="Araç"
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Durum gostergeleri */}
+      {isSubmitted && (
+        <Box sx={{ mb: 2, p: 2, border: '1px solid #10b981', borderRadius: 2, bgcolor: '#ecfdf5', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#065f46' }}>
+            Müşteri gönderdi
+          </Typography>
+        </Box>
+      )}
+
+      {isExpired && !isSubmitted && (
+        <Box sx={{ mb: 2, p: 2, border: '1px solid #ef4444', borderRadius: 2, bgcolor: '#fef2f2' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <WarningAmber sx={{ fontSize: 18, color: '#ef4444' }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#991b1b' }}>
+              Link süresi doldu
+            </Typography>
+          </Box>
+          <Button
+            size="small" variant="outlined" onClick={onResendLink}
+            sx={{ borderColor: '#ef4444', color: '#ef4444', fontWeight: 600, borderRadius: 2, '&:hover': { borderColor: '#dc2626', bgcolor: '#fef2f2' } }}
+          >
+            Yeni SMS Gönder
+          </Button>
+        </Box>
+      )}
+
+      <ImageLightbox
+        open={lightboxIndex !== null}
+        images={images}
+        index={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
+      />
     </>
   );
 }

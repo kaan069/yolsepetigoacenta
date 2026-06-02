@@ -482,6 +482,65 @@ export interface WsLocationReceived {
   address: string;
 }
 
+// --- Konum Paylasimi: Galeri & Durum ---
+
+export interface LocationShareImage {
+  id: number;
+  url: string;
+  order: number;
+  uploaded_at: string;
+}
+
+export interface LocationShareState {
+  location: { lat: number; lng: number; address: string } | null;
+  images: LocationShareImage[];
+  imageCount: number;
+  maxImages: number;
+  isSubmitted: boolean;
+  isExpired: boolean;
+}
+
+// HTTP snapshot (GET /status/) - genisletilmis sozlesme
+export interface LocationShareStatusResponse {
+  location: { lat: number; lng: number; address: string } | null;
+  images: LocationShareImage[];
+  image_count: number;
+  max_images: number;
+  is_used: boolean;
+  is_expired: boolean;
+}
+
+// --- WS event'leri (ayni soket: ws/location-share/{token}/) ---
+
+export interface WsImageUploaded {
+  type: 'image_uploaded';
+  image_id: number;
+  url: string;
+  order: number;
+}
+
+export interface WsImageDeleted {
+  type: 'image_deleted';
+  image_id: number;
+}
+
+export interface WsImageModerated {
+  type: 'image_moderated';
+  image_id: number;
+  reason: string;
+}
+
+export interface WsSubmissionCompleted {
+  type: 'submission_completed';
+}
+
+export type WsLocationShareEvent =
+  | WsLocationReceived
+  | WsImageUploaded
+  | WsImageDeleted
+  | WsImageModerated
+  | WsSubmissionCompleted;
+
 // --- Fiyatlandirma Sorulari ---
 
 export interface PricingQuestionOption {

@@ -21,6 +21,7 @@ import {
   CreatePaymentLinkResponse,
   LocationShareInitPayload,
   LocationShareInitResponse,
+  LocationShareStatusResponse,
   SendLocationSmsPayload,
   SendLocationSmsResponse,
   PricingQuestionsResponse,
@@ -310,11 +311,21 @@ export const submitSharedLocation = async (
 };
 
 /**
- * Konum paylasim token durumunu kontrol et (polling fallback)
+ * Konum paylasim token durumunu kontrol et (legacy polling fallback)
  */
 export const checkLocationShareStatus = async (
   token: string,
 ): Promise<{ is_used: boolean; latitude?: string; longitude?: string; address?: string }> => {
+  const response = await mainApi.get(`/insurance/location-share/${token}/status/`);
+  return response.data;
+};
+
+/**
+ * Konum paylasim snapshot'i - konum + arac gorselleri + durum (public, auth yok)
+ */
+export const getLocationShareStatus = async (
+  token: string,
+): Promise<LocationShareStatusResponse> => {
   const response = await mainApi.get(`/insurance/location-share/${token}/status/`);
   return response.data;
 };

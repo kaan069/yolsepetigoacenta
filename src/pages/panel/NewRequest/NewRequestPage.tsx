@@ -3,6 +3,7 @@ import {
   Typography, Card, CardContent, Box, TextField, Button, Alert, MenuItem,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import { createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQuestions } from '../../../api';
 import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, InsuranceRequestCreatePayload, PricingQuestion } from '../../../types';
@@ -61,8 +62,22 @@ export default function NewRequestPage() {
   const [locationReceived, setLocationReceived] = useState(false);
   const [locationSmsError, setLocationSmsError] = useState('');
 
-  const { isWaiting: locationWaiting } = useLocationShareWebSocket({
+  const { enqueueSnackbar } = useSnackbar();
+
+  // Panel yenilemesinde aktif konum-paylasim oturumunu localStorage'dan geri yukle
+  useEffect(() => {
+    const savedToken = localStorage.getItem('ls_token');
+    if (savedToken) {
+      setLocationToken(savedToken);
+      const accessToken = localStorage.getItem('access_token') || '';
+      setLocationWsUrl(`wss://api.yolsepetigo.com/ws/location-share/${savedToken}/?auth=${accessToken}`);
+    }
+  }, []);
+
+  const { state: shareState, isWaiting: locationWaiting } = useLocationShareWebSocket({
+    token: locationToken,
     wsUrl: locationWsUrl,
+    enabled: !!(locationToken && locationWsUrl),
     onLocationReceived: useCallback((loc: { latitude: number; longitude: number; address: string }) => {
       setForm(prev => ({
         ...prev,
@@ -71,11 +86,13 @@ export default function NewRequestPage() {
         pickup_longitude: loc.longitude,
       }));
       setLocationReceived(true);
-      setLocationWsUrl(null);
     }, []),
+    onNotify: useCallback((severity: 'info' | 'success' | 'warning' | 'error', message: string) => {
+      enqueueSnackbar(message, { variant: severity });
+    }, [enqueueSnackbar]),
   });
 
-  const handleSendLocationSms = async () => {
+  const handleSendLocationSms = async (forceNew = false) => {
     if (!form.insured_phone) {
       setLocationSmsError('Lutfen once sigortali telefon numarasini girin');
       return;
@@ -85,15 +102,17 @@ export default function NewRequestPage() {
     setLocationReceived(false);
 
     try {
-      if (!locationToken) {
+      const existing = forceNew ? null : locationToken;
+      if (!existing) {
         const initRes = await initLocationShare({ insured_phone: form.insured_phone });
         setLocationToken(initRes.token);
+        localStorage.setItem('ls_token', initRes.token);
         const accessToken = localStorage.getItem('access_token') || '';
         const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}?auth=${accessToken}`;
         setLocationWsUrl(fullWsUrl);
         await sendLocationSms({ token: initRes.token });
       } else {
-        await sendLocationSms({ token: locationToken });
+        await sendLocationSms({ token: existing });
       }
     } catch {
       setLocationSmsError('SMS gonderilemedi');
@@ -267,6 +286,7 @@ export default function NewRequestPage() {
       if (form.insurance_name) payload.insurance_name = form.insurance_name;
 
       const response = await createInsuranceRequest(payload);
+      localStorage.removeItem('ls_token');
       navigate(`/panel/requests/${response.request_id}`, {
         state: { trackingToken: response.tracking_token },
       });
@@ -332,7 +352,13 @@ export default function NewRequestPage() {
               locationSmsLoading={locationSmsLoading}
               locationSmsError={locationSmsError}
               insuredPhone={form.insured_phone}
-              onSendLocationSms={handleSendLocationSms}
+              onSendLocationSms={() => handleSendLocationSms()}
+              images={shareState.images}
+              imageCount={shareState.imageCount}
+              maxImages={shareState.maxImages}
+              isSubmitted={shareState.isSubmitted}
+              isExpired={shareState.isExpired}
+              onResendLink={() => handleSendLocationSms(true)}
             />
 
             {needsDropoff && (

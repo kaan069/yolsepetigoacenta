@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import type { WsLocationReceived } from '../types';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import type {
+  LocationShareImage,
+  LocationShareState,
+  LocationShareStatusResponse,
+  WsLocationShareEvent,
+} from '../types';
+import { getLocationShareStatus } from '../api';
 
-const MAX_RECONNECT_DELAY = 15000;
+const RECONNECT_DELAY = 5000;
 
 interface LocationResult {
   latitude: number;
@@ -9,106 +15,252 @@ interface LocationResult {
   address: string;
 }
 
+type NotifySeverity = 'info' | 'success' | 'warning' | 'error';
+
 interface UseLocationShareWebSocketOptions {
+  token: string | null;
   wsUrl: string | null;
+  enabled: boolean;
   onLocationReceived: (location: LocationResult) => void;
+  onNotify: (severity: NotifySeverity, message: string) => void;
+}
+
+const initialState: LocationShareState = {
+  location: null,
+  images: [],
+  imageCount: 0,
+  maxImages: 0,
+  isSubmitted: false,
+  isExpired: false,
+};
+
+const byOrderThenId = (a: LocationShareImage, b: LocationShareImage) =>
+  a.order - b.order || a.id - b.id;
+
+type Action =
+  | { kind: 'RESET' }
+  | { kind: 'SNAPSHOT'; snap: LocationShareStatusResponse }
+  | { kind: 'SET_LOCATION'; location: { lat: number; lng: number; address: string } }
+  | { kind: 'IMAGE_UPSERT'; image: LocationShareImage }
+  | { kind: 'IMAGE_REMOVE'; id: number }
+  | { kind: 'SUBMITTED' }
+  | { kind: 'EXPIRED' };
+
+function reducer(state: LocationShareState, action: Action): LocationShareState {
+  switch (action.kind) {
+    case 'RESET':
+      return initialState;
+
+    case 'SNAPSHOT': {
+      // Snapshot otoriterdir: gorsel listesini tumuyle degistirir, sirali tutar.
+      const { snap } = action;
+      const images = (snap.images ?? []).slice().sort(byOrderThenId);
+      const isSubmitted = state.isSubmitted || snap.is_used;
+      return {
+        ...state,
+        // location null gelirse mevcut (canli) konumu ezme
+        location: snap.location ?? state.location,
+        images,
+        imageCount: snap.image_count ?? images.length,
+        maxImages: snap.max_images ?? state.maxImages,
+        isSubmitted,
+        isExpired: (snap.is_expired ?? false) && !isSubmitted,
+      };
+    }
+
+    case 'SET_LOCATION':
+      return { ...state, location: action.location };
+
+    case 'IMAGE_UPSERT': {
+      // id zaten varsa: sayim degismez (snapshot+WS yarisinda cift sayim olmaz)
+      if (state.images.some((i) => i.id === action.image.id)) {
+        const images = state.images
+          .map((i) => (i.id === action.image.id ? { ...i, ...action.image } : i))
+          .sort(byOrderThenId);
+        return { ...state, images };
+      }
+      const images = [...state.images, action.image].sort(byOrderThenId);
+      return { ...state, images, imageCount: images.length };
+    }
+
+    case 'IMAGE_REMOVE': {
+      if (!state.images.some((i) => i.id === action.id)) return state;
+      const images = state.images.filter((i) => i.id !== action.id);
+      return { ...state, images, imageCount: Math.max(0, images.length) };
+    }
+
+    case 'SUBMITTED':
+      // submitted, expired'i ezer
+      return { ...state, isSubmitted: true, isExpired: false };
+
+    case 'EXPIRED':
+      if (state.isSubmitted) return state;
+      return { ...state, isExpired: true };
+
+    default:
+      return state;
+  }
 }
 
 export function useLocationShareWebSocket(options: UseLocationShareWebSocketOptions) {
+  const [state, dispatch] = useReducer(reducer, initialState);
   const [isConnected, setIsConnected] = useState(false);
-  const [isWaiting, setIsWaiting] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const reconnectDelayRef = useRef(1000);
   const mountedRef = useRef(true);
-  const receivedRef = useRef(false);
+  const terminalRef = useRef(false); // submission_completed | expiry -> reconnect etme
+  const locationFilledRef = useRef(false); // formu yalnizca bir kez doldur
   const callbacksRef = useRef(options);
   callbacksRef.current = options;
 
+  const { token, wsUrl, enabled } = options;
+
   useEffect(() => {
     mountedRef.current = true;
-    receivedRef.current = false;
+    terminalRef.current = false;
+    locationFilledRef.current = false;
+    dispatch({ kind: 'RESET' });
 
-    if (!options.wsUrl) {
+    if (!enabled || !wsUrl || !token) {
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
       }
       clearTimeout(reconnectTimeoutRef.current);
       setIsConnected(false);
-      setIsWaiting(false);
       return;
     }
 
-    const url = options.wsUrl;
-    setIsWaiting(true);
+    function maybeFillLocation(
+      location: { lat: number; lng: number; address: string } | null,
+    ) {
+      if (location && !locationFilledRef.current) {
+        locationFilledRef.current = true;
+        callbacksRef.current.onLocationReceived({
+          latitude: location.lat,
+          longitude: location.lng,
+          address: location.address,
+        });
+      }
+    }
+
+    async function fetchSnapshot() {
+      if (!token) return;
+      try {
+        const snap = await getLocationShareStatus(token);
+        if (!mountedRef.current) return;
+        dispatch({ kind: 'SNAPSHOT', snap });
+        if (snap.is_used) {
+          terminalRef.current = true;
+        } else if (snap.is_expired) {
+          terminalRef.current = true;
+          dispatch({ kind: 'EXPIRED' });
+        }
+        maybeFillLocation(snap.location);
+      } catch {
+        // Snapshot alinamadi; canli event'ler hala gelebilir
+      }
+    }
+
+    function handleLiveEvent(msg: WsLocationShareEvent) {
+      switch (msg.type) {
+        case 'location_received': {
+          const location = {
+            lat: parseFloat(msg.latitude),
+            lng: parseFloat(msg.longitude),
+            address: msg.address,
+          };
+          dispatch({ kind: 'SET_LOCATION', location });
+          maybeFillLocation(location);
+          break;
+        }
+        case 'image_uploaded':
+          dispatch({
+            kind: 'IMAGE_UPSERT',
+            image: {
+              id: msg.image_id,
+              url: msg.url,
+              order: msg.order,
+              uploaded_at: new Date().toISOString(),
+            },
+          });
+          callbacksRef.current.onNotify('info', 'Müşteri yeni görsel yükledi');
+          break;
+        case 'image_deleted':
+          dispatch({ kind: 'IMAGE_REMOVE', id: msg.image_id });
+          break;
+        case 'image_moderated':
+          dispatch({ kind: 'IMAGE_REMOVE', id: msg.image_id });
+          callbacksRef.current.onNotify(
+            'warning',
+            `Yönetici bir görseli kaldırdı${msg.reason ? ': ' + msg.reason : ''}`,
+          );
+          break;
+        case 'submission_completed':
+          terminalRef.current = true;
+          dispatch({ kind: 'SUBMITTED' });
+          callbacksRef.current.onNotify(
+            'success',
+            'Müşteri formu gönderdi — talep işleme alındı',
+          );
+          if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+          }
+          break;
+      }
+    }
 
     function connect() {
-      if (!mountedRef.current || receivedRef.current) return;
+      if (!mountedRef.current || terminalRef.current) return;
 
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(wsUrl as string);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        if (!mountedRef.current) return;
+        if (wsRef.current !== ws || !mountedRef.current) return;
         setIsConnected(true);
-        reconnectDelayRef.current = 1000;
+        // (Re)connect'te kacan event'leri yakalamak icin snapshot tazele
+        fetchSnapshot();
       };
 
       ws.onmessage = (event) => {
-        if (!mountedRef.current) return;
+        if (wsRef.current !== ws || !mountedRef.current) return;
         try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'location_received') {
-            const loc = data as WsLocationReceived;
-            receivedRef.current = true;
-            callbacksRef.current.onLocationReceived({
-              latitude: parseFloat(loc.latitude),
-              longitude: parseFloat(loc.longitude),
-              address: loc.address,
-            });
-            setIsWaiting(false);
-            // Konum alindi, WS'i kapat
-            ws.close();
-            wsRef.current = null;
-          }
+          const data = JSON.parse(event.data) as WsLocationShareEvent;
+          handleLiveEvent(data);
         } catch {
-          // Malformed message
+          // Bozuk mesaj
         }
       };
 
       ws.onclose = () => {
+        // Eski bir effect calismasindan kalan soketi yok say
+        if (wsRef.current !== ws) return;
         if (!mountedRef.current) return;
         setIsConnected(false);
         wsRef.current = null;
-        // Konum alindiysa reconnect etme
-        if (receivedRef.current) return;
-        // Sadece hala bekliyorsak reconnect et
-        if (callbacksRef.current.wsUrl) {
-          scheduleReconnect();
-        }
+        if (terminalRef.current) return;
+        scheduleReconnect();
       };
 
       ws.onerror = () => {
-        if (!mountedRef.current) return;
+        if (wsRef.current !== ws) return;
         ws.close();
       };
     }
 
     function scheduleReconnect() {
-      if (!mountedRef.current || receivedRef.current) return;
+      if (!mountedRef.current || terminalRef.current) return;
+      clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = setTimeout(() => {
-        if (mountedRef.current && !receivedRef.current && callbacksRef.current.wsUrl) {
-          connect();
-        }
-      }, reconnectDelayRef.current);
-      reconnectDelayRef.current = Math.min(
-        reconnectDelayRef.current * 2,
-        MAX_RECONNECT_DELAY,
-      );
+        if (mountedRef.current && !terminalRef.current) connect();
+      }, RECONNECT_DELAY);
     }
 
+    // Once snapshot (soket acilmadan galeriyi/konumu aninda doldur), sonra soket
+    fetchSnapshot();
     connect();
 
     return () => {
@@ -119,8 +271,11 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
         wsRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options.wsUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, wsUrl, enabled]);
 
-  return { isConnected, isWaiting };
+  const isWaiting =
+    enabled && !state.location && !state.isSubmitted && !state.isExpired;
+
+  return { state, isConnected, isWaiting };
 }
