@@ -64,16 +64,6 @@ export default function NewRequestPage() {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  // Panel yenilemesinde aktif konum-paylasim oturumunu localStorage'dan geri yukle
-  useEffect(() => {
-    const savedToken = localStorage.getItem('ls_token');
-    if (savedToken) {
-      setLocationToken(savedToken);
-      const accessToken = localStorage.getItem('access_token') || '';
-      setLocationWsUrl(`wss://api.yolsepetigo.com/ws/location-share/${savedToken}/?auth=${accessToken}`);
-    }
-  }, []);
-
   const { state: shareState, isWaiting: locationWaiting } = useLocationShareWebSocket({
     token: locationToken,
     wsUrl: locationWsUrl,
@@ -106,7 +96,6 @@ export default function NewRequestPage() {
       if (!existing) {
         const initRes = await initLocationShare({ insured_phone: form.insured_phone });
         setLocationToken(initRes.token);
-        localStorage.setItem('ls_token', initRes.token);
         const accessToken = localStorage.getItem('access_token') || '';
         const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}?auth=${accessToken}`;
         setLocationWsUrl(fullWsUrl);
@@ -286,7 +275,6 @@ export default function NewRequestPage() {
       if (form.insurance_name) payload.insurance_name = form.insurance_name;
 
       const response = await createInsuranceRequest(payload);
-      localStorage.removeItem('ls_token');
       navigate(`/panel/requests/${response.request_id}`, {
         state: { trackingToken: response.tracking_token },
       });
