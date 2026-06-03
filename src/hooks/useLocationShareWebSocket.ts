@@ -133,16 +133,26 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
     }
 
     function maybeFillLocation(
-      location: { lat: number; lng: number; address: string } | null,
+      raw:
+        | {
+            lat?: number; lng?: number;
+            latitude?: number | string; longitude?: number | string;
+            address?: string;
+          }
+        | null,
     ) {
-      if (location && !locationFilledRef.current) {
-        locationFilledRef.current = true;
-        callbacksRef.current.onLocationReceived({
-          latitude: location.lat,
-          longitude: location.lng,
-          address: location.address,
-        });
-      }
+      if (!raw || locationFilledRef.current) return;
+      // Hem {lat,lng} (number) hem {latitude,longitude} (string) formatina toleransli ol
+      const lat = typeof raw.lat === 'number' ? raw.lat : parseFloat(String(raw.latitude ?? ''));
+      const lng = typeof raw.lng === 'number' ? raw.lng : parseFloat(String(raw.longitude ?? ''));
+      // Gecersiz koordinati forma yazma (aksi halde toFixed crash eder)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      locationFilledRef.current = true;
+      callbacksRef.current.onLocationReceived({
+        latitude: lat,
+        longitude: lng,
+        address: raw.address ?? '',
+      });
     }
 
     async function fetchSnapshot() {

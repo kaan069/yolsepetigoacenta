@@ -85,7 +85,7 @@ export default function PickupSection({
                 {pickupAddress}
               </Typography>
               <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
-                {pickupLatitude.toFixed(4)}, {pickupLongitude.toFixed(4)}
+                {(pickupLatitude || 0).toFixed(4)}, {(pickupLongitude || 0).toFixed(4)}
               </Typography>
             </>
           ) : (
