@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQuestions } from '../../../api';
+import { createInsuranceRequest, sendLocationSms, getPricingQuestions } from '../../../api';
 import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, InsuranceRequestCreatePayload, PricingQuestion } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
@@ -55,12 +55,13 @@ export default function NewRequestPage() {
     });
   };
 
-  // Konum paylasimi
+  // Konum paylasimi (request-first: customer_share)
   const [locationSmsLoading, setLocationSmsLoading] = useState(false);
   const [locationToken, setLocationToken] = useState<string | null>(null);
   const [locationWsUrl, setLocationWsUrl] = useState<string | null>(null);
   const [locationReceived, setLocationReceived] = useState(false);
   const [locationSmsError, setLocationSmsError] = useState('');
+  const [requestId, setRequestId] = useState<number | null>(null);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -82,9 +83,11 @@ export default function NewRequestPage() {
     }, [enqueueSnackbar]),
   });
 
-  const handleSendLocationSms = async (forceNew = false) => {
-    if (!form.insured_phone) {
-      setLocationSmsError('Lutfen once sigortali telefon numarasini girin');
+  // request-first: talebi customer_share ile olustur, donen ws_token ile paylasimi baslat.
+  // Boylece musterinin yukledigi gorseller talebe FK ile otomatik baglanir.
+  const handleStartCustomerShare = async () => {
+    if (!form.insured_name || !form.insured_phone) {
+      setLocationSmsError('Lutfen once sigortali ad ve telefon bilgisini girin');
       return;
     }
     setLocationSmsLoading(true);
@@ -92,19 +95,56 @@ export default function NewRequestPage() {
     setLocationReceived(false);
 
     try {
-      const existing = forceNew ? null : locationToken;
-      if (!existing) {
-        const initRes = await initLocationShare({ insured_phone: form.insured_phone });
-        setLocationToken(initRes.token);
-        const accessToken = localStorage.getItem('access_token') || '';
-        const fullWsUrl = `wss://api.yolsepetigo.com/${initRes.ws_url}?auth=${accessToken}`;
-        setLocationWsUrl(fullWsUrl);
-        await sendLocationSms({ token: initRes.token });
-      } else {
-        await sendLocationSms({ token: existing });
+      let token = locationToken;
+
+      // Talep henuz olusturulmadiysa once olustur (konum opsiyonel)
+      if (!requestId) {
+        const payload: InsuranceRequestCreatePayload = {
+          service_type: form.service_type,
+          insured_name: form.insured_name,
+          insured_phone: form.insured_phone,
+          location_method: 'customer_share',
+          service_details: buildServiceDetails(form),
+        };
+
+        const answersArray = Object.entries(questionAnswers)
+          .filter(([, opts]) => opts.length > 0)
+          .map(([qId, opts]) => ({ question_id: Number(qId), option_ids: opts }));
+        if (answersArray.length > 0) {
+          payload.service_details = { ...payload.service_details, question_answers: answersArray };
+        }
+
+        if (needsDropoff) {
+          if (form.dropoff_address) payload.dropoff_address = form.dropoff_address;
+          if (form.dropoff_latitude) payload.dropoff_latitude = parseFloat(form.dropoff_latitude.toFixed(6));
+          if (form.dropoff_longitude) payload.dropoff_longitude = parseFloat(form.dropoff_longitude.toFixed(6));
+          if (form.estimated_km > 0) payload.estimated_km = form.estimated_km;
+        }
+        if (form.insured_plate) payload.insured_plate = form.insured_plate;
+        if (form.policy_number) payload.policy_number = form.policy_number;
+        if (form.insurance_name) payload.insurance_name = form.insurance_name;
+
+        const res = await createInsuranceRequest(payload);
+        setRequestId(res.request_id);
+        token = res.ws_token ?? null;
+        setLocationToken(token);
+        if (token) {
+          const accessToken = localStorage.getItem('access_token') || '';
+          setLocationWsUrl(`wss://api.yolsepetigo.com/ws/location-share/${token}/?auth=${accessToken}`);
+        }
       }
-    } catch {
-      setLocationSmsError('SMS gonderilemedi');
+
+      // SMS gonder (token = ws_token; backend token'i de request_id'yi de kabul ediyor)
+      if (token) {
+        await sendLocationSms({ token });
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        setLocationSmsError(axiosErr.response?.data?.error || 'Talep olusturulamadi veya SMS gonderilemedi');
+      } else {
+        setLocationSmsError('Talep olusturulamadi veya SMS gonderilemedi');
+      }
     } finally {
       setLocationSmsLoading(false);
     }
@@ -235,6 +275,11 @@ export default function NewRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // customer_share ile talep zaten olusturulduysa tekrar olusturma, talebe git
+    if (requestId) {
+      navigate(`/panel/requests/${requestId}`);
+      return;
+    }
     setError('');
 
     if (!form.insured_name || !form.insured_phone || !form.pickup_address || !form.pickup_latitude || !form.pickup_longitude) {
@@ -340,13 +385,13 @@ export default function NewRequestPage() {
               locationSmsLoading={locationSmsLoading}
               locationSmsError={locationSmsError}
               insuredPhone={form.insured_phone}
-              onSendLocationSms={() => handleSendLocationSms()}
+              onSendLocationSms={handleStartCustomerShare}
               images={shareState.images}
               imageCount={shareState.imageCount}
               maxImages={shareState.maxImages}
               isSubmitted={shareState.isSubmitted}
               isExpired={shareState.isExpired}
-              onResendLink={() => handleSendLocationSms(true)}
+              onResendLink={handleStartCustomerShare}
             />
 
             {needsDropoff && (
@@ -384,9 +429,19 @@ export default function NewRequestPage() {
               />
             )}
 
-            <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 1 }}>
-              {loading ? 'Olusturuluyor...' : 'Talep Olustur'}
-            </Button>
+            {requestId ? (
+              <Button
+                fullWidth type="button" variant="contained" size="large"
+                onClick={() => navigate(`/panel/requests/${requestId}`)}
+                sx={{ mt: 1 }}
+              >
+                {shareState.isSubmitted ? 'Surucuye Yonlendir' : 'Talebi Goruntule'}
+              </Button>
+            ) : (
+              <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 1 }}>
+                {loading ? 'Olusturuluyor...' : 'Talep Olustur'}
+              </Button>
+            )}
           </Box>
         </CardContent>
       </Card>

@@ -228,9 +228,10 @@ export interface InsuranceRequestCreatePayload {
   policy_number?: string;
   insurance_name?: string;
   location_method?: 'manual' | 'customer_share';
-  pickup_address: string;
-  pickup_latitude: number;
-  pickup_longitude: number;
+  // customer_share akisinda konum musteriden gelecegi icin opsiyonel
+  pickup_address?: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
   dropoff_address?: string;
   dropoff_latitude?: number;
   dropoff_longitude?: number;
