@@ -11,8 +11,10 @@ import type { InsuranceRequestSummary } from '../../types';
 
 const statusFilters = [
   { label: 'Tumu', value: '' },
+  { label: 'Konum Bekleniyor', value: RequestStatus.PendingLocation },
   { label: 'Beklemede', value: RequestStatus.Pending },
   { label: 'Onay Bekleniyor', value: RequestStatus.AwaitingApproval },
+  { label: 'Odeme Bekleniyor', value: RequestStatus.AwaitingPayment },
   { label: 'Devam Ediyor', value: RequestStatus.InProgress },
   { label: 'Tamamlandi', value: RequestStatus.Completed },
   { label: 'Iptal', value: RequestStatus.Cancelled },

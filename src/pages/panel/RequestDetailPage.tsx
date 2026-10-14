@@ -9,6 +9,7 @@ import {
   Star, CheckCircle, Cancel, Phone, Sms, Receipt,
 } from '@mui/icons-material';
 import { useParams, Link, useLocation } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import {
   getInsuranceRequest, getRequestOffers,
   cancelInsuranceRequest, acceptOffer as acceptOfferApi, extractTrackingToken,
@@ -447,6 +448,7 @@ export default function RequestDetailPage() {
   const [sendingSms, setSendingSms] = useState(false);
   const [smsSuccess, setSmsSuccess] = useState(false);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   const requestId = id ? Number(id) : null;
 
@@ -527,7 +529,7 @@ export default function RequestDetailPage() {
       await fetchRequest();
       setCancelDialogOpen(false);
     } catch {
-      setError('Talep iptal edilirken hata olustu');
+      enqueueSnackbar('Talep iptal edilirken hata olustu', { variant: 'error' });
     } finally {
       setCancelling(false);
     }
@@ -570,7 +572,7 @@ export default function RequestDetailPage() {
       setSmsSuccess(true);
       setTimeout(() => setSmsSuccess(false), 5000);
     } catch {
-      setError('Odeme linki olusturulamadi');
+      enqueueSnackbar('Odeme linki olusturulamadi', { variant: 'error' });
     } finally {
       setSendingSms(false);
     }
@@ -584,12 +586,12 @@ export default function RequestDetailPage() {
       if (res.status === 'ready' && res.pdf_url) {
         window.open(res.pdf_url, '_blank');
       } else if (res.status === 'processing') {
-        setError('Faturaniz hazirlaniyor, lutfen biraz sonra tekrar deneyin');
+        enqueueSnackbar('Faturaniz hazirlaniyor, lutfen biraz sonra tekrar deneyin', { variant: 'info' });
       } else if (res.status === 'no_payment') {
-        setError('Odeme bulunamadi');
+        enqueueSnackbar('Odeme bulunamadi', { variant: 'warning' });
       }
     } catch {
-      setError('Fatura yuklenirken hata olustu');
+      enqueueSnackbar('Fatura yuklenirken hata olustu', { variant: 'error' });
     } finally {
       setInvoiceLoading(false);
     }
@@ -605,7 +607,8 @@ export default function RequestDetailPage() {
     );
   }
 
-  if (error || !request) {
+  // Talep hic yuklenemediyse tam sayfa hata; yuklendikten sonraki yenileme hatalari asagida satir ici gosterilir
+  if (!request) {
     return (
       <Box>
         <Alert severity="error" sx={{ borderRadius: 2 }}>{error || 'Talep bulunamadi'}</Alert>
@@ -654,6 +657,8 @@ export default function RequestDetailPage() {
           </Button>
         )}
       </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
       {request.status === 'pending' && offers.filter(o => o.status === 'pending').length === 0 && (
         <MatchingView request={request} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import {
   Box, Typography, IconButton, Avatar, Drawer, List, ListItemButton, ListItemIcon,
   ListItemText, Divider, useMediaQuery, useTheme, AppBar, Toolbar,
@@ -8,7 +8,8 @@ import {
   Menu as MenuIcon, ChevronLeft,
 } from '@mui/icons-material';
 import { Outlet, Link, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
+import PageLoader from '../components/PageLoader';
 
 const DRAWER_WIDTH = 260;
 
@@ -22,27 +23,11 @@ const navItems = [
 ];
 
 export default function PanelLayout() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
-
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#f1f5f9' }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            component="img"
-            src="/assets/goyazililogo.jpeg"
-            alt="YolSepetiGO"
-            sx={{ width: 56, height: 56, borderRadius: 3, mx: 'auto', mb: 2, objectFit: 'cover' }}
-          />
-          <Typography color="text.secondary" sx={{ fontSize: 14 }}>Yukleniyor...</Typography>
-        </Box>
-      </Box>
-    );
-  }
 
   if (!isAuthenticated) {
     return <Navigate to="/panel/login" replace />;
@@ -199,7 +184,9 @@ export default function PanelLayout() {
 
         {/* Page content */}
         <Box sx={{ flex: 1, p: { xs: 2, sm: 3, md: 4 }, overflow: 'auto' }}>
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </Box>
       </Box>
     </Box>

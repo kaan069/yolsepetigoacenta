@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { getProfile, listInsuranceRequests } from '../../api';
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
 import type { CompanyProfile, InsuranceRequestSummary } from '../../types';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/auth';
 
 export default function DashboardPage() {
   const { user } = useAuth();

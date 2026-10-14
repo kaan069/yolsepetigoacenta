@@ -72,9 +72,11 @@ function MapPickerDialogContent({
   initialLocation,
   title,
 }: Omit<MapPickerDialogProps, 'open'>) {
-  const [searchText, setSearchText] = useState('');
+  // Icerik her acilista yeniden mount edilir; baslangic konumu yalnizca mount'ta okunur
+  const startLocation = initialLocation && initialLocation.latitude !== 0 ? initialLocation : null;
+  const [searchText, setSearchText] = useState(startLocation?.address ?? '');
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(startLocation);
   const [isSearching, setIsSearching] = useState(false);
 
   const map = useMap('location-picker');
@@ -99,18 +101,6 @@ function MapPickerDialogContent({
       geocoder.current = new geocodingLib.Geocoder();
     }
   }, [geocodingLib]);
-
-  // Reset on mount
-  useEffect(() => {
-    if (initialLocation && initialLocation.latitude !== 0) {
-      setSelectedLocation(initialLocation);
-      setSearchText(initialLocation.address);
-    } else {
-      setSelectedLocation(null);
-      setSearchText('');
-    }
-    setPredictions([]);
-  }, [initialLocation]);
 
   // Center map when location changes
   useEffect(() => {

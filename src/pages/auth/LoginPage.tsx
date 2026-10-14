@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Typography, TextField, Button, Alert, Link as MuiLink, InputAdornment, IconButton } from '@mui/material';
 import { Email, Visibility, VisibilityOff, Lock } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/auth';
 
 export default function LoginPage() {
   const { login } = useAuth();

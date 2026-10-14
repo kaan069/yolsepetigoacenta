@@ -6,12 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { createInsuranceRequest, sendLocationSms, getPricingQuestions } from '../../../api';
 import { ServiceType } from '../../../types';
-import type { ServiceTypeValue, InsuranceRequestCreatePayload, PricingQuestion } from '../../../types';
+import type { ServiceTypeValue, PricingQuestion } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
+import { WS_BASE_URL } from '../../../config';
 import type { RequestFormState } from './types';
 import { initialFormState } from './types';
 import { serviceTypeOptions, NEEDS_DROPOFF } from './constants';
-import { buildServiceDetails } from './buildServiceDetails';
+import { buildRequestPayload } from './buildRequestPayload';
 import SectionLabel from './SectionLabel';
 import ServiceFields from './ServiceFields';
 import PickupSection from './PickupSection';
@@ -99,38 +100,13 @@ export default function NewRequestPage() {
 
       // Talep henuz olusturulmadiysa once olustur (konum opsiyonel)
       if (!requestId) {
-        const payload: InsuranceRequestCreatePayload = {
-          service_type: form.service_type,
-          insured_name: form.insured_name,
-          insured_phone: form.insured_phone,
-          location_method: 'customer_share',
-          service_details: buildServiceDetails(form),
-        };
-
-        const answersArray = Object.entries(questionAnswers)
-          .filter(([, opts]) => opts.length > 0)
-          .map(([qId, opts]) => ({ question_id: Number(qId), option_ids: opts }));
-        if (answersArray.length > 0) {
-          payload.service_details = { ...payload.service_details, question_answers: answersArray };
-        }
-
-        if (needsDropoff) {
-          if (form.dropoff_address) payload.dropoff_address = form.dropoff_address;
-          if (form.dropoff_latitude) payload.dropoff_latitude = parseFloat(form.dropoff_latitude.toFixed(6));
-          if (form.dropoff_longitude) payload.dropoff_longitude = parseFloat(form.dropoff_longitude.toFixed(6));
-          if (form.estimated_km > 0) payload.estimated_km = form.estimated_km;
-        }
-        if (form.insured_plate) payload.insured_plate = form.insured_plate;
-        if (form.policy_number) payload.policy_number = form.policy_number;
-        if (form.insurance_name) payload.insurance_name = form.insurance_name;
-
-        const res = await createInsuranceRequest(payload);
+        const res = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'customer_share'));
         setRequestId(res.request_id);
         token = res.ws_token ?? null;
         setLocationToken(token);
         if (token) {
           const accessToken = localStorage.getItem('access_token') || '';
-          setLocationWsUrl(`wss://api.yolsepetigo.com/ws/location-share/${token}/?auth=${accessToken}`);
+          setLocationWsUrl(`${WS_BASE_URL}/ws/location-share/${token}/?auth=${accessToken}`);
         }
       }
 
@@ -289,37 +265,7 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      const payload: InsuranceRequestCreatePayload = {
-        service_type: form.service_type,
-        insured_name: form.insured_name,
-        insured_phone: form.insured_phone,
-        location_method: 'manual',
-        pickup_address: form.pickup_address,
-        pickup_latitude: parseFloat(form.pickup_latitude.toFixed(6)),
-        pickup_longitude: parseFloat(form.pickup_longitude.toFixed(6)),
-        service_details: buildServiceDetails(form),
-      };
-
-      // Fiyatlandirma soru cevaplarini service_details icine ekle
-      const answersArray = Object.entries(questionAnswers)
-        .filter(([, opts]) => opts.length > 0)
-        .map(([qId, opts]) => ({ question_id: Number(qId), option_ids: opts }));
-      if (answersArray.length > 0) {
-        payload.service_details = { ...payload.service_details, question_answers: answersArray };
-      }
-
-      if (needsDropoff) {
-        if (form.dropoff_address) payload.dropoff_address = form.dropoff_address;
-        if (form.dropoff_latitude) payload.dropoff_latitude = parseFloat(form.dropoff_latitude.toFixed(6));
-        if (form.dropoff_longitude) payload.dropoff_longitude = parseFloat(form.dropoff_longitude.toFixed(6));
-        if (form.estimated_km > 0) payload.estimated_km = form.estimated_km;
-      }
-
-      if (form.insured_plate) payload.insured_plate = form.insured_plate;
-      if (form.policy_number) payload.policy_number = form.policy_number;
-      if (form.insurance_name) payload.insurance_name = form.insurance_name;
-
-      const response = await createInsuranceRequest(payload);
+      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'manual'));
       navigate(`/panel/requests/${response.request_id}`, {
         state: { trackingToken: response.tracking_token },
       });

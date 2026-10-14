@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DriverOfferInfo, WsMessage } from '../types';
+import { WS_BASE_URL } from '../config';
 
-const WS_BASE = 'wss://api.yolsepetigo.com/ws/requests';
+const WS_BASE = `${WS_BASE_URL}/ws/requests`;
 const MAX_RECONNECT_DELAY = 30000;
 
 interface UseRequestWebSocketOptions {
@@ -22,7 +23,9 @@ export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
 
   // Store callbacks in ref to avoid effect re-runs
   const callbacksRef = useRef(options);
-  callbacksRef.current = options;
+  useEffect(() => {
+    callbacksRef.current = options;
+  });
 
   useEffect(() => {
     mountedRef.current = true;
@@ -34,7 +37,6 @@ export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
         wsRef.current = null;
       }
       clearTimeout(reconnectTimeoutRef.current);
-      setIsConnected(false);
       return;
     }
 
@@ -114,8 +116,9 @@ export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
         wsRef.current.close();
         wsRef.current = null;
       }
+      // onclose mountedRef nedeniyle erken doner; durumu burada sifirla
+      setIsConnected(false);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options.trackingToken, options.enabled]);
 
   return { isConnected };

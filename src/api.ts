@@ -1,7 +1,6 @@
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import {
-  TowTruckRequestForm,
-  CreateRequestResponse,
   RegisterPayload,
   RegisterResponse,
   LoginPayload,
@@ -19,8 +18,6 @@ import {
   AcceptOfferResponse,
   CreatePaymentLinkPayload,
   CreatePaymentLinkResponse,
-  LocationShareInitPayload,
-  LocationShareInitResponse,
   LocationShareStatusResponse,
   SendLocationSmsPayload,
   SendLocationSmsResponse,
@@ -29,79 +26,14 @@ import {
   HakedisListResponse,
 } from './types';
 
-const API_BASE_URL = 'https://api.yolpaketi.com';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-/**
- * OTP kodu gonder
- */
-export const sendOTP = async (phoneNumber: string): Promise<{ success: boolean; message: string }> => {
-  const response = await api.post('/api/otp/send/', {
-    phoneNumber: phoneNumber,
-  });
-  return response.data;
-};
-
-/**
- * OTP kodunu dogrula
- */
-export const verifyOTP = async (phoneNumber: string, code: string): Promise<{ success: boolean; message: string; verificationToken?: string }> => {
-  const response = await api.post('/api/otp/verify/', {
-    phoneNumber: phoneNumber,
-    otpCode: code,
-  });
-  return response.data;
-};
-
-/**
- * Cekici talebi olustur
- */
-export const createTowTruckRequest = async (form: TowTruckRequestForm, verificationToken: string): Promise<CreateRequestResponse> => {
-  // Backend'in beklediği formata dönüştür
-  const payload = {
-    requestedServiceType: 'tow_truck',
-    towTruckDetails: {
-      vehicleType: form.vehicleType,
-    },
-    question_answers: [],
-    pickupLocation: {
-      address: form.pickupAddress,
-      latitude: form.pickupLatitude,
-      longitude: form.pickupLongitude,
-    },
-    dropoffLocation: {
-      address: form.dropoffAddress,
-      latitude: form.dropoffLatitude,
-      longitude: form.dropoffLongitude,
-    },
-    routeInfo: null,
-    estimatedPrice: '0',
-    estimatedKm: 0,
-    createdAt: new Date().toISOString(),
-  };
-
-  const response = await api.post('/requests/create/tow-truck/', payload, {
-    headers: {
-      'X-Verification-Token': verificationToken,
-    },
-  });
-  return response.data;
-};
-
-export default api;
-
 // ==========================================
 // Insurance / Acenta API
 // ==========================================
 
+const INSURANCE_BASE_URL = `${API_BASE_URL}/insurance`;
+
 const insuranceApi = axios.create({
-  baseURL: 'https://api.yolsepetigo.com/insurance',
+  baseURL: INSURANCE_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -118,6 +50,9 @@ const authHeader = () => ({
 });
 
 // --- Token Refresh Interceptor ---
+
+// Bu uclardaki 401 "oturum dustu" degil "bilgiler hatali" demektir; refresh denenmez
+const AUTH_ENDPOINTS = ['/login/', '/register/'];
 
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
@@ -138,7 +73,7 @@ insuranceApi.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !AUTH_ENDPOINTS.includes(originalRequest.url)) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -161,7 +96,8 @@ insuranceApi.interceptors.response.use(
       }
 
       try {
-        const { data } = await insuranceApi.post<TokenRefreshResponse>('/token/refresh/', {
+        // Interceptor'suz axios: refresh 401 donerse kuyruga girip kendini beklemesin
+        const { data } = await axios.post<TokenRefreshResponse>(`${INSURANCE_BASE_URL}/token/refresh/`, {
           refresh_token: refreshTokenStr,
         });
         const newAccessToken = data.tokens.access_token;
@@ -196,11 +132,6 @@ export const registerCompany = async (payload: RegisterPayload): Promise<Registe
 
 export const loginCompany = async (payload: LoginPayload): Promise<LoginResponse> => {
   const response = await insuranceApi.post('/login/', payload);
-  return response.data;
-};
-
-export const refreshToken = async (refresh_token: string): Promise<TokenRefreshResponse> => {
-  const response = await insuranceApi.post('/token/refresh/', { refresh_token });
   return response.data;
 };
 
@@ -265,7 +196,7 @@ export const estimatePrice = async (payload: PricingEstimatePayload): Promise<Pr
 // ==========================================
 
 const mainApi = axios.create({
-  baseURL: 'https://api.yolsepetigo.com',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -311,32 +242,12 @@ export const submitSharedLocation = async (
 };
 
 /**
- * Konum paylasim token durumunu kontrol et (legacy polling fallback)
- */
-export const checkLocationShareStatus = async (
-  token: string,
-): Promise<{ is_used: boolean; latitude?: string; longitude?: string; address?: string }> => {
-  const response = await mainApi.get(`/insurance/location-share/${token}/status/`);
-  return response.data;
-};
-
-/**
  * Konum paylasim snapshot'i - konum + arac gorselleri + durum (public, auth yok)
  */
 export const getLocationShareStatus = async (
   token: string,
 ): Promise<LocationShareStatusResponse> => {
   const response = await mainApi.get(`/insurance/location-share/${token}/status/`);
-  return response.data;
-};
-
-/**
- * Konum paylasimi basla (token al)
- */
-export const initLocationShare = async (payload: LocationShareInitPayload): Promise<LocationShareInitResponse> => {
-  const response = await insuranceApi.post('/location-share/init/', payload, {
-    headers: authHeader(),
-  });
   return response.data;
 };
 

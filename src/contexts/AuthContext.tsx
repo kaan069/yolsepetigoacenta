@@ -1,41 +1,28 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { loginCompany } from '../api';
+import { AuthContext, type AuthUser } from './auth';
 
-export interface AuthUser {
-  id: number;
-  name: string;
-  contact_person: string;
-  contact_email: string;
-}
+const clearStoredSession = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+};
 
-interface AuthContextType {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+// Oturum localStorage'dan senkron okunur; ayri bir yukleme durumuna gerek yok
+const readStoredUser = (): AuthUser | null => {
+  const storedUser = localStorage.getItem('user');
+  const storedToken = localStorage.getItem('access_token');
+  if (!storedUser || !storedToken) return null;
+  try {
+    return JSON.parse(storedUser);
+  } catch {
+    clearStoredSession();
+    return null;
+  }
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('access_token');
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  const [user, setUser] = useState<AuthUser | null>(readStoredUser);
 
   const login = async (email: string, password: string) => {
     const response = await loginCompany({ email, password });
@@ -52,23 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    clearStoredSession();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

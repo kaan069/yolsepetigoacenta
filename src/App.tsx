@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { ThemeProvider, CssBaseline, Box, IconButton } from '@mui/material';
 import { WhatsApp, Email } from '@mui/icons-material';
 import { Routes, Route } from 'react-router-dom';
@@ -6,17 +7,20 @@ import { theme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 import PublicLayout from './layouts/PublicLayout';
 import PanelLayout from './layouts/PanelLayout';
-import HomePage from './pages/public/HomePage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import DashboardPage from './pages/panel/DashboardPage';
-import RequestsPage from './pages/panel/RequestsPage';
-import RequestDetailPage from './pages/panel/RequestDetailPage';
-import NewRequestPage from './pages/panel/NewRequest';
-import PricingPage from './pages/panel/PricingPage';
-import HakedislerPage from './pages/panel/HakedislerPage';
-import SettingsPage from './pages/panel/SettingsPage';
-import LocationSharePage from './pages/public/LocationSharePage';
+import PageLoader from './components/PageLoader';
+
+// Sayfalar ayri chunk'lara bolunur; harita kutuphanesi yalnizca gereken sayfada yuklenir
+const HomePage = lazy(() => import('./pages/public/HomePage'));
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const DashboardPage = lazy(() => import('./pages/panel/DashboardPage'));
+const RequestsPage = lazy(() => import('./pages/panel/RequestsPage'));
+const RequestDetailPage = lazy(() => import('./pages/panel/RequestDetailPage'));
+const NewRequestPage = lazy(() => import('./pages/panel/NewRequest'));
+const PricingPage = lazy(() => import('./pages/panel/PricingPage'));
+const HakedislerPage = lazy(() => import('./pages/panel/HakedislerPage'));
+const SettingsPage = lazy(() => import('./pages/panel/SettingsPage'));
+const LocationSharePage = lazy(() => import('./pages/public/LocationSharePage'));
 
 function App() {
   return (
@@ -28,6 +32,7 @@ function App() {
         autoHideDuration={4000}
       >
       <AuthProvider>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public */}
           <Route element={<PublicLayout />}>
@@ -52,6 +57,7 @@ function App() {
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
+        </Suspense>
 
         {/* Sabit iletisim butonlari */}
         <Box sx={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 1.5, zIndex: 1300 }}>

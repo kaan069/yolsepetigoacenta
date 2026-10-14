@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import { Box, Typography, Button, Container } from '@mui/material';
 import { Login } from '@mui/icons-material';
 import { Outlet, Link } from 'react-router-dom';
+import PageLoader from '../components/PageLoader';
 
 export default function PublicLayout() {
   return (
@@ -79,7 +81,9 @@ export default function PublicLayout() {
 
       {/* Content */}
       <Box sx={{ flex: 1 }}>
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </Box>
 
       {/* Footer */}

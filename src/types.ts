@@ -1,77 +1,3 @@
-// Arac tipi
-export const VehicleType = {
-  Car: 'car',
-  Motorcycle: 'motorcycle',
-  SUV: 'suv',
-  Commercial: 'commercial',
-  Minibus: 'minibus',
-  Truck: 'truck',
-  Tractor: 'tractor',
-} as const;
-
-export type VehicleTypeValue = typeof VehicleType[keyof typeof VehicleType];
-
-// Arac tipi etiketleri
-export const VehicleTypeLabels: Record<VehicleTypeValue, string> = {
-  [VehicleType.Car]: 'Otomobil',
-  [VehicleType.Motorcycle]: 'Motosiklet',
-  [VehicleType.SUV]: 'Arazi Araci / SUV',
-  [VehicleType.Commercial]: 'Ticari Arac',
-  [VehicleType.Minibus]: 'Minibus',
-  [VehicleType.Truck]: 'Kamyon / TIR',
-  [VehicleType.Tractor]: 'Traktor',
-};
-
-// Konum tipi
-export interface Location {
-  address: string;
-  latitude: number;
-  longitude: number;
-}
-
-// Cekici talep formu
-export interface TowTruckRequestForm {
-  // Musteri bilgileri
-  customerName: string;
-  customerPhone: string;
-
-  // Arac bilgileri
-  vehicleType: VehicleTypeValue | '';
-  vehicleBrand: string;
-  vehicleModel: string;
-  vehiclePlate: string;
-
-  // Konum bilgileri
-  pickupAddress: string;
-  pickupLatitude: string;
-  pickupLongitude: string;
-  dropoffAddress: string;
-  dropoffLatitude: string;
-  dropoffLongitude: string;
-
-  // Ek bilgiler
-  isVehicleOperational: boolean;
-  hasKeys: boolean;
-  additionalNotes: string;
-}
-
-// API Response
-export interface CreateRequestResponse {
-  id: number;
-  message: string;
-  status: string;
-  tracking_token: string;
-  tracking_url: string;
-  websocket_url: string;
-}
-
-// API Error
-export interface ApiError {
-  error: string;
-  errorCode?: string;
-  details?: Record<string, string[]>;
-}
-
 // ==========================================
 // Insurance / Acenta Panel Types
 // ==========================================
@@ -455,17 +381,6 @@ export interface CreatePaymentLinkResponse {
 }
 
 // --- Konum Paylasimi ---
-
-export interface LocationShareInitPayload {
-  insured_phone: string;
-}
-
-export interface LocationShareInitResponse {
-  token: string;
-  share_url: string;
-  expires_at: string;
-  ws_url: string;
-}
 
 export interface SendLocationSmsPayload {
   token: string;

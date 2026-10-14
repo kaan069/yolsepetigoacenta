@@ -112,7 +112,9 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
   const terminalRef = useRef(false); // submission_completed | expiry -> reconnect etme
   const locationFilledRef = useRef(false); // formu yalnizca bir kez doldur
   const callbacksRef = useRef(options);
-  callbacksRef.current = options;
+  useEffect(() => {
+    callbacksRef.current = options;
+  });
 
   const { token, wsUrl, enabled } = options;
 
@@ -128,7 +130,6 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
         wsRef.current = null;
       }
       clearTimeout(reconnectTimeoutRef.current);
-      setIsConnected(false);
       return;
     }
 
@@ -280,8 +281,9 @@ export function useLocationShareWebSocket(options: UseLocationShareWebSocketOpti
         wsRef.current.close();
         wsRef.current = null;
       }
+      // onclose mountedRef nedeniyle erken doner; durumu burada sifirla
+      setIsConnected(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, wsUrl, enabled]);
 
   const isWaiting =

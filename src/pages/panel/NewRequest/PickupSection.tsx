@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box, Typography, Button, Alert, CircularProgress,
 } from '@mui/material';
@@ -40,15 +40,11 @@ export default function PickupSection({
 }: PickupSectionProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Acik lightbox index'i, gorsel silindiyse sinirla / bossa kapat
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    if (images.length === 0) {
-      setLightboxIndex(null);
-    } else if (lightboxIndex > images.length - 1) {
-      setLightboxIndex(images.length - 1);
-    }
-  }, [images.length, lightboxIndex]);
+  // Acik lightbox index'i, gorsel silindiyse sinirla / bossa kapat (render sirasinda duzeltilir)
+  if (lightboxIndex !== null) {
+    const clamped = images.length === 0 ? null : Math.min(lightboxIndex, images.length - 1);
+    if (clamped !== lightboxIndex) setLightboxIndex(clamped);
+  }
 
   const sessionActive =
     locationWaiting || locationReceived || isSubmitted || isExpired ||
