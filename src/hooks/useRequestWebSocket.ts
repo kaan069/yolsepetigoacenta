@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { DriverOfferInfo, WsMessage } from '../types';
+import type { AgencyAssignmentEvent, DriverOfferInfo, WsMessage } from '../types';
 import { WS_BASE_URL } from '../config';
 
 const WS_BASE = `${WS_BASE_URL}/ws/requests`;
@@ -11,6 +11,8 @@ interface UseRequestWebSocketOptions {
   onNewOffer: (offer: DriverOfferInfo) => void;
   onOfferWithdrawn: (offerId: number) => void;
   onStatusChange: () => void;
+  // Dogrudan atama olaylari (assignment_offered / declined / expired / cancelled)
+  onAgencyAssignment?: (event: AgencyAssignmentEvent) => void;
 }
 
 export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
@@ -74,6 +76,9 @@ export function useRequestWebSocket(options: UseRequestWebSocketOptions) {
             case 'request_cancelled':
             case 'payment_completed':
               cb.onStatusChange();
+              break;
+            case 'agency_assignment':
+              cb.onAgencyAssignment?.(data);
               break;
           }
         } catch {

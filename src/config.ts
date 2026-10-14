@@ -3,3 +3,6 @@ export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://api.yolsep
 
 // WebSocket adresi API adresinden turetilir (https -> wss, http -> ws)
 export const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
+
+// Harita, adres arama ve mesafe hesabi
+export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';

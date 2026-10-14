@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { createInsuranceRequest, sendLocationSms, getPricingQuestions } from '../../../api';
 import { ServiceType } from '../../../types';
-import type { ServiceTypeValue, PricingQuestion } from '../../../types';
+import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
 import { WS_BASE_URL } from '../../../config';
 import type { RequestFormState } from './types';
@@ -18,10 +18,13 @@ import ServiceFields from './ServiceFields';
 import PickupSection from './PickupSection';
 import DropoffSection from './DropoffSection';
 import PricingQuestions from './PricingQuestions';
+import DispatchModeSection from './DispatchModeSection';
 import type { LocationResult } from '../../../components/MapPickerDialog';
 
 export default function NewRequestPage() {
   const [form, setForm] = useState<RequestFormState>(initialFormState);
+  const [dispatchMode, setDispatchMode] = useState<DispatchMode>('marketplace');
+  const isDirect = dispatchMode === 'agency_direct';
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -100,7 +103,7 @@ export default function NewRequestPage() {
 
       // Talep henuz olusturulmadiysa once olustur (konum opsiyonel)
       if (!requestId) {
-        const res = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'customer_share'));
+        const res = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'customer_share', dispatchMode));
         setRequestId(res.request_id);
         token = res.ws_token ?? null;
         setLocationToken(token);
@@ -125,6 +128,17 @@ export default function NewRequestPage() {
       setLocationSmsLoading(false);
     }
   };
+
+  // Dogrudan atamada musteri konumu gelince harita ekranina gecilebilir
+  const canAssign = isDirect && (locationReceived || !!shareState.location || shareState.isSubmitted);
+  const createdRequestPath = canAssign ? `/panel/requests/${requestId}/assign` : `/panel/requests/${requestId}`;
+
+  // Musteri formu gonderip bitirince (fotograflar dahil) harita ekranina kendiliginden gec
+  useEffect(() => {
+    if (isDirect && requestId && shareState.isSubmitted) {
+      navigate(`/panel/requests/${requestId}/assign`);
+    }
+  }, [isDirect, requestId, shareState.isSubmitted, navigate]);
 
   const needsDropoff = NEEDS_DROPOFF.includes(form.service_type);
 
@@ -253,7 +267,7 @@ export default function NewRequestPage() {
     e.preventDefault();
     // customer_share ile talep zaten olusturulduysa tekrar olusturma, talebe git
     if (requestId) {
-      navigate(`/panel/requests/${requestId}`);
+      navigate(createdRequestPath);
       return;
     }
     setError('');
@@ -265,8 +279,10 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'manual'));
-      navigate(`/panel/requests/${response.request_id}`, {
+      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'manual', dispatchMode));
+      // Dogrudan atamada konum hazir; dogrudan harita ekranina gidilir
+      const path = isDirect ? `/panel/requests/${response.request_id}/assign` : `/panel/requests/${response.request_id}`;
+      navigate(path, {
         state: { trackingToken: response.tracking_token },
       });
     } catch (err: unknown) {
@@ -315,6 +331,10 @@ export default function NewRequestPage() {
               )}
               <TextField fullWidth label="Police Numarasi" value={form.policy_number} onChange={handleChange('policy_number')} />
             </Box>
+
+            <SectionLabel>Dağıtım Yöntemi</SectionLabel>
+
+            <DispatchModeSection value={dispatchMode} onChange={setDispatchMode} locked={!!requestId} />
 
             <SectionLabel>Alis Konumu</SectionLabel>
 
@@ -378,10 +398,10 @@ export default function NewRequestPage() {
             {requestId ? (
               <Button
                 fullWidth type="button" variant="contained" size="large"
-                onClick={() => navigate(`/panel/requests/${requestId}`)}
+                onClick={() => navigate(createdRequestPath)}
                 sx={{ mt: 1 }}
               >
-                {shareState.isSubmitted ? 'Surucuye Yonlendir' : 'Talebi Goruntule'}
+                {canAssign ? 'Sürücü Ata' : shareState.isSubmitted ? 'Surucuye Yonlendir' : 'Talebi Goruntule'}
               </Button>
             ) : (
               <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 1 }}>

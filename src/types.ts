@@ -163,6 +163,7 @@ export interface InsuranceRequestCreatePayload {
   dropoff_longitude?: number;
   estimated_km?: number;
   service_details?: Record<string, unknown>;
+  dispatch_mode?: DispatchMode;
 }
 
 export interface InsuranceRequestCreateResponse {
@@ -172,6 +173,7 @@ export interface InsuranceRequestCreateResponse {
   tracking_url: string;
   location_share_url?: string;
   ws_token?: string;
+  dispatch_mode?: DispatchMode;
   created_at: string;
 }
 
@@ -225,6 +227,10 @@ export interface InsuranceRequestDetail {
     accepted_at: string | null;
     completed_at: string | null;
   };
+  dispatch_mode?: DispatchMode;
+  agency_assignment?: AgencyAssignment | null;
+  // En yeni basta
+  assignment_history?: AgencyAssignment[];
 }
 
 export interface CancelRequestResponse {
@@ -335,7 +341,8 @@ export type WsMessage =
   | WsOfferAccepted
   | WsRequestCompleted
   | WsRequestCancelled
-  | WsPaymentCompleted;
+  | WsPaymentCompleted
+  | AgencyAssignmentEvent;
 
 // --- Fiyatlandirma ---
 
@@ -512,4 +519,161 @@ export interface HakedisListResponse {
     this_month_completed: number;
     commission_rate: number;
   };
+}
+
+// ==========================================
+// Surucu Havuzu ve Dogrudan Atama
+// ==========================================
+
+// marketplace: talep uygun tum suruculere yayinlanir. agency_direct: yalnizca atanan surucu gorur.
+export type DispatchMode = 'marketplace' | 'agency_direct';
+
+// Surucunun verebildigi hizmetler: talep tiplerine ek olarak transfer
+export type DriverServiceType = ServiceTypeValue | 'transfer';
+
+export const DriverServiceLabels: Record<DriverServiceType, string> = {
+  towTruck: 'Çekici',
+  crane: 'Vinç',
+  roadAssistance: 'Yol Yardım',
+  homeToHomeMoving: 'Evden Eve',
+  cityToCity: 'Şehirler Arası',
+  transfer: 'Transfer',
+};
+
+export type LocationSource = 'live' | 'business';
+
+export type AssignmentStatus = 'pending' | 'offered' | 'declined' | 'expired' | 'cancelled';
+
+export const AssignmentStatusLabels: Record<AssignmentStatus, string> = {
+  pending: 'Yanıt bekleniyor',
+  offered: 'Teklif verdi',
+  declined: 'Reddetti',
+  expired: 'Süre doldu',
+  cancelled: 'İptal edildi',
+};
+
+export const AssignmentCancelReasonLabels: Record<string, string> = {
+  reassigned: 'Başka sürücü seçildi',
+  agency_cancelled: 'Acente iptal etti',
+  driver_removed: 'Sürücü listeden çıkarıldı',
+  offer_withdrawn: 'Sürücü teklifini geri çekti',
+  opened_to_marketplace: 'Pazaryerine açıldı',
+  request_cancelled: 'Talep iptal edildi',
+  admin_reverted: 'Yönetici geri aldı',
+  timeout: 'Süre doldu',
+  driver_declined: 'Sürücü reddetti',
+};
+
+export interface AgencyDriverInfo {
+  id: number;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  user_type: DriverServiceType[];
+  is_online: boolean;
+}
+
+export interface DriverLocation {
+  latitude: number;
+  longitude: number;
+  source: LocationSource;
+  // business kaynaginda null
+  updated_at: string | null;
+}
+
+export interface PoolDriver {
+  membership_id: number;
+  source: 'linked' | 'registered';
+  added_at: string;
+  driver: AgencyDriverInfo;
+  license_status: 'pending' | 'approved' | 'rejected' | null;
+  // Bossa surucu atanamaz, haritada gorunmez
+  eligible_services: DriverServiceType[];
+  is_busy: boolean;
+  location: DriverLocation | null;
+  business_address: string | null;
+}
+
+export interface PoolDriverListResponse {
+  count: number;
+  results: PoolDriver[];
+}
+
+export interface DriverMembershipResponse {
+  message: string;
+  membership_id: number;
+  driver: AgencyDriverInfo;
+}
+
+export interface RegisterDriverPayload {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  tc_no?: string;
+  user_type: DriverServiceType[];
+  service_cities?: string[];
+  business_address?: string;
+  business_address_il?: string;
+  business_address_ilce?: string;
+  // 6 ondalikli metin: "40.991000"
+  business_latitude?: string;
+  business_longitude?: string;
+}
+
+export interface AvailableDriver {
+  driver: AgencyDriverInfo;
+  location: DriverLocation | null;
+  distance_km: number | null;
+  vehicles: { id: number; brand: string; model: string; plate_number: string }[];
+}
+
+export interface AvailableDriversResponse {
+  request_id: number;
+  service_type: ServiceTypeValue;
+  customer_location: { latitude: number; longitude: number };
+  radius_km: number | null;
+  // Mesafeye gore sirali; konumsuzlar en sonda
+  drivers: AvailableDriver[];
+}
+
+export interface AgencyAssignment {
+  id: number;
+  request_id: number;
+  status: AssignmentStatus;
+  driver: AgencyDriverInfo;
+  expires_at: string;
+  responded_at: string | null;
+  // Bos ya da AssignmentCancelReasonLabels anahtarlarindan biri
+  cancel_reason: string;
+  created_at: string;
+}
+
+export interface AssignDriverResponse {
+  message: string;
+  assignment: AgencyAssignment;
+}
+
+export interface AssignmentStateResponse {
+  request_id: number;
+  dispatch_mode: DispatchMode;
+  active: AgencyAssignment | null;
+  history: AgencyAssignment[];
+}
+
+export interface OpenToMarketplaceResponse {
+  message: string;
+  request_id: number;
+  dispatch_mode: DispatchMode;
+}
+
+// ws/requests/{tracking_token}/ kanalindaki atama olayi
+export interface AgencyAssignmentEvent {
+  type: 'agency_assignment';
+  event: 'assignment_offered' | 'assignment_declined' | 'assignment_expired' | 'assignment_cancelled';
+  request_id: number;
+  assignment: AgencyAssignment;
+  reason: string | null;
+  // Sadece assignment_offered olayinda dolu
+  offer_id: number | null;
+  estimated_price: string | null;
 }

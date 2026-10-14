@@ -8,12 +8,21 @@ import {
 } from '@mui/material';
 import { Close, Search, LocationOn, MyLocation } from '@mui/icons-material';
 import { APIProvider, Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { GOOGLE_MAPS_API_KEY } from '../config';
 
 export interface LocationResult {
   address: string;
   latitude: number;
   longitude: number;
+  il?: string;
+  ilce?: string;
 }
+
+// Turkiye'de il = administrative_area_level_1, ilce = administrative_area_level_2
+const extractIlIlce = (components: google.maps.GeocoderAddressComponent[] | undefined) => ({
+  il: components?.find((c) => c.types.includes('administrative_area_level_1'))?.long_name,
+  ilce: components?.find((c) => c.types.includes('administrative_area_level_2'))?.long_name,
+});
 
 interface MapPickerDialogProps {
   open: boolean;
@@ -53,7 +62,7 @@ export default function MapPickerDialog({
       }}
     >
       {open && (
-        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+        <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
           <MapPickerDialogContent
             onClose={onClose}
             onSelect={onSelect}
@@ -159,7 +168,7 @@ function MapPickerDialogContent({
     if (!placesService.current) return;
 
     placesService.current.getDetails(
-      { placeId: prediction.place_id, fields: ['geometry', 'formatted_address'] },
+      { placeId: prediction.place_id, fields: ['geometry', 'formatted_address', 'address_components'] },
       (
         place: google.maps.places.PlaceResult | null,
         status: google.maps.places.PlacesServiceStatus,
@@ -168,7 +177,7 @@ function MapPickerDialogContent({
           const lat = parseFloat(place.geometry.location.lat().toFixed(4));
           const lng = parseFloat(place.geometry.location.lng().toFixed(4));
           const address = place.formatted_address || prediction.description;
-          setSelectedLocation({ address, latitude: lat, longitude: lng });
+          setSelectedLocation({ address, latitude: lat, longitude: lng, ...extractIlIlce(place.address_components) });
           setSearchText(address);
           setPredictions([]);
         }
@@ -193,7 +202,7 @@ function MapPickerDialogContent({
         ) => {
           if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
             const address = results[0].formatted_address;
-            setSelectedLocation({ address, latitude: lat, longitude: lng });
+            setSelectedLocation({ address, latitude: lat, longitude: lng, ...extractIlIlce(results[0].address_components) });
             setSearchText(address);
           } else {
             setSelectedLocation({

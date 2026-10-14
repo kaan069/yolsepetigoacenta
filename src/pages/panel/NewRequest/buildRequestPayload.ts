@@ -1,4 +1,4 @@
-import type { InsuranceRequestCreatePayload } from '../../../types';
+import type { DispatchMode, InsuranceRequestCreatePayload } from '../../../types';
 import type { RequestFormState } from './types';
 import { NEEDS_DROPOFF } from './constants';
 import { buildServiceDetails } from './buildServiceDetails';
@@ -8,6 +8,7 @@ export function buildRequestPayload(
   form: RequestFormState,
   questionAnswers: Record<number, number[]>,
   locationMethod: 'manual' | 'customer_share',
+  dispatchMode: DispatchMode,
 ): InsuranceRequestCreatePayload {
   const payload: InsuranceRequestCreatePayload = {
     service_type: form.service_type,
@@ -15,6 +16,7 @@ export function buildRequestPayload(
     insured_phone: form.insured_phone,
     location_method: locationMethod,
     service_details: buildServiceDetails(form),
+    dispatch_mode: dispatchMode,
   };
 
   if (locationMethod === 'manual') {

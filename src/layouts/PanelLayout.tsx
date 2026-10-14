@@ -4,7 +4,7 @@ import {
   ListItemText, Divider, useMediaQuery, useTheme, AppBar, Toolbar,
 } from '@mui/material';
 import {
-  Dashboard, ListAlt, AddCircleOutline, Calculate, AccountBalanceWallet, Settings, Logout,
+  Dashboard, ListAlt, AddCircleOutline, Calculate, AccountBalanceWallet, Settings, Logout, Groups,
   Menu as MenuIcon, ChevronLeft,
 } from '@mui/icons-material';
 import { Outlet, Link, Navigate, useLocation } from 'react-router-dom';
@@ -16,6 +16,7 @@ const DRAWER_WIDTH = 260;
 const navItems = [
   { label: 'Kontrol Paneli', path: '/panel', icon: <Dashboard /> },
   { label: 'Talepler', path: '/panel/requests', icon: <ListAlt /> },
+  { label: 'Sürücülerim', path: '/panel/drivers', icon: <Groups /> },
   { label: 'Yeni Talep', path: '/panel/requests/new', icon: <AddCircleOutline /> },
   { label: 'Fiyat Hesapla', path: '/panel/pricing', icon: <Calculate /> },
   { label: 'Hakedisler', path: '/panel/hakedisler', icon: <AccountBalanceWallet /> },

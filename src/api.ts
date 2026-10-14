@@ -24,7 +24,51 @@ import {
   PricingQuestionsResponse,
   InvoiceResponse,
   HakedisListResponse,
+  PoolDriverListResponse,
+  DriverMembershipResponse,
+  RegisterDriverPayload,
+  AvailableDriversResponse,
+  AssignDriverResponse,
+  AssignmentStateResponse,
+  AgencyAssignment,
+  OpenToMarketplaceResponse,
 } from './types';
+
+// ==========================================
+// Hata Ayristirma
+// ==========================================
+
+export interface ApiErrorInfo {
+  status?: number;
+  // Akis kararlari bu koda gore verilir (orn. DRIVER_BUSY)
+  code?: string;
+  // Kullaniciya gosterilecek Turkce mesaj
+  message?: string;
+  // DRF alan hatalari: { alan: ["mesaj"] } -> { alan: "mesaj" }
+  fieldErrors: Record<string, string>;
+  data: Record<string, unknown>;
+}
+
+export const getApiError = (err: unknown): ApiErrorInfo => {
+  if (!axios.isAxiosError(err) || !err.response) return { fieldErrors: {}, data: {} };
+
+  const raw = err.response.data;
+  const data = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const fieldErrors: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (Array.isArray(value) && typeof value[0] === 'string') fieldErrors[key] = value[0];
+  }
+  const code = data.error_code ?? data.errorCode;
+  const message = data.error ?? data.detail;
+
+  return {
+    status: err.response.status,
+    code: typeof code === 'string' ? code : undefined,
+    message: typeof message === 'string' ? message : undefined,
+    fieldErrors,
+    data,
+  };
+};
 
 // ==========================================
 // Insurance / Acenta API
@@ -288,3 +332,76 @@ export const listHakedisler = async (params?: {
   return response.data;
 };
 
+
+// --- Surucu havuzu ---
+
+export const listPoolDrivers = async (): Promise<PoolDriverListResponse> => {
+  const response = await insuranceApi.get('/drivers/', {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+// Telefon "0532 111 22 33" bicimiyle gelebilir; backend normalize eder
+export const linkDriver = async (phone_number: string): Promise<DriverMembershipResponse> => {
+  const response = await insuranceApi.post('/drivers/link/', { phone_number }, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const registerDriver = async (payload: RegisterDriverPayload): Promise<DriverMembershipResponse> => {
+  const response = await insuranceApi.post('/drivers/register/', payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const removeDriver = async (driverId: number): Promise<{ message: string }> => {
+  const response = await insuranceApi.delete(`/drivers/${driverId}/`, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+// --- Dogrudan atama ---
+
+// radius_km: 0 = sinirsiz
+export const getAvailableDrivers = async (
+  requestId: number,
+  opts: { radius_km?: number; include_offline?: boolean } = {},
+): Promise<AvailableDriversResponse> => {
+  const response = await insuranceApi.get(`/requests/${requestId}/available-drivers/`, {
+    params: { radius_km: opts.radius_km, include_offline: opts.include_offline ? 1 : 0 },
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const assignDriver = async (requestId: number, driver_id: number): Promise<AssignDriverResponse> => {
+  const response = await insuranceApi.post(`/requests/${requestId}/assign-driver/`, { driver_id }, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const getAssignment = async (requestId: number): Promise<AssignmentStateResponse> => {
+  const response = await insuranceApi.get(`/requests/${requestId}/assignment/`, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const cancelAssignment = async (requestId: number): Promise<{ message: string; assignment: AgencyAssignment }> => {
+  const response = await insuranceApi.delete(`/requests/${requestId}/assignment/`, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const openToMarketplace = async (requestId: number): Promise<OpenToMarketplaceResponse> => {
+  const response = await insuranceApi.post(`/requests/${requestId}/open-to-marketplace/`, {}, {
+    headers: authHeader(),
+  });
+  return response.data;
+};

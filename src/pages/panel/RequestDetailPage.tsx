@@ -13,11 +13,13 @@ import { useSnackbar } from 'notistack';
 import {
   getInsuranceRequest, getRequestOffers,
   cancelInsuranceRequest, acceptOffer as acceptOfferApi, extractTrackingToken,
-  createPaymentLink, getInvoice,
+  createPaymentLink, getInvoice, getApiError,
 } from '../../api';
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
-import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse } from '../../types';
+import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse, AgencyAssignmentEvent } from '../../types';
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
+import { assignmentOutcomeMessage, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
+import AssignmentCard from '../../components/AssignmentCard';
 
 // --- Animasyonlar ---
 
@@ -517,6 +519,15 @@ export default function RequestDetailPage() {
       fetchRequest();
       if (trackingToken) fetchOffers(trackingToken);
     }, [fetchRequest, fetchOffers, trackingToken]),
+    onAgencyAssignment: useCallback((event: AgencyAssignmentEvent) => {
+      const reason = event.reason || event.assignment.cancel_reason;
+      if (event.event === 'assignment_offered') {
+        enqueueSnackbar(offeredMessage(event.estimated_price), { variant: 'success' });
+      } else if (!isOwnCancelReason(reason)) {
+        enqueueSnackbar(assignmentOutcomeMessage(event.assignment.status, reason), { variant: 'info' });
+      }
+      fetchRequest();
+    }, [enqueueSnackbar, fetchRequest]),
   });
 
   // --- Handlers ---
@@ -528,8 +539,15 @@ export default function RequestDetailPage() {
       await cancelInsuranceRequest(requestId);
       await fetchRequest();
       setCancelDialogOpen(false);
-    } catch {
-      enqueueSnackbar('Talep iptal edilirken hata olustu', { variant: 'error' });
+    } catch (err) {
+      // 409: talebin durumu bu sirada degisti; guncel durumu goster
+      if (getApiError(err).status === 409) {
+        enqueueSnackbar('Talebin durumu değişti, bilgiler yenilendi', { variant: 'warning' });
+        setCancelDialogOpen(false);
+        fetchRequest();
+      } else {
+        enqueueSnackbar('Talep iptal edilirken hata olustu', { variant: 'error' });
+      }
     } finally {
       setCancelling(false);
     }
@@ -617,6 +635,9 @@ export default function RequestDetailPage() {
     );
   }
 
+  // Dogrudan atama: talep yayinlanmaz, "surucu araniyor" yerine atama karti gosterilir
+  const isDirect = request.dispatch_mode === 'agency_direct';
+
   return (
     <Box sx={{ maxWidth: 700, mx: 'auto' }}>
       <Button component={Link} to="/panel/requests" startIcon={<ArrowBack />} size="small" sx={{ color: '#64748b', fontWeight: 500, mb: 1 }}>
@@ -636,6 +657,13 @@ export default function RequestDetailPage() {
           label={ServiceTypeLabels[request.service_type] || request.service_type}
           variant="outlined" sx={{ fontSize: 12, borderColor: '#e2e8f0', color: '#64748b' }}
         />
+        {isDirect && (
+          <Chip
+            label="Doğrudan atama"
+            variant="outlined"
+            sx={{ fontSize: 12, borderColor: '#bae6fd', color: '#0369a1', bgcolor: '#f0f9ff' }}
+          />
+        )}
         {wsEnabled && (
           <Chip
             label={isConnected ? 'Canli' : 'Baglaniyor...'}
@@ -660,7 +688,9 @@ export default function RequestDetailPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
-      {request.status === 'pending' && offers.filter(o => o.status === 'pending').length === 0 && (
+      {isDirect && <AssignmentCard request={request} onChanged={fetchRequest} />}
+
+      {!isDirect && request.status === 'pending' && offers.filter(o => o.status === 'pending').length === 0 && (
         <MatchingView request={request} />
       )}
       {(request.status === 'awaiting_approval' || (request.status === 'pending' && offers.filter(o => o.status === 'pending').length > 0)) && (
