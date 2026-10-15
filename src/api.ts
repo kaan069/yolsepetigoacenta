@@ -389,10 +389,12 @@ export const removeDriver = async (driverId: number): Promise<{ message: string 
 // radius_km: 0 = sinirsiz
 export const getAvailableDrivers = async (
   requestId: number,
-  opts: { radius_km?: number; include_offline?: boolean } = {},
+  opts: { radius_km?: number } = {},
 ): Promise<AvailableDriversResponse> => {
   const response = await insuranceApi.get(`/requests/${requestId}/available-drivers/`, {
-    params: { radius_km: opts.radius_km, include_offline: opts.include_offline ? 1 : 0 },
+    // Cevrimdisi suruculer her zaman listelenir (is adresinde, gri). Yeni backend include_offline'i
+    // yok sayiyor; eski surum ise 1 gelmezse cevrimdisilari eliyor, bu yuzden her zaman 1 gonderilir.
+    params: { radius_km: opts.radius_km, include_offline: 1 },
     headers: authHeader(),
   });
   return response.data;

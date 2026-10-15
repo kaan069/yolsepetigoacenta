@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Typography, Card, CardContent, Box, TextField, Button, Alert, MenuItem,
 } from '@mui/material';
@@ -8,7 +8,8 @@ import { createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQ
 import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
-import { WS_BASE_URL } from '../../../config';
+import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { WS_BASE_URL, GOOGLE_MAPS_API_KEY } from '../../../config';
 import type { RequestFormState } from './types';
 import { initialFormState } from './types';
 import { serviceTypeOptions, NEEDS_DROPOFF } from './constants';
@@ -22,6 +23,16 @@ import DispatchModeSection from './DispatchModeSection';
 import type { LocationResult } from '../../../components/MapPickerDialog';
 
 export default function NewRequestPage() {
+  // Rota (km + sure) hesabi icin Google Maps sayfa acilir acilmaz yuklenir; harita dialoglari ayni anahtarla
+  // kendi APIProvider'larini kullanir, yukleyici ayni yuklemeyi paylasir.
+  return (
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+      <NewRequestForm />
+    </APIProvider>
+  );
+}
+
+function NewRequestForm() {
   const [form, setForm] = useState<RequestFormState>(initialFormState);
   const [dispatchMode, setDispatchMode] = useState<DispatchMode>('marketplace');
   const isDirect = dispatchMode === 'agency_direct';
@@ -134,75 +145,77 @@ export default function NewRequestPage() {
   }
   if (form.service_type === ServiceType.TowTruck && !form.tw_vehicle_type) missingItems.push('Araç tipini seçin');
 
-  const calculateDistance = useCallback((
-    pickup: { lat: number; lng: number },
-    dropoff: { lat: number; lng: number },
-  ) => {
-    if (typeof google === 'undefined' || !google.maps) return;
+  // Alis -> birakis surus mesafesi ve suresi (sitedeki gibi Google Directions).
+  // Alis musteriden gelse de haritadan secilse de iki konum her degistiginde yeniden hesaplanir.
+  const [routeInfo, setRouteInfo] = useState<{ distanceText: string; durationText: string } | null>(null);
+  const latestRouteKeyRef = useRef<string | null>(null);
+
+  // Rota servisi Google'in "routes" kutuphanesinde; sayfa APIProvider altinda oldugu icin acilista yuklenir
+  const routesLib = useMapsLibrary('routes');
+
+  const calculateRoute = useCallback((pickup: google.maps.LatLngLiteral, dropoff: google.maps.LatLngLiteral) => {
+    if (!routesLib) return;
+    const key = `${pickup.lat},${pickup.lng}>${dropoff.lat},${dropoff.lng}`;
+    latestRouteKeyRef.current = key;
     setDistanceLoading(true);
-    const service = new google.maps.DistanceMatrixService();
-    service.getDistanceMatrix(
+    new routesLib.DirectionsService().route(
       {
-        origins: [pickup],
-        destinations: [dropoff],
-        travelMode: google.maps.TravelMode.DRIVING,
-        unitSystem: google.maps.UnitSystem.METRIC,
+        origin: pickup,
+        destination: dropoff,
+        travelMode: routesLib.TravelMode.DRIVING,
       },
-      (
-        response: google.maps.DistanceMatrixResponse | null,
-        status: google.maps.DistanceMatrixStatus,
-      ) => {
+      (result, status) => {
+        // Bu arada konum degistiyse eski yanit yok sayilir
+        if (latestRouteKeyRef.current !== key) return;
         setDistanceLoading(false);
-        if (status === google.maps.DistanceMatrixStatus.OK && response) {
-          const element = response.rows[0]?.elements[0];
-          if (element?.status === google.maps.DistanceMatrixElementStatus.OK) {
-            const km = Math.round(element.distance.value / 1000);
-            setForm((prev) => ({ ...prev, estimated_km: km }));
-          }
+        const leg = status === routesLib.DirectionsStatus.OK ? result?.routes[0]?.legs[0] : undefined;
+        if (!leg?.distance || !leg.duration) {
+          setRouteInfo(null);
+          setForm((prev) => ({ ...prev, estimated_km: 0 }));
+          return;
         }
-      }
+        setRouteInfo({ distanceText: leg.distance.text, durationText: leg.duration.text });
+        setForm((prev) => ({ ...prev, estimated_km: Math.round(leg.distance!.value / 100) / 10 }));
+      },
     );
-  }, []);
+  }, [routesLib]);
+
+  const pickupLat = form.pickup_latitude;
+  const pickupLng = form.pickup_longitude;
+  const dropoffLat = form.dropoff_latitude;
+  const dropoffLng = form.dropoff_longitude;
+
+  useEffect(() => {
+    if (!pickupLat || !pickupLng || !dropoffLat || !dropoffLng) {
+      latestRouteKeyRef.current = null;
+      return;
+    }
+    calculateRoute({ lat: pickupLat, lng: pickupLng }, { lat: dropoffLat, lng: dropoffLng });
+  }, [pickupLat, pickupLng, dropoffLat, dropoffLng, calculateRoute]);
 
   const handlePickupLocationSelect = (loc: LocationResult) => {
     // Haritadan elle secilen konum musteriden gelmedi; musteri gorseli sart degil
     setPickupFromCustomer(false);
-    setForm((prev) => {
-      const updated = {
-        ...prev,
-        pickup_address: loc.address,
-        pickup_latitude: loc.latitude,
-        pickup_longitude: loc.longitude,
-      };
-      if (updated.dropoff_latitude && updated.dropoff_longitude) {
-        calculateDistance(
-          { lat: loc.latitude, lng: loc.longitude },
-          { lat: updated.dropoff_latitude, lng: updated.dropoff_longitude },
-        );
-      }
-      return updated;
-    });
+    setForm((prev) => ({
+      ...prev,
+      pickup_address: loc.address,
+      pickup_latitude: loc.latitude,
+      pickup_longitude: loc.longitude,
+    }));
   };
 
+  // Mesafe ve sure, konumlar degisince yukaridaki effect ile hesaplanir
   const handleDropoffLocationSelect = (loc: LocationResult) => {
-    setForm((prev) => {
-      const updated = {
-        ...prev,
-        dropoff_address: loc.address,
-        dropoff_latitude: loc.latitude,
-        dropoff_longitude: loc.longitude,
-      };
-      if (updated.pickup_latitude && updated.pickup_longitude) {
-        calculateDistance(
-          { lat: updated.pickup_latitude, lng: updated.pickup_longitude },
-          { lat: loc.latitude, lng: loc.longitude },
-        );
-      }
-      return updated;
-    });
+    setForm((prev) => ({
+      ...prev,
+      dropoff_address: loc.address,
+      dropoff_latitude: loc.latitude,
+      dropoff_longitude: loc.longitude,
+    }));
   };
 
   const clearDropoffLocation = () => {
+    setRouteInfo(null);
     setForm((prev) => ({
       ...prev,
       dropoff_address: '',
@@ -231,6 +244,7 @@ export default function NewRequestPage() {
   const handleServiceTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newType = e.target.value as ServiceTypeValue;
     const willNeedDropoff = NEEDS_DROPOFF.includes(newType);
+    if (!willNeedDropoff) setRouteInfo(null);
 
     setForm((prev) => ({
       ...prev,
@@ -268,7 +282,7 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode));
+      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode, routeInfo));
       // Dogrudan atamada konum hazir; dogrudan harita ekranina gidilir
       const path = isDirect ? `/panel/requests/${response.request_id}/assign` : `/panel/requests/${response.request_id}`;
       navigate(path, {
@@ -358,6 +372,7 @@ export default function NewRequestPage() {
                   dropoffLongitude={form.dropoff_longitude}
                   pickupAddress={form.pickup_address}
                   estimatedKm={form.estimated_km}
+                  estimatedDuration={routeInfo?.durationText}
                   distanceLoading={distanceLoading}
                   dialogOpen={dropoffDialogOpen}
                   onDialogOpen={() => setDropoffDialogOpen(true)}

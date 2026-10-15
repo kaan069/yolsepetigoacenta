@@ -1,5 +1,5 @@
 import {
-  Box, Typography, Button, Chip, IconButton, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup,
+  Box, Typography, Button, Chip, IconButton, ToggleButton, ToggleButtonGroup,
   CircularProgress, Tooltip,
 } from '@mui/material';
 import { Refresh, MyLocation, Groups, PersonOff } from '@mui/icons-material';
@@ -17,11 +17,9 @@ interface DriverListProps {
   loading: boolean;
   emptyState: DriverListEmptyState;
   radiusKm: number;
-  includeOffline: boolean;
   selectedDriverId: number | null;
   assigningId: number | null;
   onRadiusChange: (radiusKm: number) => void;
-  onIncludeOfflineChange: (include: boolean) => void;
   onRefresh: () => void;
   onSelect: (driver: AvailableDriver) => void;
   onAssign: (driver: AvailableDriver) => void;
@@ -45,8 +43,8 @@ function EmptyMessage({ icon, title, description, children }: {
 }
 
 export default function DriverList({
-  drivers, loadedAt, loading, emptyState, radiusKm, includeOffline, selectedDriverId, assigningId,
-  onRadiusChange, onIncludeOfflineChange, onRefresh, onSelect, onAssign, onOpenMarketplace,
+  drivers, loadedAt, loading, emptyState, radiusKm, selectedDriverId, assigningId,
+  onRadiusChange, onRefresh, onSelect, onAssign, onOpenMarketplace,
 }: DriverListProps) {
   const renderBody = () => {
     if (emptyState === 'location_pending') {
@@ -77,9 +75,6 @@ export default function DriverList({
         <EmptyMessage icon={<PersonOff />} title="Bu talep için müsait sürücü yok">
           {radiusKm !== 0 && (
             <Button size="small" variant="outlined" onClick={() => onRadiusChange(0)}>Yarıçapı kaldır</Button>
-          )}
-          {!includeOffline && (
-            <Button size="small" variant="outlined" onClick={() => onIncludeOfflineChange(true)}>Çevrimdışıları göster</Button>
           )}
           <Button size="small" variant="contained" onClick={onOpenMarketplace}>Pazaryerine aç</Button>
         </EmptyMessage>
@@ -179,11 +174,9 @@ export default function DriverList({
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <FormControlLabel
-          control={<Switch size="small" checked={includeOffline} onChange={(e) => onIncludeOfflineChange(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: 13, color: '#334155' }}>Çevrimdışıları da göster</Typography>}
-          sx={{ m: 0 }}
-        />
+        <Typography sx={{ fontSize: 12, color: '#94a3b8' }}>
+          Çevrimdışı sürücüler iş adreslerinde, gri olarak gösterilir.
+        </Typography>
       </Box>
 
       {/* Liste */}

@@ -163,6 +163,10 @@ export interface InsuranceRequestCreatePayload {
   dropoff_latitude?: number;
   dropoff_longitude?: number;
   estimated_km?: number;
+  // Google rota metinleri ("12,4 km", "18 dakika"); TowTruckRequestDetails.route_distance / route_duration.
+  // Acente ucu bunlari henuz kaydetmiyor (backend brief'inde istendi); o zamana kadar yok sayilir.
+  route_distance?: string;
+  route_duration?: string;
   service_details?: Record<string, unknown>;
   dispatch_mode?: DispatchMode;
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Box, Typography, Button, Alert, CircularProgress,
 } from '@mui/material';
-import { MyLocation, Sms, CheckCircle, PhotoLibrary, WarningAmber } from '@mui/icons-material';
+import { MyLocation, Sms, CheckCircle, PhotoLibrary, WarningAmber, SupportAgent, PhotoCamera } from '@mui/icons-material';
 import MapPickerDialog, { type LocationResult } from '../../../components/MapPickerDialog';
 import ImageLightbox from '../../../components/ImageLightbox';
 import type { LocationShareImage } from '../../../types';
@@ -49,6 +49,19 @@ export default function PickupSection({
   const sessionActive =
     locationWaiting || locationReceived || isSubmitted || isExpired ||
     images.length > 0 || maxImages > 0;
+
+  // Musteriye telefonda okunacak adimlar (photo: gorsel adimlari vurgulanir)
+  const guideSteps = [
+    { title: 'SMS ile gelen linki açsın', detail: `${insuredPhone} numarasına gönderilen linke dokunması yeterli` },
+    { title: '"Konumumu Paylaş" butonuna bassın', detail: 'Açılan sayfadaki konum paylaşma butonu' },
+    { title: 'Konum izninde "İzin Ver" desin', detail: 'Tarayıcı konum izni istediğinde reddetmemesi önemli' },
+    {
+      title: 'Aracın fotoğraflarını yüklesin',
+      detail: `Net ve farklı açılardan: ön, arka, yanlar ve hasarlı bölge${maxImages > 0 ? ` (en fazla ${maxImages} adet)` : ''}`,
+      photo: true,
+    },
+    { title: '"Gönder" butonuna bassın', detail: 'Fotoğraflar yüklendikten sonra işlemi tamamlar', photo: true },
+  ];
 
   return (
     <>
@@ -120,16 +133,50 @@ export default function PickupSection({
           <Typography sx={{ fontSize: 12, color: '#a16207', mb: 1.5 }}>
             {insuredPhone} numarasina SMS gonderildi
           </Typography>
-          <Box sx={{ bgcolor: '#fef3c7', borderRadius: 1.5, p: 1.5, mb: 1.5 }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#92400e', mb: 0.5 }}>
-              Musteriyi yonlendirin:
-            </Typography>
-            <Typography component="ul" sx={{ fontSize: 12, color: '#a16207', m: 0, pl: 2, lineHeight: 1.8 }}>
-              <li>SMS ile gelen linki acmasini isteyin</li>
-              <li>Acilan sayfada "Konumumu Paylas" butonuna basmasini soyleyIn</li>
-              <li>Tarayicinin konum izni istediginde "Izin Ver" demesini belirtin</li>
-              <li>Konum basariyla paylasildIginda bu alan otomatik guncellenecektir</li>
-            </Typography>
+          <Box sx={{
+            mb: 1.5, bgcolor: 'white', border: '2px solid #f59e0b', borderRadius: 2,
+            overflow: 'hidden', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.18)',
+          }}>
+            <Box sx={{ bgcolor: '#f59e0b', px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <SupportAgent sx={{ fontSize: 20, color: 'white' }} />
+              <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', letterSpacing: 0.3 }}>
+                Müşteriyi telefonda adım adım yönlendirin
+              </Typography>
+            </Box>
+            <Box component="ol" sx={{ m: 0, p: 1.5, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {guideSteps.map((step, i) => (
+                <Box
+                  component="li" key={step.title}
+                  sx={{
+                    display: 'flex', alignItems: 'flex-start', gap: 1.25,
+                    ...(step.photo && { bgcolor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 1.5, p: 1, mx: -0.5 }),
+                  }}
+                >
+                  <Box sx={{
+                    width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                    bgcolor: step.photo ? '#0ea5e9' : '#f59e0b', color: 'white',
+                    fontSize: 12, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {i + 1}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.4 }}>
+                      {step.title}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: '#64748b', lineHeight: 1.4, mt: 0.25 }}>
+                      {step.detail}
+                    </Typography>
+                  </Box>
+                  {step.photo && <PhotoCamera sx={{ fontSize: 18, color: '#0ea5e9', mt: 0.25 }} />}
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ px: 1.5, py: 1, bgcolor: '#fffbeb', borderTop: '1px solid #fde68a' }}>
+              <Typography sx={{ fontSize: 12, color: '#92400e' }}>
+                Konum ve fotoğraflar geldikçe bu alan otomatik güncellenir.
+              </Typography>
+            </Box>
           </Box>
           <Button
             size="small" variant="text"
@@ -148,6 +195,15 @@ export default function PickupSection({
               Musteri konumu alindi
             </Typography>
           </Box>
+          {!isSubmitted && (
+            <Box sx={{ mt: 1.25, p: 1.25, borderRadius: 1.5, bgcolor: 'white', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <PhotoCamera sx={{ fontSize: 18, color: '#0ea5e9', mt: 0.1 }} />
+              <Typography sx={{ fontSize: 12.5, color: '#0f172a', lineHeight: 1.5 }}>
+                <b>Sırada fotoğraflar var:</b> Müşteriden aynı sayfada aracın fotoğraflarını
+                yükleyip <b>"Gönder"</b> butonuna basmasını isteyin.
+              </Typography>
+            </Box>
+          )}
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>

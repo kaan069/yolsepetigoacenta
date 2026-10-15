@@ -67,7 +67,6 @@ function AssignDriverView() {
   const [resultMessage, setResultMessage] = useState('');
 
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM);
-  const [includeOffline, setIncludeOffline] = useState(false);
   const [driversData, setDriversData] = useState<AvailableDriversResponse | null>(null);
   const [driversLoading, setDriversLoading] = useState(false);
   const [loadedAt, setLoadedAt] = useState(0);
@@ -120,7 +119,7 @@ function AssignDriverView() {
     const seq = ++loadSeqRef.current;
     setDriversLoading(true);
     try {
-      const data = await getAvailableDrivers(requestId, { radius_km: radiusKm, include_offline: includeOffline });
+      const data = await getAvailableDrivers(requestId, { radius_km: radiusKm });
       if (seq !== loadSeqRef.current) return;
       setDriversData(data);
       setLoadedAt(Date.now());
@@ -146,7 +145,7 @@ function AssignDriverView() {
     } finally {
       if (seq === loadSeqRef.current) setDriversLoading(false);
     }
-  }, [requestId, radiusKm, includeOffline, enqueueSnackbar]);
+  }, [requestId, radiusKm, enqueueSnackbar]);
 
   // Ilk acilista ve filtre degisince yukle, haritayi sigdir
   useEffect(() => {
@@ -400,11 +399,9 @@ function AssignDriverView() {
               loading={driversLoading}
               emptyState={emptyState}
               radiusKm={radiusKm}
-              includeOffline={includeOffline}
               selectedDriverId={selectedDriverId}
               assigningId={assigningId}
               onRadiusChange={setRadiusKm}
-              onIncludeOfflineChange={setIncludeOffline}
               onRefresh={() => loadDrivers()}
               onSelect={handleSelectDriver}
               onAssign={handleAssign}

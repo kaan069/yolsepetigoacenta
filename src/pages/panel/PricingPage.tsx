@@ -4,13 +4,23 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { MyLocation, LocationOn, Close } from '@mui/icons-material';
-import { useMapsLibrary } from '@vis.gl/react-google-maps';
+import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { ServiceType } from '../../types';
 import { estimatePrice } from '../../api';
+import { GOOGLE_MAPS_API_KEY } from '../../config';
 import type { ServiceTypeValue, PricingEstimatePayload, PricingEstimateResponse } from '../../types';
 import MapPickerDialog, { type LocationResult } from '../../components/MapPickerDialog';
 
+// useMapsLibrary yalnizca APIProvider icinde calisir; disarida hep null doner ve mesafe hic hesaplanmiyordu
 export default function PricingPage() {
+  return (
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+      <PricingForm />
+    </APIProvider>
+  );
+}
+
+function PricingForm() {
   const [form, setForm] = useState<PricingEstimatePayload>({
     service_type: ServiceType.TowTruck as ServiceTypeValue,
     pickup_latitude: 0,

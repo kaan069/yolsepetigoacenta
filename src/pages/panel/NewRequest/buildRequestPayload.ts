@@ -9,6 +9,7 @@ export function buildRequestPayload(
   form: RequestFormState,
   questionAnswers: Record<number, number[]>,
   dispatchMode: DispatchMode,
+  routeInfo: { distanceText: string; durationText: string } | null,
 ): InsuranceRequestCreatePayload {
   const payload: InsuranceRequestCreatePayload = {
     service_type: form.service_type,
@@ -36,6 +37,10 @@ export function buildRequestPayload(
     if (form.dropoff_latitude) payload.dropoff_latitude = parseFloat(form.dropoff_latitude.toFixed(6));
     if (form.dropoff_longitude) payload.dropoff_longitude = parseFloat(form.dropoff_longitude.toFixed(6));
     if (form.estimated_km > 0) payload.estimated_km = form.estimated_km;
+    if (routeInfo) {
+      payload.route_distance = routeInfo.distanceText;
+      payload.route_duration = routeInfo.durationText;
+    }
   }
 
   if (form.insured_plate) payload.insured_plate = form.insured_plate;

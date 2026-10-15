@@ -105,3 +105,19 @@ Sürücü aracındaki izinli değer ise `'tractor'` (`core/validators.py` → `v
 **İstenen:** Talep tarafında da `'tractor'` kullanılsın. `type_map` içinde `'traktor'`, `'traktör'` ve `'tractor'` değerlerinin hepsi `'tractor'`a eşlensin; `valid_types` içinde `'traktor'` yerine `'tractor'` olsun. Mevcut kayıtlarda `vehicle_type='traktor'` olan çekici talepleri `'tractor'` yapılsın.
 
 Acente paneli bu düzeltme gelene kadar traktör seçeneğini göstermiyor. Panel artık backend'in kodlarını doğrudan gönderiyor: `car`, `suv`, `commercial`, `minibus`, `motorcycle`, `truck`. Önceden gönderdiği `pickup`, `van` ve `bus` değerleri tanınmadığı için `car` olarak kaydediliyordu.
+
+---
+
+## Ek 2: Acente talebinde rota süresi kaydedilmiyor
+
+`TowTruckRequestDetails` modelinde `route_distance` ve `route_duration` alanları var, ama acente talep oluşturma ucu (`POST /insurance/requests/create/`, `CreateInsuranceRequestSerializer`) bu alanları almıyor. `_create_service_details` de yalnızca `estimated_km` alanını yazıyor.
+
+Acente paneli artık alış → bırakış rotasını Google Directions ile hesaplıyor ve talep oluştururken şunları gönderiyor:
+- `estimated_km` (sayı, örn. `12.4`). Bugün de kaydediliyor.
+- `route_distance` (metin, örn. `"12,4 km"`)
+- `route_duration` (metin, örn. `"18 dakika"`)
+
+**İstenen:**
+- `CreateInsuranceRequestSerializer` bu iki alanı isteğe bağlı metin olarak kabul etsin.
+- `_create_service_details`, çekici (ve alanı olan diğer hizmet tipleri) için bu değerleri detay kaydına yazsın.
+- Gelmezse boş kalsın; mevcut davranış bozulmaz.

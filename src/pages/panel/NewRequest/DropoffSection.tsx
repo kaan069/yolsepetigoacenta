@@ -10,6 +10,8 @@ interface DropoffSectionProps {
   dropoffLongitude: number;
   pickupAddress: string;
   estimatedKm: number;
+  // Google'in surus suresi metni ("18 dakika")
+  estimatedDuration?: string;
   distanceLoading: boolean;
   dialogOpen: boolean;
   onDialogOpen: () => void;
@@ -20,7 +22,7 @@ interface DropoffSectionProps {
 
 export default function DropoffSection({
   dropoffAddress, dropoffLatitude, dropoffLongitude,
-  pickupAddress, estimatedKm, distanceLoading,
+  pickupAddress, estimatedKm, estimatedDuration, distanceLoading,
   dialogOpen, onDialogOpen, onDialogClose, onLocationSelect, onClear,
 }: DropoffSectionProps) {
   return (
@@ -103,7 +105,10 @@ export default function DropoffSection({
             </>
           ) : estimatedKm ? (
             <Typography sx={{ fontSize: 13, color: '#0f172a' }}>
-              <strong>{estimatedKm} km</strong>
+              <strong>
+                {new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(estimatedKm)} km
+                {estimatedDuration && ` · ~${estimatedDuration}`}
+              </strong>
               <Typography component="span" sx={{ fontSize: 12, color: '#94a3b8', ml: 1 }}>
                 {pickupAddress?.split(',')[0]} → {dropoffAddress?.split(',')[0]}
               </Typography>
