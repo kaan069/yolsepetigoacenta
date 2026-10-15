@@ -581,9 +581,35 @@ export interface DriverLocation {
   updated_at: string | null;
 }
 
+// Dokumandaki VehicleType; talepteki "vehicle_type" alanlariyla karismasin diye boyle adlandirildi
+export type DriverVehicleType = 'towTruck' | 'crane' | 'roadAssistance' | 'moving' | 'transfer';
+
+export const DriverVehicleTypeLabels: Record<DriverVehicleType, string> = {
+  towTruck: 'Çekici',
+  crane: 'Vinç',
+  roadAssistance: 'Yol Yardım',
+  moving: 'Nakliye',
+  transfer: 'Transfer',
+};
+
+// Surucunun is almaya hazir olmasi icin eksik ya da onay bekleyen adim
+export interface MissingStep {
+  step: 'license' | 'company_info' | 'payment_method' | 'vehicle';
+  status: 'missing' | 'pending' | 'rejected' | 'documents_missing';
+  // Sadece step === 'vehicle' iken dolu
+  vehicle_type: DriverVehicleType | null;
+  // Turkce, dogrudan gosterilebilir
+  message: string;
+  rejection_reason: string | null;
+}
+
 export interface PoolDriver {
   membership_id: number;
   source: 'linked' | 'registered';
+  // true: acente panelden kaydetti, belge ve bilgilerini duzenleyebilir
+  managed: boolean;
+  // Bossa surucu is almaya hazir
+  missing_steps: MissingStep[];
   added_at: string;
   driver: AgencyDriverInfo;
   license_status: 'pending' | 'approved' | 'rejected' | null;
@@ -677,3 +703,89 @@ export interface AgencyAssignmentEvent {
   offer_id: number | null;
   estimated_price: string | null;
 }
+
+// ==========================================
+// Yonetilen Surucu: Belge ve Bilgiler (sadece managed === true)
+// ==========================================
+
+export type DocumentVerificationStatus = 'pending' | 'approved' | 'rejected';
+
+export interface DriverLicense {
+  id: number;
+  license_photo: string;
+  tax_plate_photo: string;
+  k_document_photo: string | null;
+  verification_status: DocumentVerificationStatus;
+  rejection_reason: string | null;
+}
+
+export interface DriverCompanyInfo {
+  id: number;
+  company_name: string;
+  tax_number: string;
+}
+
+// IBAN asla tam donmez
+export interface DriverPaymentMethod {
+  account_holder_name: string;
+  iban_masked: string;
+  updated_at: string;
+}
+
+export interface DriverVehicle {
+  id: number;
+  brand: string;
+  model: string;
+  year: number;
+  plate_number: string;
+  verification_status: 'no_document' | DocumentVerificationStatus;
+  verification_rejection_reason: string | null;
+  // Tipe ozel alanlar (max_height, transfer_type, ...)
+  [key: string]: unknown;
+}
+
+export interface DriverVehicleEntry {
+  vehicle_type: DriverVehicleType;
+  vehicle: DriverVehicle;
+  // Dosya URL'leri + verification_status
+  documents: Record<string, unknown> | null;
+}
+
+export interface DriverProfile {
+  driver: AgencyDriverInfo & {
+    service_cities: string[];
+    business_address: string | null;
+    business_address_il: string | null;
+    business_address_ilce: string | null;
+    business_latitude: number | null;
+    business_longitude: number | null;
+  };
+  license: DriverLicense | null;
+  company_info: DriverCompanyInfo | null;
+  payment_method: DriverPaymentMethod | null;
+  vehicles: DriverVehicleEntry[];
+  missing_steps: MissingStep[];
+}
+
+// Telefon degistirilemez (giris kullanici adi)
+export type UpdateDriverInfoPayload = Partial<Omit<RegisterDriverPayload, 'phone_number'>>;
+
+// Profil disindaki her basarili yanitta guncel missing_steps doner
+interface DriverStepsResponse {
+  message: string;
+  missing_steps: MissingStep[];
+}
+
+export interface DriverLicenseResponse extends DriverStepsResponse {
+  license: DriverLicense;
+}
+
+export interface DriverCompanyInfoResponse extends DriverStepsResponse {
+  company_info: DriverCompanyInfo;
+}
+
+export interface DriverPaymentMethodResponse extends DriverStepsResponse {
+  payment_method: DriverPaymentMethod;
+}
+
+export interface DriverVehicleResponse extends DriverStepsResponse, DriverVehicleEntry {}

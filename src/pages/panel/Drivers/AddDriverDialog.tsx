@@ -4,6 +4,7 @@ import {
   useMediaQuery, useTheme,
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import LinkDriverTab from './LinkDriverTab';
 import RegisterDriverTab from './RegisterDriverTab';
@@ -19,10 +20,12 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabValue>('link');
   // Telefon iki sekmede ortak; sekme degisince kaybolmaz
   const [phone, setPhone] = useState('');
-  const [registered, setRegistered] = useState(false);
+  // Kayit basariliysa yeni surucunun id'si; belgeleri girmek icin detay sayfasina gidilir
+  const [registeredDriverId, setRegisteredDriverId] = useState<number | null>(null);
 
   const switchTab = (next: TabValue, phoneNumber: string) => {
     setPhone(phoneNumber);
@@ -35,9 +38,9 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
     onClose();
   };
 
-  const handleRegistered = () => {
+  const handleRegistered = (driverId: number) => {
     onAdded();
-    setRegistered(true);
+    setRegisteredDriverId(driverId);
   };
 
   return (
@@ -56,16 +59,26 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
         </IconButton>
       </DialogTitle>
 
-      {registered ? (
+      {registeredDriverId !== null ? (
         <>
           <DialogContent>
             <Alert severity="success" sx={{ borderRadius: 2 }}>
-              Sürücü kaydedildi. Giriş bilgileri SMS ile gönderildi. Sürücü uygulamadan ehliyet, araç belgeleri,
-              şirket bilgisi ve IBAN'ını girip onaylandığında atanabilir.
+              Sürücü kaydedildi. Giriş bilgileri SMS ile gönderildi. Belgeleri ve bilgileri şimdi siz girebilir
+              ya da sürücünün uygulamadan girmesini bekleyebilirsiniz.
             </Alert>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button variant="contained" onClick={onClose} sx={{ borderRadius: 2 }}>Tamam</Button>
+            <Button onClick={onClose} sx={{ color: '#64748b' }}>Kapat</Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                onClose();
+                navigate(`/panel/drivers/${registeredDriverId}`);
+              }}
+              sx={{ borderRadius: 2 }}
+            >
+              Belgeleri şimdi gir
+            </Button>
           </DialogActions>
         </>
       ) : (

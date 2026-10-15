@@ -6,3 +6,7 @@ export const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
 
 // Harita, adres arama ve mesafe hesabi
 export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+// Backend dosya adreslerini goreli ("/media/...") dondurebilir; API adresiyle tamamlanir
+export const toMediaUrl = (path: string) =>
+  /^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;

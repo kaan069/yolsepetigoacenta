@@ -1,13 +1,9 @@
 import { useState } from 'react';
-import { Box, TextField, Button, Alert, Chip, Typography, Autocomplete, IconButton } from '@mui/material';
-import { Place, Close } from '@mui/icons-material';
+import { Box, TextField, Button, Alert } from '@mui/material';
 import { registerDriver, getApiError } from '../../../api';
-import { DriverServiceLabels } from '../../../types';
 import type { DriverServiceType, RegisterDriverPayload } from '../../../types';
-import { TURKEY_CITIES, filterCities } from '../../../data/turkeyCities';
-import MapPickerDialog, { type LocationResult } from '../../../components/MapPickerDialog';
-
-const serviceOptions = Object.keys(DriverServiceLabels) as DriverServiceType[];
+import type { LocationResult } from '../../../components/MapPickerDialog';
+import { ServiceTypeChips, CityAutocomplete, BusinessAddressField } from '../../../components/DriverFields';
 
 // Formda alan altinda gosterilen hatalar; digerleri genel uyari olarak gosterilir
 const FORM_FIELDS = ['first_name', 'last_name', 'phone_number', 'tc_no', 'user_type', 'service_cities'];
@@ -15,7 +11,7 @@ const FORM_FIELDS = ['first_name', 'last_name', 'phone_number', 'tc_no', 'user_t
 interface RegisterDriverTabProps {
   phone: string;
   onPhoneChange: (phone: string) => void;
-  onRegistered: () => void;
+  onRegistered: (driverId: number) => void;
   onLinkInstead: (phone: string) => void;
 }
 
@@ -33,14 +29,9 @@ export default function RegisterDriverTab({ phone, onPhoneChange, onRegistered, 
   const [services, setServices] = useState<DriverServiceType[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [business, setBusiness] = useState<LocationResult | null>(null);
-  const [mapOpen, setMapOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<Notice | null>(null);
-
-  const toggleService = (service: DriverServiceType) => {
-    setServices((prev) => (prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]));
-  };
 
   const validate = () => {
     const errors: Record<string, string> = {};
@@ -77,8 +68,8 @@ export default function RegisterDriverTab({ phone, onPhoneChange, onRegistered, 
 
     setLoading(true);
     try {
-      await registerDriver(payload);
-      onRegistered();
+      const response = await registerDriver(payload);
+      onRegistered(response.driver.id);
     } catch (err) {
       const apiError = getApiError(err);
       if (apiError.code === 'PHONE_EXISTS') {
@@ -127,66 +118,9 @@ export default function RegisterDriverTab({ phone, onPhoneChange, onRegistered, 
         />
       </Box>
 
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 1 }}>Hizmet tipleri *</Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: fieldErrors.user_type ? 0.5 : 2 }}>
-        {serviceOptions.map((service) => (
-          <Chip
-            key={service}
-            label={DriverServiceLabels[service]}
-            onClick={() => toggleService(service)}
-            color={services.includes(service) ? 'primary' : 'default'}
-            variant={services.includes(service) ? 'filled' : 'outlined'}
-            sx={{ cursor: 'pointer' }}
-          />
-        ))}
-      </Box>
-      {fieldErrors.user_type && (
-        <Typography sx={{ fontSize: 12, color: 'error.main', mb: 2 }}>{fieldErrors.user_type}</Typography>
-      )}
-
-      <Autocomplete
-        multiple
-        options={TURKEY_CITIES}
-        value={cities}
-        onChange={(_, value) => setCities(value)}
-        filterOptions={(options, state) => filterCities(options, state.inputValue)}
-        filterSelectedOptions
-        noOptionsText="İl bulunamadı"
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Hizmet şehirleri"
-            placeholder={cities.length === 0 ? 'İl seçin' : ''}
-            error={!!fieldErrors.service_cities}
-            helperText={fieldErrors.service_cities}
-          />
-        )}
-        sx={{ mb: 2 }}
-      />
-
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 1 }}>İş adresi</Typography>
-      {business ? (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, mb: 1 }}>
-          <Place sx={{ color: '#0ea5e9', mt: 0.25 }} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{business.address}</Typography>
-            <Typography sx={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
-              {business.latitude.toFixed(6)}, {business.longitude.toFixed(6)}
-            </Typography>
-          </Box>
-          <Button size="small" onClick={() => setMapOpen(true)}>Değiştir</Button>
-          <IconButton size="small" onClick={() => setBusiness(null)} title="Kaldır">
-            <Close fontSize="small" />
-          </IconButton>
-        </Box>
-      ) : (
-        <Button variant="outlined" startIcon={<Place />} onClick={() => setMapOpen(true)} sx={{ mb: 1, borderRadius: 2 }}>
-          Haritadan seç
-        </Button>
-      )}
-      <Typography sx={{ fontSize: 12, color: '#94a3b8', mb: 2 }}>
-        Sürücü uygulamadan konum göndermediği sürece haritada bu adreste görünür. Seçmeniz önerilir.
-      </Typography>
+      <ServiceTypeChips value={services} onChange={setServices} error={fieldErrors.user_type} />
+      <CityAutocomplete value={cities} onChange={setCities} error={fieldErrors.service_cities} />
+      <BusinessAddressField value={business} onChange={setBusiness} />
 
       {notice && (
         <Alert severity={notice.severity} sx={{ mb: 2, borderRadius: 2 }}>
@@ -210,14 +144,6 @@ export default function RegisterDriverTab({ phone, onPhoneChange, onRegistered, 
       <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} sx={{ borderRadius: 2 }}>
         {loading ? 'Kaydediliyor...' : 'Sürücüyü Kaydet'}
       </Button>
-
-      <MapPickerDialog
-        open={mapOpen}
-        onClose={() => setMapOpen(false)}
-        onSelect={setBusiness}
-        initialLocation={business}
-        title="İş Adresi Seç"
-      />
     </Box>
   );
 }

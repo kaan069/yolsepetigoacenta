@@ -19,6 +19,7 @@ const RequestDetailPage = lazy(() => import('./pages/panel/RequestDetailPage'));
 const NewRequestPage = lazy(() => import('./pages/panel/NewRequest'));
 const AssignDriverPage = lazy(() => import('./pages/panel/AssignDriver'));
 const DriversPage = lazy(() => import('./pages/panel/Drivers'));
+const DriverDetailPage = lazy(() => import('./pages/panel/DriverDetail'));
 const PricingPage = lazy(() => import('./pages/panel/PricingPage'));
 const HakedislerPage = lazy(() => import('./pages/panel/HakedislerPage'));
 const SettingsPage = lazy(() => import('./pages/panel/SettingsPage'));
@@ -56,6 +57,7 @@ function App() {
             <Route path="requests/:id" element={<RequestDetailPage />} />
             <Route path="requests/:id/assign" element={<AssignDriverPage />} />
             <Route path="drivers" element={<DriversPage />} />
+            <Route path="drivers/:id" element={<DriverDetailPage />} />
             <Route path="pricing" element={<PricingPage />} />
             <Route path="hakedisler" element={<HakedislerPage />} />
             <Route path="settings" element={<SettingsPage />} />

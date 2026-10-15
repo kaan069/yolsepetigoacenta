@@ -5,6 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
 import { PersonAdd, Groups } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { listPoolDrivers, removeDriver, getApiError } from '../../../api';
 import { DriverServiceLabels } from '../../../types';
@@ -13,18 +14,16 @@ import { driverFullName, describeLocation, getPoolDriverStatus } from '../../../
 import type { PoolDriverStatus } from '../../../utils/drivers';
 import AddDriverDialog from './AddDriverDialog';
 
-const statusChips: Record<PoolDriverStatus, { label: string; bg: string; color: string; hint?: string }> = {
-  pending_approval: {
-    label: 'Onay bekliyor', bg: '#f1f5f9', color: '#64748b',
-    hint: 'Sürücü uygulamadan belgelerini yükleyip onaylandığında atanabilir.',
-  },
+const statusChips: Record<PoolDriverStatus, { label: string; bg: string; color: string }> = {
+  pending_approval: { label: 'Eksik / onay bekliyor', bg: '#f1f5f9', color: '#64748b' },
   busy: { label: 'Meşgul', bg: '#ffedd5', color: '#c2410c' },
   offline: { label: 'Çevrimdışı', bg: '#f1f5f9', color: '#64748b' },
   available: { label: 'Müsait', bg: '#dcfce7', color: '#16a34a' },
 };
 
-function StatusChip({ poolDriver }: { poolDriver: PoolDriver }) {
-  const status = statusChips[getPoolDriverStatus(poolDriver)];
+function StatusCell({ poolDriver }: { poolDriver: PoolDriver }) {
+  const statusKey = getPoolDriverStatus(poolDriver);
+  const status = statusChips[statusKey];
   const chip = (
     <Chip
       label={status.label}
@@ -32,7 +31,38 @@ function StatusChip({ poolDriver }: { poolDriver: PoolDriver }) {
       sx={{ fontSize: 11, fontWeight: 600, height: 24, bgcolor: status.bg, color: status.color }}
     />
   );
-  return status.hint ? <Tooltip title={status.hint} arrow>{chip}</Tooltip> : chip;
+  if (statusKey !== 'pending_approval') return chip;
+
+  // Eksik adimlar tooltip'te; kaydedilen surucude acente tamamlayabilir, eklenende surucu tamamlar
+  const steps = poolDriver.missing_steps ?? [];
+  return (
+    <Box>
+      {steps.length > 0 ? (
+        <Tooltip
+          arrow
+          title={(
+            <Box component="ul" sx={{ m: 0, pl: 2 }}>
+              {steps.map((step, index) => <li key={index}>{step.message}</li>)}
+            </Box>
+          )}
+        >
+          {chip}
+        </Tooltip>
+      ) : chip}
+      {poolDriver.managed ? (
+        <Button
+          component={Link}
+          to={`/panel/drivers/${poolDriver.driver.id}`}
+          size="small"
+          sx={{ display: 'block', mt: 0.5, p: 0, minWidth: 0, fontSize: 12, fontWeight: 600, textTransform: 'none' }}
+        >
+          Belgeleri tamamla
+        </Button>
+      ) : (
+        <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5 }}>Sürücü kendi uygulamasından tamamlamalı.</Typography>
+      )}
+    </Box>
+  );
 }
 
 export default function DriversPage() {
@@ -159,7 +189,7 @@ export default function DriversPage() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <StatusChip poolDriver={item} />
+                        <StatusCell poolDriver={item} />
                       </TableCell>
                       <TableCell>
                         <Typography sx={{ fontSize: 13, color: '#334155' }}>{describeLocation(item.location, loadedAt)}</Typography>
@@ -176,9 +206,17 @@ export default function DriversPage() {
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Button size="small" color="error" onClick={() => setRemoveTarget(item)} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          Listeden çıkar
-                        </Button>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                          {/* Belge ve bilgileri yalnizca panelden kaydedilen surucude duzenlenebilir */}
+                          {item.managed && (
+                            <Button component={Link} to={`/panel/drivers/${item.driver.id}`} size="small" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              Düzenle
+                            </Button>
+                          )}
+                          <Button size="small" color="error" onClick={() => setRemoveTarget(item)} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            Listeden çıkar
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

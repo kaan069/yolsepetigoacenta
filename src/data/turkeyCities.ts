@@ -23,3 +23,9 @@ export const filterCities = (options: string[], query: string) => {
   const needle = normalizeForSearch(query.trim());
   return needle ? options.filter((city) => normalizeForSearch(city).includes(needle)) : options;
 };
+
+// Backend sehirleri normalize ederek doner ("istanbul"); listedeki gorunen ada ("İstanbul") cevir
+export const toCityDisplayName = (city: string) =>
+  TURKEY_CITIES.find((option) => normalizeForSearch(option) === normalizeForSearch(city)) ?? city;
+
+export const isSameCity = (a: string, b: string) => normalizeForSearch(a) === normalizeForSearch(b);

@@ -32,6 +32,13 @@ import {
   AssignmentStateResponse,
   AgencyAssignment,
   OpenToMarketplaceResponse,
+  DriverProfile,
+  UpdateDriverInfoPayload,
+  DriverLicenseResponse,
+  DriverCompanyInfoResponse,
+  DriverPaymentMethodResponse,
+  DriverVehicleType,
+  DriverVehicleResponse,
 } from './types';
 
 // ==========================================
@@ -403,5 +410,105 @@ export const openToMarketplace = async (requestId: number): Promise<OpenToMarket
   const response = await insuranceApi.post(`/requests/${requestId}/open-to-marketplace/`, {}, {
     headers: authHeader(),
   });
+  return response.data;
+};
+
+// --- Yonetilen surucu: belge ve bilgiler (sadece managed === true; aksi halde 403 DRIVER_NOT_MANAGED) ---
+
+// insuranceApi varsayilan olarak JSON gonderir; axios 1.x bu baslikla FormData'yi JSON'a cevirir ve
+// dosyalar gitmez. Dosya yuklemede baslik ezilir; tarayici boundary'yi kendisi ekler.
+const multipartHeaders = () => ({ ...authHeader(), 'Content-Type': 'multipart/form-data' });
+
+const toFormData = (files: Record<string, File | undefined>) => {
+  const form = new FormData();
+  Object.entries(files).forEach(([key, file]) => {
+    if (file) form.append(key, file);
+  });
+  return form;
+};
+
+export const getDriverProfile = async (driverId: number): Promise<DriverProfile> => {
+  const response = await insuranceApi.get(`/drivers/${driverId}/profile/`, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+// Sadece degisen alanlar gonderilir; yanit guncel profilin tamamidir
+export const updateDriverInfo = async (
+  driverId: number,
+  payload: UpdateDriverInfoPayload,
+): Promise<DriverProfile & { message: string }> => {
+  const response = await insuranceApi.patch(`/drivers/${driverId}/profile/`, payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+// Ehliyet ve vergi levhasi birlikte zorunlu; yeniden yukleme onayi sifirlar
+export const uploadDriverLicense = async (
+  driverId: number,
+  files: { license_photo: File; tax_plate_photo: File; k_document_photo?: File },
+): Promise<DriverLicenseResponse> => {
+  const response = await insuranceApi.post(`/drivers/${driverId}/license/`, toFormData(files), {
+    headers: multipartHeaders(),
+  });
+  return response.data;
+};
+
+export const saveDriverCompanyInfo = async (
+  driverId: number,
+  payload: { company_name?: string; tax_number?: string },
+): Promise<DriverCompanyInfoResponse> => {
+  const response = await insuranceApi.put(`/drivers/${driverId}/company-info/`, payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const saveDriverPaymentMethod = async (
+  driverId: number,
+  payload: { account_holder_name?: string; iban?: string },
+): Promise<DriverPaymentMethodResponse> => {
+  const response = await insuranceApi.put(`/drivers/${driverId}/payment-method/`, payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const createDriverVehicle = async (
+  driverId: number,
+  vehicleType: DriverVehicleType,
+  payload: Record<string, unknown>,
+): Promise<DriverVehicleResponse> => {
+  const response = await insuranceApi.post(`/drivers/${driverId}/vehicles/${vehicleType}/`, payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const updateDriverVehicle = async (
+  driverId: number,
+  vehicleType: DriverVehicleType,
+  vehicleId: number,
+  payload: Record<string, unknown>,
+): Promise<DriverVehicleResponse> => {
+  const response = await insuranceApi.patch(`/drivers/${driverId}/vehicles/${vehicleType}/${vehicleId}/`, payload, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+export const uploadDriverVehicleDocuments = async (
+  driverId: number,
+  vehicleType: DriverVehicleType,
+  vehicleId: number,
+  files: Record<string, File | undefined>,
+): Promise<DriverVehicleResponse> => {
+  const response = await insuranceApi.post(
+    `/drivers/${driverId}/vehicles/${vehicleType}/${vehicleId}/documents/`,
+    toFormData(files),
+    { headers: multipartHeaders() },
+  );
   return response.data;
 };
