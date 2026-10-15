@@ -11,18 +11,24 @@ import FileField from '../../../components/FileField';
 import { documentFields } from './vehicleConfig';
 import { VerificationChip } from './parts';
 import { otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 interface VehicleDocumentsDialogProps {
   driverId: number;
   entry: DriverVehicleEntry;
   onClose: () => void;
   onSaved: (entry: DriverVehicleEntry, steps: MissingStep[]) => void;
+  // VEHICLE_NOT_FOUND: arac artik yok; liste yenilenir
+  onVehicleMissing: () => void;
 }
 
-export default function VehicleDocumentsDialog({ driverId, entry, onClose, onSaved }: VehicleDocumentsDialogProps) {
+export default function VehicleDocumentsDialog({
+  driverId, entry, onClose, onSaved, onVehicleMissing,
+}: VehicleDocumentsDialogProps) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -68,7 +74,11 @@ export default function VehicleDocumentsDialog({ driverId, entry, onClose, onSav
       onClose();
     } catch (err) {
       const apiError = getApiError(err);
-      if (apiError.code === 'FILES_REQUIRED') {
+      if (redirectIfDriverGone(apiError)) return;
+      if (apiError.code === 'VEHICLE_NOT_FOUND') {
+        enqueueSnackbar(apiError.message || 'Araç bulunamadı', { variant: 'warning' });
+        onVehicleMissing();
+      } else if (apiError.code === 'FILES_REQUIRED') {
         setNotice(apiError.message || 'Yüklemek için en az bir belge seçin');
       } else {
         setFieldErrors(apiError.fieldErrors);
@@ -107,6 +117,13 @@ export default function VehicleDocumentsDialog({ driverId, entry, onClose, onSav
             : 'Araç fotoğrafı her yüklemede zorunludur, sigorta belgesi isteğe bağlıdır.'}
           {' '}JPG, PNG, WEBP ya da PDF; en fazla 5 MB. Yüklenen belgeler admin onayına düşer.
         </Typography>
+
+        {/* Tek bir belge eklemek bile onaylı aracı yeniden onaya dusurur (transfer dahil) */}
+        {vehicle.verification_status === 'approved' && (
+          <Alert severity="warning" sx={{ mb: 1, borderRadius: 2 }}>
+            Belgeleri değiştirirseniz araç yeniden onaya düşer. Admin onaylayana kadar sürücü bu araçla iş alamaz.
+          </Alert>
+        )}
 
         {fields.map((field) => (
           <FileField

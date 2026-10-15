@@ -12,6 +12,7 @@ const MAX_FIT_ZOOM = 15;
 const COLORS = {
   customer: '#ef4444',
   live: '#16a34a',
+  lastKnown: '#f97316',
   business: '#2563eb',
   offline: '#94a3b8',
 };
@@ -132,9 +133,13 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
       {drivers.map(({ driver, location }) => {
         if (!location) return null;
         const offline = !driver.is_online;
-        const business = location.source === 'business';
         const selected = driver.id === selectedDriverId;
-        const color = offline ? COLORS.offline : business ? COLORS.business : COLORS.live;
+        // live: yesil, business: mavi + "İş adresi", last_known (ve tanimsiz degerler): turuncu + "Son konum"
+        const { color: sourceColor, label } =
+          location.source === 'live' ? { color: COLORS.live, label: undefined }
+          : location.source === 'business' ? { color: COLORS.business, label: 'İş adresi' }
+          : { color: COLORS.lastKnown, label: 'Son konum' };
+        const color = offline ? COLORS.offline : sourceColor;
         return (
           <AdvancedMarker
             key={driver.id}
@@ -145,7 +150,7 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
           >
             <MarkerBadge
               color={color}
-              label={business ? 'İş adresi' : undefined}
+              label={label}
               icon={<LocalShipping sx={{ fontSize: 18 }} />}
               selected={selected}
               faded={offline}

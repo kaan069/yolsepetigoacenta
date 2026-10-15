@@ -14,8 +14,8 @@ const SERVICE_TO_VEHICLE: Record<DriverServiceType, DriverVehicleType> = {
 export const allowedVehicleTypes = (services: DriverServiceType[]): DriverVehicleType[] =>
   [...new Set(services.map((service) => SERVICE_TO_VEHICLE[service]).filter(Boolean))];
 
-// --- Secenekler: surucu uygulamasindaki (helpermobile) arac formlariyla ayni degerler ---
-
+// --- Secenekler: degerler backend'in izin verdigi listelerle ayni ---
+// Cekici: core/validators.py validate_vehicle_types (bos olamaz)
 export const TOWABLE_VEHICLE_OPTIONS = [
   { value: 'car', label: 'Otomobil' },
   { value: 'motorcycle', label: 'Motosiklet' },
@@ -26,14 +26,16 @@ export const TOWABLE_VEHICLE_OPTIONS = [
   { value: 'tractor', label: 'Traktör' },
 ];
 
+// Yol yardim: YolYardimModel.SERVICE_TYPES
 export const ROAD_SERVICE_OPTIONS = [
   { value: 'tire_change', label: 'Lastik Değişimi' },
-  { value: 'battery_boost', label: 'Akü Takviye' },
+  { value: 'battery_boost', label: 'Akü Takviyesi' },
   { value: 'fuel_delivery', label: 'Yakıt İkmali' },
-  { value: 'lockout', label: 'Kapı Açma' },
-  { value: 'minor_repair', label: 'Küçük Onarım' },
+  { value: 'lockout', label: 'Araç Kilit Açma' },
+  { value: 'minor_repair', label: 'Küçük Tamirat' },
 ];
 
+// Nakliye: NakliyeModel.VEHICLE_TYPE_CHOICES
 export const MOVING_VEHICLE_OPTIONS = [
   { value: 'closed_truck', label: 'Kapalı Kasa Kamyon' },
   { value: 'closed_pickup', label: 'Kapalı Kasa Kamyonet' },
@@ -47,14 +49,16 @@ export const MOVING_VEHICLE_OPTIONS = [
   { value: 'partial_load', label: 'Parsiyel Yük Aracı' },
 ];
 
+// NakliyeModel.VEHICLE_CAPACITY_TYPE (varsayilan medium)
 export const CAPACITY_TYPE_OPTIONS = [
-  { value: 'small', label: 'Küçük' },
-  { value: 'medium', label: 'Orta' },
-  { value: 'large', label: 'Büyük' },
+  { value: 'small', label: 'Küçük (Panelvan)' },
+  { value: 'medium', label: 'Orta (Kamyonet)' },
+  { value: 'large', label: 'Büyük (Kamyon)' },
 ];
 
+// Transfer: TransferVehicleModel.TRANSFER_TYPE_CHOICES ve VEHICLE_CLASS_CHOICES
 export const TRANSFER_TYPE_OPTIONS = [
-  { value: 'organization', label: 'Organizasyon (servis)' },
+  { value: 'organization', label: 'Organizasyon' },
   { value: 'vip', label: 'VIP' },
 ];
 

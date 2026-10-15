@@ -12,6 +12,7 @@ import LicenseCard from './LicenseCard';
 import CompanyInfoCard from './CompanyInfoCard';
 import PaymentMethodCard from './PaymentMethodCard';
 import VehiclesCard from './VehiclesCard';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 const isSameVehicle = (a: DriverVehicleEntry, b: DriverVehicleEntry) =>
   a.vehicle_type === b.vehicle_type && a.vehicle.id === b.vehicle.id;
@@ -26,6 +27,7 @@ export default function DriverDetailPage() {
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message: string; notManaged?: boolean } | null>(null);
+  const redirectIfDriverGone = useDriverGoneRedirect();
 
   useEffect(() => {
     if (invalidId) return;
@@ -33,19 +35,27 @@ export default function DriverDetailPage() {
       .then(setProfile)
       .catch((err) => {
         const apiError = getApiError(err);
+        if (redirectIfDriverGone(apiError)) return;
         if (apiError.code === 'DRIVER_NOT_MANAGED') {
           setError({
-            message: apiError.message || 'Bu sürücü telefonla eklendi. Belge ve bilgilerini yalnızca kendisi uygulamadan yönetebilir.',
+            message: 'Bu sürücü belgelerini kendisi yönetiyor. Telefonla eklenen sürücünün ehliyet, araç ve IBAN bilgilerini yalnızca sürücü uygulamadan girebilir.',
             notManaged: true,
           });
-        } else if (apiError.status === 404) {
-          setError({ message: 'Sürücü listenizde bulunamadı' });
         } else {
           setError({ message: apiError.message || 'Sürücü bilgileri yüklenemedi' });
         }
       })
       .finally(() => setLoading(false));
-  }, [invalidId, driverId]);
+  }, [invalidId, driverId, redirectIfDriverGone]);
+
+  // Arac bulunamadi gibi durumlarda guncel profili yeniden cek
+  const reloadProfile = () => {
+    getDriverProfile(driverId)
+      .then(setProfile)
+      .catch((err) => {
+        redirectIfDriverGone(getApiError(err));
+      });
+  };
 
   const updateProfile = (patch: Partial<DriverProfile>) => {
     setProfile((prev) => (prev ? { ...prev, ...patch } : prev));
@@ -125,6 +135,7 @@ export default function DriverDetailPage() {
         services={profile.driver.user_type}
         vehicles={profile.vehicles}
         onSaved={handleVehicleSaved}
+        onReload={reloadProfile}
       />
     </Box>
   );

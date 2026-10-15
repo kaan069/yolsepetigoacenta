@@ -12,6 +12,7 @@ import {
   TRANSFER_TYPE_OPTIONS, vehicleClassOptions,
 } from './vehicleConfig';
 import { otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 interface VehicleFormState {
   brand: string;
@@ -20,6 +21,7 @@ interface VehicleFormState {
   plate_number: string;
   availibility_vehicles_types: string[];
   max_height: string;
+  max_capacity: string;
   available_services: string[];
   // Nakliye arac tipi; payload'da "vehicle_type" olarak gider
   moving_vehicle_type: string;
@@ -33,14 +35,31 @@ interface VehicleFormState {
 }
 
 const FORM_FIELDS = [
-  'brand', 'model', 'year', 'plate_number', 'availibility_vehicles_types', 'max_height', 'available_services',
+  'brand', 'model', 'year', 'plate_number', 'availibility_vehicles_types', 'max_height', 'max_capacity', 'available_services',
   'moving_vehicle_type', 'capacity_type', 'max_volume', 'max_weight', 'has_helper', 'transfer_type',
   'passenger_capacity', 'vehicle_class',
 ];
 
 const str = (value: unknown) => (value === null || value === undefined ? '' : String(value));
 const list = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
-const normalizePlate = (plate: string) => plate.replace(/\s/g, '').toUpperCase();
+
+// --- Backend kurallari (core/validators.py, apps/vehicles/models.py, apps/vehicles/serializers.py) ---
+
+// Plaka: il kodu (01-81) + 1-3 harf + 2-4 rakam; bosluk, tire ve nokta silinip buyuk harfe cevrilir
+const PLATE_REGEX = /^(0[1-9]|[1-7][0-9]|8[01])[A-Z]{1,3}[0-9]{2,4}$/;
+const normalizePlate = (plate: string) => plate.replace(/[\s\-.]/g, '').toUpperCase();
+
+// DecimalField(max_digits=6, decimal_places=2): 0'dan buyuk, en fazla 9999.99 ve 2 ondalik
+const isValidDecimal = (value: string) => /^\d{1,4}(\.\d{1,2})?$/.test(value) && Number(value) > 0;
+const DECIMAL_ERROR = "0'dan büyük, en fazla 9999,99 ve en fazla 2 ondalık olmalıdır";
+
+const MAX_TEXT_LENGTH = 100;
+
+// Ondalik alan girdisi: virgul noktaya cevrilir, rakam ve tek nokta disindaki karakterler atilir
+const toDecimalInput = (value: string) => {
+  const [whole, ...rest] = value.replace(/,/g, '.').replace(/[^\d.]/g, '').split('.');
+  return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
+};
 
 const initialForm = (entry?: DriverVehicleEntry): VehicleFormState => {
   const vehicle = entry?.vehicle;
@@ -51,6 +70,7 @@ const initialForm = (entry?: DriverVehicleEntry): VehicleFormState => {
     plate_number: str(vehicle?.plate_number),
     availibility_vehicles_types: list(vehicle?.availibility_vehicles_types),
     max_height: str(vehicle?.max_height),
+    max_capacity: str(vehicle?.max_capacity),
     available_services: list(vehicle?.available_services),
     moving_vehicle_type: str(vehicle?.vehicle_type),
     capacity_type: str(vehicle?.capacity_type) || 'medium',
@@ -63,19 +83,25 @@ const initialForm = (entry?: DriverVehicleEntry): VehicleFormState => {
   };
 };
 
-// Alanlar surucu uygulamasindaki arac formlariyla ayni; cekici ve vinc icin uygulama gibi bos renk gonderilir
+// Alanlar backend'in arac serializer'lariyla (apps/vehicles/serializers.py) ve surucu uygulamasindaki formlarla ayni
 const buildPayload = (type: DriverVehicleType, form: VehicleFormState): Record<string, unknown> => {
   const base = {
     brand: form.brand.trim(),
     model: form.model.trim(),
     year: Number(form.year),
-    plate_number: form.plate_number.trim(),
+    // Normalize hali gonderilir; backend de ayni bicimde saklar ("34 abc 123" -> "34ABC123")
+    plate_number: normalizePlate(form.plate_number),
   };
   switch (type) {
     case 'towTruck':
-      return { ...base, color: '', availibility_vehicles_types: form.availibility_vehicles_types };
+      return { ...base, availibility_vehicles_types: form.availibility_vehicles_types };
     case 'crane':
-      return { ...base, color: '', max_height: Number(form.max_height) };
+      // max_height tam sayi (metre); max_capacity ton, bos birakilirsa backend varsayilanini kullanir
+      return {
+        ...base,
+        max_height: Number(form.max_height),
+        ...(form.max_capacity && { max_capacity: Number(form.max_capacity) }),
+      };
     case 'roadAssistance':
       return { ...base, available_services: form.available_services };
     case 'moving':
@@ -99,24 +125,41 @@ const buildPayload = (type: DriverVehicleType, form: VehicleFormState): Record<s
 
 const validate = (type: DriverVehicleType, form: VehicleFormState) => {
   const errors: Record<string, string> = {};
-  const year = Number(form.year);
-  if (!form.brand.trim()) errors.brand = 'Marka zorunludur';
-  if (!form.model.trim()) errors.model = 'Model zorunludur';
-  if (!/^\d{4}$/.test(form.year) || year < 1950 || year > new Date().getFullYear() + 1) errors.year = 'Geçerli bir yıl girin';
-  if (!form.plate_number.trim()) errors.plate_number = 'Plaka zorunludur';
 
+  // Ortak: brand/model max 100 karakter, yil 1900 - bu yil, plaka Turkiye formati
+  if (!form.brand.trim()) errors.brand = 'Marka zorunludur';
+  else if (form.brand.trim().length > MAX_TEXT_LENGTH) errors.brand = 'En fazla 100 karakter olabilir';
+  if (!form.model.trim()) errors.model = 'Model zorunludur';
+  else if (form.model.trim().length > MAX_TEXT_LENGTH) errors.model = 'En fazla 100 karakter olabilir';
+  const year = Number(form.year);
+  const currentYear = new Date().getFullYear();
+  if (!/^\d{4}$/.test(form.year) || year < 1900 || year > currentYear) errors.year = `1900 ile ${currentYear} arasında olmalıdır`;
+  if (!form.plate_number.trim()) errors.plate_number = 'Plaka zorunludur';
+  else if (!PLATE_REGEX.test(normalizePlate(form.plate_number))) {
+    errors.plate_number = 'Geçersiz plaka. İl kodu (01-81), 1-3 harf ve 2-4 rakam olmalı (örn. 34 ABC 123)';
+  }
+
+  // Cekici: availibility_vehicles_types bos olamaz (validate_vehicle_types)
   if (type === 'towTruck' && form.availibility_vehicles_types.length === 0) {
     errors.availibility_vehicles_types = 'Çekebildiği en az bir araç tipi seçin';
   }
-  if (type === 'crane' && !(Number(form.max_height) > 0)) errors.max_height = "Yükseklik 0'dan büyük olmalıdır";
+  // Vinc: max_height tam sayi 1-1000 (metre), max_capacity istege bagli ondalik (ton)
+  if (type === 'crane') {
+    const height = Number(form.max_height);
+    if (!Number.isInteger(height) || height < 1 || height > 1000) errors.max_height = '1 ile 1000 arasında tam sayı olmalıdır';
+    if (form.max_capacity && !isValidDecimal(form.max_capacity)) errors.max_capacity = DECIMAL_ERROR;
+  }
+  // Nakliye: hacim ve agirlik zorunlu ondalik (max 9999.99)
   if (type === 'moving') {
     if (!form.moving_vehicle_type) errors.moving_vehicle_type = 'Nakliye araç tipi seçin';
-    if (!(Number(form.max_volume) > 0)) errors.max_volume = "Hacim 0'dan büyük olmalıdır";
-    if (!(Number(form.max_weight) > 0)) errors.max_weight = "Ağırlık 0'dan büyük olmalıdır";
+    if (!isValidDecimal(form.max_volume)) errors.max_volume = DECIMAL_ERROR;
+    if (!isValidDecimal(form.max_weight)) errors.max_weight = DECIMAL_ERROR;
   }
+  // Transfer: tip, sinif ve en az 1 yolcu zorunlu (modelde varsayilan yok)
   if (type === 'transfer') {
+    if (!form.transfer_type) errors.transfer_type = 'Transfer tipi seçin';
     const capacity = Number(form.passenger_capacity);
-    if (!Number.isInteger(capacity) || capacity < 1) errors.passenger_capacity = 'Yolcu kapasitesi en az 1 olmalıdır';
+    if (!Number.isInteger(capacity) || capacity < 1) errors.passenger_capacity = 'En az 1 olmalıdır';
     if (!form.vehicle_class) errors.vehicle_class = 'Araç sınıfı seçin';
   }
   return errors;
@@ -133,12 +176,17 @@ interface VehicleFormDialogProps {
   entry?: DriverVehicleEntry;
   onClose: () => void;
   onSaved: (entry: DriverVehicleEntry, steps: MissingStep[], created: boolean) => void;
+  // VEHICLE_NOT_FOUND: arac artik yok; liste yenilenir
+  onVehicleMissing: () => void;
 }
 
-export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClose, onSaved }: VehicleFormDialogProps) {
+export default function VehicleFormDialog({
+  driverId, allowedTypes, entry, onClose, onSaved, onVehicleMissing,
+}: VehicleFormDialogProps) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const editing = !!entry;
 
   const [vehicleType, setVehicleType] = useState<DriverVehicleType | ''>(
@@ -205,9 +253,13 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
       );
     } catch (err) {
       const apiError = getApiError(err);
+      if (redirectIfDriverGone(apiError)) return;
       if (apiError.code === 'PLATE_EXISTS') {
         setFieldErrors({ plate_number: apiError.message || 'Bu plaka başka bir araçta kayıtlı' });
-      } else if (apiError.code === 'USER_TYPE_MISMATCH') {
+      } else if (apiError.code === 'VEHICLE_NOT_FOUND') {
+        enqueueSnackbar(apiError.message || 'Araç bulunamadı', { variant: 'warning' });
+        onVehicleMissing();
+      } else if (apiError.code === 'USER_TYPE_MISMATCH' || apiError.code === 'VEHICLE_TYPE_INVALID') {
         setNotice(apiError.message || 'Bu araç tipi sürücünün hizmet tiplerinde yok. Önce temel bilgilerden hizmet tipini ekleyin.');
       } else {
         // Nakliyede backend'in "vehicle_type" hatasi formdaki nakliye arac tipi alanina aittir
@@ -217,6 +269,10 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
             message,
           ]),
         );
+        // Ayni tipte ayni plaka: DRF'in unique kontrolu Ingilizce mesaj doner ("... already exists")
+        if (errorsByField.plate_number && /already exists/i.test(errorsByField.plate_number)) {
+          errorsByField.plate_number = 'Bu plaka zaten kayıtlı';
+        }
         setFieldErrors(errorsByField);
         const hasFieldErrors = Object.keys(errorsByField).length > 0;
         setNotice(
@@ -286,10 +342,12 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
           <TextField
             label="Marka *" value={form.brand} onChange={(e) => update({ brand: e.target.value })}
             error={!!fieldErrors.brand} helperText={fieldErrors.brand}
+            slotProps={{ htmlInput: { maxLength: MAX_TEXT_LENGTH } }}
           />
           <TextField
             label="Model *" value={form.model} onChange={(e) => update({ model: e.target.value })}
             error={!!fieldErrors.model} helperText={fieldErrors.model}
+            slotProps={{ htmlInput: { maxLength: MAX_TEXT_LENGTH } }}
           />
           <TextField
             label="Yıl *" value={form.year} onChange={(e) => update({ year: e.target.value.replace(/\D/g, '').slice(0, 4) })}
@@ -299,6 +357,7 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
           <TextField
             label="Plaka *" value={form.plate_number} onChange={(e) => update({ plate_number: e.target.value.toUpperCase() })}
             error={!!fieldErrors.plate_number} helperText={fieldErrors.plate_number || 'Örn. 34 ABC 123'}
+            slotProps={{ htmlInput: { maxLength: 15 } }}
           />
         </Box>
 
@@ -311,13 +370,21 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
         {vehicleType === 'towTruck' && chipGroup('availibility_vehicles_types', 'Çekebildiği araç tipleri *', TOWABLE_VEHICLE_OPTIONS)}
 
         {vehicleType === 'crane' && (
-          <TextField
-            fullWidth label="Maksimum yükseklik (m) *" value={form.max_height}
-            onChange={(e) => update({ max_height: e.target.value.replace(',', '.') })}
-            error={!!fieldErrors.max_height} helperText={fieldErrors.max_height}
-            slotProps={{ htmlInput: { inputMode: 'decimal' } }}
-            sx={{ mb: 2 }}
-          />
+          <Box sx={gridSx}>
+            <TextField
+              label="Maksimum yükseklik (m) *" value={form.max_height}
+              onChange={(e) => update({ max_height: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+              error={!!fieldErrors.max_height} helperText={fieldErrors.max_height || 'Tam sayı, 1-1000'}
+              slotProps={{ htmlInput: { inputMode: 'numeric' } }}
+            />
+            <TextField
+              label="Maksimum kapasite (ton)" value={form.max_capacity}
+              onChange={(e) => update({ max_capacity: toDecimalInput(e.target.value) })}
+              error={!!fieldErrors.max_capacity}
+              helperText={fieldErrors.max_capacity || 'Boş bırakılırsa 10 ton kabul edilir'}
+              slotProps={{ htmlInput: { inputMode: 'decimal' } }}
+            />
+          </Box>
         )}
 
         {vehicleType === 'roadAssistance' && chipGroup('available_services', 'Verdiği hizmetler', ROAD_SERVICE_OPTIONS)}
@@ -335,7 +402,7 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
                 ))}
               </TextField>
               <TextField
-                select label="Kapasite" value={form.capacity_type}
+                select label="Kapasite tipi" value={form.capacity_type}
                 onChange={(e) => update({ capacity_type: e.target.value })}
                 error={!!fieldErrors.capacity_type} helperText={fieldErrors.capacity_type}
               >
@@ -345,14 +412,14 @@ export default function VehicleFormDialog({ driverId, allowedTypes, entry, onClo
               </TextField>
               <TextField
                 label="Maksimum hacim (m³) *" value={form.max_volume}
-                onChange={(e) => update({ max_volume: e.target.value.replace(',', '.') })}
-                error={!!fieldErrors.max_volume} helperText={fieldErrors.max_volume}
+                onChange={(e) => update({ max_volume: toDecimalInput(e.target.value) })}
+                error={!!fieldErrors.max_volume} helperText={fieldErrors.max_volume || 'En fazla 9999,99'}
                 slotProps={{ htmlInput: { inputMode: 'decimal' } }}
               />
               <TextField
                 label="Maksimum ağırlık (kg) *" value={form.max_weight}
-                onChange={(e) => update({ max_weight: e.target.value.replace(',', '.') })}
-                error={!!fieldErrors.max_weight} helperText={fieldErrors.max_weight}
+                onChange={(e) => update({ max_weight: toDecimalInput(e.target.value) })}
+                error={!!fieldErrors.max_weight} helperText={fieldErrors.max_weight || 'En fazla 9999,99 kg'}
                 slotProps={{ htmlInput: { inputMode: 'decimal' } }}
               />
             </Box>

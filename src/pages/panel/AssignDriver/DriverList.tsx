@@ -5,7 +5,7 @@ import {
 import { Refresh, MyLocation, Groups, PersonOff } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import type { AvailableDriver } from '../../../types';
-import { driverFullName, formatDistance, describeLocation } from '../../../utils/drivers';
+import { driverFullName, formatDistance, describeLocation, describeLastSeen } from '../../../utils/drivers';
 import { RADIUS_OPTIONS } from './constants';
 
 export type DriverListEmptyState = 'location_pending' | 'pool_empty' | 'no_available' | 'load_failed' | null;
@@ -97,6 +97,7 @@ export default function DriverList({
     return drivers.map((item) => {
       const { driver, location, distance_km, vehicles } = item;
       const selected = driver.id === selectedDriverId;
+      const lastSeen = describeLastSeen(location, item.app_location, loadedAt);
       return (
         <Box
           key={driver.id}
@@ -124,6 +125,7 @@ export default function DriverList({
                 {distance_km != null && `${formatDistance(distance_km)} · `}
                 {describeLocation(location, loadedAt)}
               </Typography>
+              {lastSeen && <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>{lastSeen}</Typography>}
               {vehicles.map((vehicle) => (
                 <Typography key={vehicle.id} sx={{ fontSize: 12, color: '#94a3b8' }}>
                   {vehicle.plate_number} · {vehicle.brand} {vehicle.model}

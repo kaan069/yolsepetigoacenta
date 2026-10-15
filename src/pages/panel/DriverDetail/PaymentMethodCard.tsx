@@ -5,6 +5,7 @@ import { saveDriverPaymentMethod, getApiError } from '../../../api';
 import type { DriverPaymentMethod, MissingStep } from '../../../types';
 import { SectionCard } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 const FORM_FIELDS = ['account_holder_name', 'iban'];
 
@@ -17,6 +18,7 @@ interface PaymentMethodCardProps {
 // IBAN asla tam gosterilmez; form bos acilir, yeni IBAN yazilirsa gonderilir
 export default function PaymentMethodCard({ driverId, paymentMethod, onSaved }: PaymentMethodCardProps) {
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const [holderName, setHolderName] = useState('');
   const [iban, setIban] = useState('');
   const [saving, setSaving] = useState(false);
@@ -50,6 +52,7 @@ export default function PaymentMethodCard({ driverId, paymentMethod, onSaved }: 
       if (normalizedIban) enqueueSnackbar('IBAN değişikliği sürücüye SMS ile bildirildi.', { variant: 'info' });
     } catch (err) {
       const apiError = getApiError(err);
+      if (redirectIfDriverGone(apiError)) return;
       setFieldErrors(apiError.fieldErrors);
       const hasFieldErrors = Object.keys(apiError.fieldErrors).length > 0;
       setNotice(

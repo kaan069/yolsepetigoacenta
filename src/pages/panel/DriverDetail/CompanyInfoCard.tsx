@@ -5,6 +5,7 @@ import { saveDriverCompanyInfo, getApiError } from '../../../api';
 import type { DriverCompanyInfo, MissingStep } from '../../../types';
 import { SectionCard } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 const FORM_FIELDS = ['company_name', 'tax_number'];
 
@@ -16,6 +17,7 @@ interface CompanyInfoCardProps {
 
 export default function CompanyInfoCard({ driverId, companyInfo, onSaved }: CompanyInfoCardProps) {
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const [companyName, setCompanyName] = useState(companyInfo?.company_name ?? '');
   const [taxNumber, setTaxNumber] = useState(companyInfo?.tax_number ?? '');
   const [saving, setSaving] = useState(false);
@@ -37,6 +39,7 @@ export default function CompanyInfoCard({ driverId, companyInfo, onSaved }: Comp
       enqueueSnackbar(response.message || 'Şirket bilgisi kaydedildi', { variant: 'success' });
     } catch (err) {
       const apiError = getApiError(err);
+      if (redirectIfDriverGone(apiError)) return;
       setFieldErrors(apiError.fieldErrors);
       const hasFieldErrors = Object.keys(apiError.fieldErrors).length > 0;
       setNotice(

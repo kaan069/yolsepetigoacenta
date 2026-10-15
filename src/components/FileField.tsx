@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { Box, Typography, Button, IconButton, Link as MuiLink } from '@mui/material';
 import { AttachFile, Close, OpenInNew } from '@mui/icons-material';
 
-// Backend kurali: jpg, jpeg, png, webp ya da pdf; en fazla 5 MB
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+// Backend kurali (core/validators.py): uzantiya bakilir; jpg, jpeg, png, webp ya da pdf, en fazla 5 MB
+const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+const hasAcceptedExtension = (name: string) => {
+  const dot = name.lastIndexOf('.');
+  return dot >= 0 && ACCEPTED_EXTENSIONS.includes(name.slice(dot).toLowerCase());
+};
 
 interface FileFieldProps {
   label: string;
@@ -24,7 +29,7 @@ export default function FileField({ label, required, file, onChange, currentUrl,
     // Ayni dosya tekrar secilebilsin
     e.target.value = '';
     if (!selected) return;
-    if (!ACCEPTED_TYPES.includes(selected.type)) {
+    if (!hasAcceptedExtension(selected.name)) {
       setLocalError('Sadece JPG, PNG, WEBP ya da PDF yüklenebilir');
       return;
     }
@@ -51,7 +56,7 @@ export default function FileField({ label, required, file, onChange, currentUrl,
         )}
         <Button component="label" size="small" variant="outlined" startIcon={<AttachFile />} sx={{ borderRadius: 2 }}>
           {file || currentUrl ? 'Değiştir' : 'Dosya seç'}
-          <input hidden type="file" accept={ACCEPTED_TYPES.join(',')} onChange={handleSelect} />
+          <input hidden type="file" accept={ACCEPTED_EXTENSIONS.join(',')} onChange={handleSelect} />
         </Button>
       </Box>
       {file && (

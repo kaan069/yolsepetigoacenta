@@ -10,7 +10,7 @@ import { useSnackbar } from 'notistack';
 import { listPoolDrivers, removeDriver, getApiError } from '../../../api';
 import { DriverServiceLabels } from '../../../types';
 import type { PoolDriver } from '../../../types';
-import { driverFullName, describeLocation, getPoolDriverStatus } from '../../../utils/drivers';
+import { driverFullName, describeLocation, describeLastSeen, getPoolDriverStatus } from '../../../utils/drivers';
 import type { PoolDriverStatus } from '../../../utils/drivers';
 import AddDriverDialog from './AddDriverDialog';
 
@@ -193,8 +193,13 @@ export default function DriversPage() {
                       </TableCell>
                       <TableCell>
                         <Typography sx={{ fontSize: 13, color: '#334155' }}>{describeLocation(item.location, loadedAt)}</Typography>
-                        {item.business_address && (
+                        {item.location?.source === 'business' && item.business_address && (
                           <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>{item.business_address}</Typography>
+                        )}
+                        {describeLastSeen(item.location, item.app_location, loadedAt) && (
+                          <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>
+                            {describeLastSeen(item.location, item.app_location, loadedAt)}
+                          </Typography>
                         )}
                       </TableCell>
                       <TableCell>

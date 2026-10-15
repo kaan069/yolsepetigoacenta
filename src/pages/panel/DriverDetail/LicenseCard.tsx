@@ -7,6 +7,7 @@ import type { DriverLicense, MissingStep } from '../../../types';
 import FileField from '../../../components/FileField';
 import { SectionCard, VerificationChip } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 const FORM_FIELDS = ['license_photo', 'tax_plate_photo', 'k_document_photo'];
 
@@ -18,6 +19,7 @@ interface LicenseCardProps {
 
 export default function LicenseCard({ driverId, license, onSaved }: LicenseCardProps) {
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const [licensePhoto, setLicensePhoto] = useState<File | null>(null);
   const [taxPlatePhoto, setTaxPlatePhoto] = useState<File | null>(null);
   const [kDocumentPhoto, setKDocumentPhoto] = useState<File | null>(null);
@@ -51,6 +53,7 @@ export default function LicenseCard({ driverId, license, onSaved }: LicenseCardP
       enqueueSnackbar(response.message || 'Belgeler yüklendi, admin onayına gönderildi', { variant: 'success' });
     } catch (err) {
       const apiError = getApiError(err);
+      if (redirectIfDriverGone(apiError)) return;
       setFieldErrors(apiError.fieldErrors);
       const hasFieldErrors = Object.keys(apiError.fieldErrors).length > 0;
       setNotice(

@@ -540,7 +540,16 @@ export const DriverServiceLabels: Record<DriverServiceType, string> = {
   transfer: 'Transfer',
 };
 
-export type LocationSource = 'live' | 'business';
+// live: 45 dk'dan yeni, last_known: 45 dk - 24 saat, business: is adresi
+export type LocationSource = 'live' | 'last_known' | 'business';
+
+// Surucu uygulamasinin gonderdigi son konum (app-ping); "son gorulme" icin
+export interface AppLocation {
+  latitude: number;
+  longitude: number;
+  updated_at: string;
+  trigger: 'app_open' | 'foreground' | 'online' | 'periodic';
+}
 
 export type AssignmentStatus = 'pending' | 'offered' | 'declined' | 'expired' | 'cancelled';
 
@@ -617,6 +626,8 @@ export interface PoolDriver {
   eligible_services: DriverServiceType[];
   is_busy: boolean;
   location: DriverLocation | null;
+  // Uygulama hic konum gondermediyse null; eski backend surumunde alan yok
+  app_location?: AppLocation | null;
   business_address: string | null;
 }
 
@@ -649,6 +660,7 @@ export interface RegisterDriverPayload {
 export interface AvailableDriver {
   driver: AgencyDriverInfo;
   location: DriverLocation | null;
+  app_location?: AppLocation | null;
   distance_km: number | null;
   vehicles: { id: number; brand: string; model: string; plate_number: string }[];
 }

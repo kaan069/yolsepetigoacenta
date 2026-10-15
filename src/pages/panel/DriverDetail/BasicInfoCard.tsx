@@ -8,6 +8,7 @@ import { ServiceTypeChips, CityAutocomplete, BusinessAddressField } from '../../
 import { toCityDisplayName, isSameCity } from '../../../data/turkeyCities';
 import { SectionCard } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
+import { useDriverGoneRedirect } from './useDriverGoneRedirect';
 
 const FORM_FIELDS = ['first_name', 'last_name', 'tc_no', 'user_type', 'service_cities'];
 
@@ -35,6 +36,7 @@ interface BasicInfoCardProps {
 
 export default function BasicInfoCard({ driverId, driver, onSaved }: BasicInfoCardProps) {
   const { enqueueSnackbar } = useSnackbar();
+  const redirectIfDriverGone = useDriverGoneRedirect();
   const [firstName, setFirstName] = useState(driver.first_name);
   const [lastName, setLastName] = useState(driver.last_name);
   // Profil TC'yi dondurmez; yalnizca degistirilmek istenirse yazilir
@@ -93,6 +95,7 @@ export default function BasicInfoCard({ driverId, driver, onSaved }: BasicInfoCa
       enqueueSnackbar(message || 'Bilgiler kaydedildi', { variant: 'success' });
     } catch (err) {
       const apiError = getApiError(err);
+      if (redirectIfDriverGone(apiError)) return;
       if (apiError.code === 'TC_EXISTS') {
         setFieldErrors({ tc_no: apiError.message || 'Bu TC kimlik numarası başka bir kullanıcıda kayıtlı' });
       } else {

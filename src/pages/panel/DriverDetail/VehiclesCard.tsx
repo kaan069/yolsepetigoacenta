@@ -15,9 +15,11 @@ interface VehiclesCardProps {
   services: DriverServiceType[];
   vehicles: DriverVehicleEntry[];
   onSaved: (entry: DriverVehicleEntry, steps: MissingStep[]) => void;
+  // Arac backend'de bulunamadi (VEHICLE_NOT_FOUND); profil yeniden yuklenir
+  onReload: () => void;
 }
 
-export default function VehiclesCard({ driverId, services, vehicles, onSaved }: VehiclesCardProps) {
+export default function VehiclesCard({ driverId, services, vehicles, onSaved, onReload }: VehiclesCardProps) {
   const { enqueueSnackbar } = useSnackbar();
   // create: yeni arac formu, edit: secili aracin formu
   const [formTarget, setFormTarget] = useState<{ entry?: DriverVehicleEntry } | null>(null);
@@ -34,6 +36,12 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved }: 
     } else {
       enqueueSnackbar('Araç bilgileri kaydedildi', { variant: 'success' });
     }
+  };
+
+  const handleVehicleMissing = () => {
+    setFormTarget(null);
+    setDocumentsEntry(null);
+    onReload();
   };
 
   const addButton = (
@@ -111,6 +119,7 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved }: 
           entry={formTarget.entry}
           onClose={() => setFormTarget(null)}
           onSaved={handleVehicleSaved}
+          onVehicleMissing={handleVehicleMissing}
         />
       )}
       {documentsEntry && (
@@ -119,6 +128,7 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved }: 
           entry={documentsEntry}
           onClose={() => setDocumentsEntry(null)}
           onSaved={onSaved}
+          onVehicleMissing={handleVehicleMissing}
         />
       )}
     </SectionCard>
