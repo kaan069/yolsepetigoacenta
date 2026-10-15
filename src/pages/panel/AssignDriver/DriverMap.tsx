@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box } from '@mui/material';
-import { LocalShipping, Person } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import { LocalShipping, Person, Phone } from '@mui/icons-material';
 import { Map, AdvancedMarker, AdvancedMarkerAnchorPoint, useMap } from '@vis.gl/react-google-maps';
-import type { AvailableDriver } from '../../../types';
+import type { AgencyDriverInfo, AvailableDriver } from '../../../types';
 import { driverFullName } from '../../../utils/drivers';
 import { MAP_ID } from './constants';
 import { groupDrivers, fanOffsets } from './markerGroups';
@@ -13,6 +13,7 @@ const TURKEY_CENTER = { lat: 39.0, lng: 35.0 };
 const DEFAULT_ZOOM = 6;
 const MAX_FIT_ZOOM = 15;
 const BADGE_SIZE = 32;
+const HOVER_LIST_LIMIT = 6;
 
 const COLORS = {
   customer: colors.danger[500],
@@ -50,27 +51,65 @@ const labelSx = (color: string) => ({
   boxShadow: `0 1px 4px ${alpha(colors.neutral[900], 0.25)}`,
 });
 
+// Pinin uzerine gelince acilan kart (pinin ustunde; fareyi engellememesi icin pointer-events kapali)
+function HoverCard({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      sx={{
+        position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
+        bgcolor: 'white', borderRadius: 2, border: `1px solid ${colors.neutral[200]}`,
+        boxShadow: `0 6px 20px ${alpha(colors.neutral[900], 0.2)}`,
+        px: 1.5, py: 1, minWidth: 170, whiteSpace: 'nowrap', textAlign: 'left',
+        pointerEvents: 'none', zIndex: 1,
+        '&::after': {
+          content: '""', position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+          borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid white',
+        },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+function DriverContact({ driver }: { driver: AgencyDriverInfo }) {
+  return (
+    <Box>
+      <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900], lineHeight: 1.4 }}>
+        {driverFullName(driver)}
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: colors.neutral[600] }}>
+        <Phone sx={{ fontSize: 13 }} />
+        <Typography sx={{ fontSize: 12 }}>{driver.phone_number || 'Telefon yok'}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
 interface MarkerBadgeProps {
   color: string;
   icon: React.ReactNode;
   label?: string;
   selected?: boolean;
   faded?: boolean;
+  hoverContent?: React.ReactNode;
 }
 
 // <Pin> marker icerigini tamamen degistirdigi icin etiketli isaretciler HTML ile cizilir.
 // Icerigin alt ortasi (ucgenin ucu) konuma denk gelir.
-function MarkerBadge({ color, icon, label, selected, faded }: MarkerBadgeProps) {
+function MarkerBadge({ color, icon, label, selected, faded, hoverContent }: MarkerBadgeProps) {
   return (
     <Box
       sx={{
+        position: 'relative',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        opacity: faded ? 0.55 : 1,
+        opacity: faded && !hoverContent ? 0.55 : 1,
         transform: selected ? 'scale(1.2)' : 'none',
         transformOrigin: 'bottom center',
         transition: 'transform 0.15s ease',
       }}
     >
+      {hoverContent && <HoverCard>{hoverContent}</HoverCard>}
       {label && <Box sx={{ ...labelSx(color), mb: 0.5 }}>{label}</Box>}
       <Box sx={circleSx(color, selected)}>{icon}</Box>
       <Box
@@ -86,22 +125,24 @@ function MarkerBadge({ color, icon, label, selected, faded }: MarkerBadgeProps) 
 
 // Acik gruptaki pin: daire merkeze gore kaydirilir (piksel; zoom'dan bagimsiz), cizgi gercek konumu gosterir.
 // Etiket akis disinda (absolute) tutulur ki daire merkezi kaymasin.
-function FanBadge({ color, label, selected, faded, offset }: {
+function FanBadge({ color, label, selected, faded, offset, hoverContent }: {
   color: string;
   label?: string;
   selected: boolean;
   faded: boolean;
   offset: { x: number; y: number };
+  hoverContent?: React.ReactNode;
 }) {
   return (
     <Box sx={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}>
       <Box
         sx={{
-          position: 'relative', opacity: faded ? 0.75 : 1,
+          position: 'relative', opacity: faded && !hoverContent ? 0.75 : 1,
           transform: selected ? 'scale(1.2)' : 'none', transition: 'transform 0.15s ease',
         }}
       >
-        {label && (
+        {hoverContent && <HoverCard>{hoverContent}</HoverCard>}
+        {label && !hoverContent && (
           <Box sx={{ ...labelSx(color), position: 'absolute', bottom: '100%', left: '50%', transform: 'translate(-50%, -4px)' }}>
             {label}
           </Box>
@@ -179,17 +220,25 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
   )?.key ?? null;
   const openKey = manual.selectedId === selectedDriverId ? manual.key : (selectedGroupKey ?? manual.key);
 
+  // Uzerine gelinen pin: surucu "d-<id>", kapali grup "g-<anahtar>"
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const hoverProps = (key: string) => ({
+    onMouseEnter: () => setHoverKey(key),
+    onMouseLeave: () => setHoverKey((current) => (current === key ? null : current)),
+  });
+
   const renderSingle = (item: LocatedDriver) => {
     const { driver, location } = item;
     const style = markerStyle(item);
     const selected = driver.id === selectedDriverId;
+    const hovered = hoverKey === `d-${driver.id}`;
     return (
       <AdvancedMarker
         key={driver.id}
         position={{ lat: location.latitude, lng: location.longitude }}
-        title={driverFullName(driver)}
         onClick={() => onSelectDriver(driver.id)}
-        zIndex={selected ? 999 : undefined}
+        {...hoverProps(`d-${driver.id}`)}
+        zIndex={hovered ? 1300 : selected ? 999 : undefined}
       >
         <MarkerBadge
           color={style.color}
@@ -197,6 +246,7 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
           icon={<LocalShipping sx={{ fontSize: 18 }} />}
           selected={selected}
           faded={style.faded}
+          hoverContent={hovered ? <DriverContact driver={driver} /> : undefined}
         />
       </AdvancedMarker>
     );
@@ -207,13 +257,15 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
     const best = styles.reduce((a, b) => (b.rank < a.rank ? b : a));
     const containsSelected = group.members.some((m) => m.driver.id === selectedDriverId);
     const count = group.members.length;
+    const hovered = hoverKey === `g-${group.key}`;
+    const hidden = count - HOVER_LIST_LIMIT;
     return (
       <AdvancedMarker
         key={group.key}
         position={group.center}
-        title={group.members.map((m) => driverFullName(m.driver)).join(', ')}
         onClick={() => setManual({ key: group.key, selectedId: selectedDriverId })}
-        zIndex={containsSelected ? 999 : undefined}
+        {...hoverProps(`g-${group.key}`)}
+        zIndex={hovered ? 1300 : containsSelected ? 999 : undefined}
       >
         <MarkerBadge
           color={best.color}
@@ -221,6 +273,15 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
           icon={<Box component="span" sx={{ fontSize: 14, fontWeight: 800 }}>{count}</Box>}
           selected={containsSelected}
           faded={styles.every((st) => st.faded)}
+          hoverContent={hovered ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {group.members.slice(0, HOVER_LIST_LIMIT).map((m) => <DriverContact key={m.driver.id} driver={m.driver} />)}
+              {hidden > 0 && (
+                <Typography sx={{ fontSize: 12, color: colors.neutral[500] }}>+{hidden} sürücü daha</Typography>
+              )}
+              <Typography sx={{ fontSize: 11, color: colors.primary[600], fontWeight: 600 }}>Açmak için tıklayın</Typography>
+            </Box>
+          ) : undefined}
         />
       </AdvancedMarker>
     );
@@ -240,14 +301,15 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
       ...group.members.map((item, i) => {
         const style = markerStyle(item);
         const selected = item.driver.id === selectedDriverId;
+        const hovered = hoverKey === `d-${item.driver.id}`;
         return (
           <AdvancedMarker
             key={item.driver.id}
             position={group.center}
             anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
-            title={driverFullName(item.driver)}
             onClick={() => onSelectDriver(item.driver.id)}
-            zIndex={selected ? 1200 : 1100}
+            {...hoverProps(`d-${item.driver.id}`)}
+            zIndex={hovered ? 1300 : selected ? 1200 : 1100}
           >
             <FanBadge
               color={style.color}
@@ -255,6 +317,7 @@ export default function DriverMap({ customer, drivers, selectedDriverId, onSelec
               selected={selected}
               faded={style.faded}
               offset={offsets[i]}
+              hoverContent={hovered ? <DriverContact driver={item.driver} /> : undefined}
             />
           </AdvancedMarker>
         );
