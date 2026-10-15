@@ -96,6 +96,8 @@ Bu yama yeni talepleri düzeltir. Bozuk kalmış talepler (#202, #203) için yin
 
 ## Ek: Çekici talebinde traktör hiçbir sürücüyle eşleşmiyor
 
+> **Durum:** Çözüldü (`379cf04`, migration `request/0030`). Panel traktörü `tractor` koduyla tekrar açtı.
+
 `CreateInsuranceRequestView._create_service_details` (`apps/insurance/views.py`) çekici araç tipini normalize ederken traktörü `'traktor'` olarak kaydediyor:
 - `type_map` içinde `'traktor': 'traktor'` var.
 - `valid_types` içinde `'traktor'` var, `'tractor'` yok.
@@ -109,6 +111,8 @@ Acente paneli bu düzeltme gelene kadar traktör seçeneğini göstermiyor. Pane
 ---
 
 ## Ek 2: Acente talebinde rota süresi kaydedilmiyor
+
+> **Durum:** Çözüldü (`379cf04`). Panelin gönderdiği `route_distance` / `route_duration` artık kaydediliyor.
 
 `TowTruckRequestDetails` modelinde `route_distance` ve `route_duration` alanları var, ama acente talep oluşturma ucu (`POST /insurance/requests/create/`, `CreateInsuranceRequestSerializer`) bu alanları almıyor. `_create_service_details` de yalnızca `estimated_km` alanını yazıyor.
 

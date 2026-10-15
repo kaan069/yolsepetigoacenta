@@ -10,6 +10,8 @@ export function buildRequestPayload(
   questionAnswers: Record<number, number[]>,
   dispatchMode: DispatchMode,
   routeInfo: { distanceText: string; durationText: string } | null,
+  // Musteriden konum istendiyse init token'i; musterinin fotograflari talebe baglanir
+  locationShareToken: string | null,
 ): InsuranceRequestCreatePayload {
   const payload: InsuranceRequestCreatePayload = {
     service_type: form.service_type,
@@ -42,6 +44,10 @@ export function buildRequestPayload(
       payload.route_duration = routeInfo.durationText;
     }
   }
+
+  // Il yalnizca haritadan secilen konumda bilinir; musteri konumunda backend adresten cikarir
+  if (form.pickup_city) payload.city = form.pickup_city;
+  if (locationShareToken) payload.location_share_token = locationShareToken;
 
   if (form.insured_plate) payload.insured_plate = form.insured_plate;
   if (form.insurance_name) payload.insurance_name = form.insurance_name;

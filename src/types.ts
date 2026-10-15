@@ -151,7 +151,7 @@ export interface InsuranceRequestCreatePayload {
   insured_name: string;
   insured_phone: string;
   insured_plate?: string;
-  // Backend zorunlu tutuyor (apps/insurance/serializers.py, varsayilani yok)
+  // Opsiyonel; bos "" kabul edilir
   policy_number: string;
   insurance_name?: string;
   location_method?: 'manual' | 'customer_share';
@@ -163,10 +163,15 @@ export interface InsuranceRequestCreatePayload {
   dropoff_latitude?: number;
   dropoff_longitude?: number;
   estimated_km?: number;
-  // Google rota metinleri ("12,4 km", "18 dakika"); TowTruckRequestDetails.route_distance / route_duration.
-  // Acente ucu bunlari henuz kaydetmiyor (backend brief'inde istendi); o zamana kadar yok sayilir.
+  // Google rota metinleri ("12,4 km", "18 dakika"); cekici ve nakliye detayina yazilir (en fazla 50 karakter)
   route_distance?: string;
   route_duration?: string;
+  // Alis konumunun ili (Google administrative_area_level_1). Gelmezse backend pickup_address'ten cikarir;
+  // pazaryeri bildirimleri ve surucu is listeleri bu sehre gore suzulur.
+  city?: string;
+  // Musteriden konum istendiyse location-share/init token'i: token ve musterinin fotograflari talebe baglanir.
+  // Bulunamazsa ya da baska talebe bagliysa 400 doner ve talep olusturulmaz.
+  location_share_token?: string;
   service_details?: Record<string, unknown>;
   dispatch_mode?: DispatchMode;
 }

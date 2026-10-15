@@ -3,7 +3,7 @@ import {
 } from '@mui/material';
 import { ServiceType } from '../../../types';
 import type { RequestFormState } from './types';
-import { towTruckVehicleTypes, craneDurationOptions, problemTypeOptions, timeSlotOptions } from './constants';
+import { towTruckVehicleTypes, roadAssistanceVehicleTypes, craneDurationOptions, problemTypeOptions, timeSlotOptions } from './constants';
 import SectionLabel from './SectionLabel';
 import { colors } from '../../../tokens';
 
@@ -73,7 +73,7 @@ function RoadAssistanceFields({ form, onChange, onToggleProblemType }: Pick<Serv
         select fullWidth label="Arac Tipi" value={form.ra_vehicle_type}
         onChange={onChange('ra_vehicle_type')} sx={{ mb: 2 }}
       >
-        {towTruckVehicleTypes.map((opt) => (
+        {roadAssistanceVehicleTypes.map((opt) => (
           <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
         ))}
       </TextField>

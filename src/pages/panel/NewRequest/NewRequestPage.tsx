@@ -95,6 +95,7 @@ function NewRequestForm() {
         pickup_address: loc.address || `Müşteri konumu (${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)})`,
         pickup_latitude: loc.latitude,
         pickup_longitude: loc.longitude,
+        pickup_city: '',
       }));
       setLocationReceived(true);
       setPickupFromCustomer(true);
@@ -137,7 +138,6 @@ function NewRequestForm() {
   const missingItems: string[] = [];
   if (!form.insured_name.trim()) missingItems.push('Sigortalı adını girin');
   if (!form.insured_phone.trim()) missingItems.push('Sigortalı telefonunu girin');
-  if (!form.policy_number.trim()) missingItems.push('Poliçe numarasını girin');
   if (!hasPickup) {
     missingItems.push(locationToken ? 'Müşterinin konumu bekleniyor' : 'Alış konumunu seçin ya da müşteriden isteyin');
   }
@@ -202,6 +202,7 @@ function NewRequestForm() {
       pickup_address: loc.address,
       pickup_latitude: loc.latitude,
       pickup_longitude: loc.longitude,
+      pickup_city: loc.il ?? '',
     }));
   };
 
@@ -283,7 +284,7 @@ function NewRequestForm() {
 
     setLoading(true);
     try {
-      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode, routeInfo));
+      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode, routeInfo, locationToken));
       // Dogrudan atamada konum hazir; dogrudan harita ekranina gidilir
       const path = isDirect ? `/panel/requests/${response.request_id}/assign` : `/panel/requests/${response.request_id}`;
       navigate(path, {
@@ -333,7 +334,7 @@ function NewRequestForm() {
               {form.service_type !== ServiceType.Crane && (
                 <TextField fullWidth label="Plaka" value={form.insured_plate} onChange={handleChange('insured_plate')} />
               )}
-              <TextField fullWidth label="Police Numarasi *" value={form.policy_number} onChange={handleChange('policy_number')} />
+              <TextField fullWidth label="Police Numarasi" value={form.policy_number} onChange={handleChange('policy_number')} />
             </Box>
 
             <SectionLabel>Dağıtım Yöntemi</SectionLabel>

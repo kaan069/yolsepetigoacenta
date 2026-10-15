@@ -11,6 +11,8 @@ export interface RequestFormState {
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
+  // Haritadan secilen alis konumunun ili; musteriden gelen konumda bos (backend adresten cikarir)
+  pickup_city: string;
   dropoff_address: string;
   dropoff_latitude: number;
   dropoff_longitude: number;
@@ -66,6 +68,7 @@ export const initialFormState: RequestFormState = {
   pickup_address: '',
   pickup_latitude: 0,
   pickup_longitude: 0,
+  pickup_city: '',
   dropoff_address: '',
   dropoff_latitude: 0,
   dropoff_longitude: 0,

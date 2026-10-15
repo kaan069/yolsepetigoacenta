@@ -5,15 +5,20 @@ export const serviceTypeOptions = Object.entries(ServiceTypeLabels).map(([value,
 
 // Degerler backend'in cekici arac kodlariyla ayni (core/validators.py validate_vehicle_types).
 // Surucu, ancak cekicisinin "cekebildigi araclar" listesinde bu kod varsa talebe uygun sayilir;
-// backend'in tanimadigi degerler (orn. 'pickup', 'van', 'bus') sessizce 'car' olarak kaydediliyordu.
-// Traktor bilerek yok: backend talepte 'traktor', surucu aracinda 'tractor' kullandigi icin eslesmiyor.
-export const towTruckVehicleTypes = [
+// backend'in tanimadigi degerler (orn. 'pickup', 'van', 'bus') 'car' olarak kaydedilir.
+export const roadAssistanceVehicleTypes = [
   { value: 'car', label: 'Otomobil' },
   { value: 'suv', label: 'Arazi Aracı / SUV' },
   { value: 'commercial', label: 'Ticari (Kamyonet, Van, Pickup)' },
   { value: 'minibus', label: 'Minibüs / Otobüs' },
   { value: 'motorcycle', label: 'Motosiklet' },
   { value: 'truck', label: 'Kamyon / Tır' },
+];
+
+// Traktor yalnizca cekicide: backend 379cf04 ile talepte de 'tractor' kullaniyor (eskiden 'traktor')
+export const towTruckVehicleTypes = [
+  ...roadAssistanceVehicleTypes,
+  { value: 'tractor', label: 'Traktör' },
 ];
 
 export const craneDurationOptions = [
