@@ -151,7 +151,8 @@ export interface InsuranceRequestCreatePayload {
   insured_name: string;
   insured_phone: string;
   insured_plate?: string;
-  policy_number?: string;
+  // Backend zorunlu tutuyor (apps/insurance/serializers.py, varsayilani yok)
+  policy_number: string;
   insurance_name?: string;
   location_method?: 'manual' | 'customer_share';
   // customer_share akisinda konum musteriden gelecegi icin opsiyonel
@@ -388,6 +389,18 @@ export interface CreatePaymentLinkResponse {
 }
 
 // --- Konum Paylasimi ---
+
+// Talep olusturulmadan once alinan paylasim token'i (POST /location-share/init/)
+export interface LocationShareInitPayload {
+  insured_phone: string;
+}
+
+export interface LocationShareInitResponse {
+  token: string;
+  share_url: string;
+  expires_at: string;
+  ws_url: string;
+}
 
 export interface SendLocationSmsPayload {
   token: string;

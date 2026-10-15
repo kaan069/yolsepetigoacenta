@@ -71,7 +71,7 @@ export const initialFormState: RequestFormState = {
   dropoff_longitude: 0,
   estimated_km: 0,
 
-  tw_vehicle_type: 'sedan',
+  tw_vehicle_type: 'car',
 
   cr_load_type: '',
   cr_load_weight: '',
@@ -81,7 +81,7 @@ export const initialFormState: RequestFormState = {
   cr_obstacle_note: '',
   cr_duration: '',
 
-  ra_vehicle_type: 'sedan',
+  ra_vehicle_type: 'car',
   ra_problem_types: [],
   ra_problem_description: '',
 

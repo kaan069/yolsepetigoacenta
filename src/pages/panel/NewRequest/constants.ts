@@ -3,14 +3,17 @@ import type { ServiceTypeValue } from '../../../types';
 
 export const serviceTypeOptions = Object.entries(ServiceTypeLabels).map(([value, label]) => ({ value, label }));
 
+// Degerler backend'in cekici arac kodlariyla ayni (core/validators.py validate_vehicle_types).
+// Surucu, ancak cekicisinin "cekebildigi araclar" listesinde bu kod varsa talebe uygun sayilir;
+// backend'in tanimadigi degerler (orn. 'pickup', 'van', 'bus') sessizce 'car' olarak kaydediliyordu.
+// Traktor bilerek yok: backend talepte 'traktor', surucu aracinda 'tractor' kullandigi icin eslesmiyor.
 export const towTruckVehicleTypes = [
-  { value: 'sedan', label: 'Sedan' },
-  { value: 'suv', label: 'SUV' },
-  { value: 'pickup', label: 'Pickup' },
-  { value: 'van', label: 'Van' },
+  { value: 'car', label: 'Otomobil' },
+  { value: 'suv', label: 'Arazi Aracı / SUV' },
+  { value: 'commercial', label: 'Ticari (Kamyonet, Van, Pickup)' },
+  { value: 'minibus', label: 'Minibüs / Otobüs' },
   { value: 'motorcycle', label: 'Motosiklet' },
-  { value: 'truck', label: 'Kamyon' },
-  { value: 'bus', label: 'Otobus' },
+  { value: 'truck', label: 'Kamyon / Tır' },
 ];
 
 export const craneDurationOptions = [

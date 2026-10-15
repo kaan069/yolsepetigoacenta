@@ -20,6 +20,8 @@ import {
   CreatePaymentLinkResponse,
   LocationShareStatusResponse,
   SendLocationSmsPayload,
+  LocationShareInitPayload,
+  LocationShareInitResponse,
   SendLocationSmsResponse,
   PricingQuestionsResponse,
   InvoiceResponse,
@@ -299,6 +301,17 @@ export const getLocationShareStatus = async (
   token: string,
 ): Promise<LocationShareStatusResponse> => {
   const response = await mainApi.get(`/insurance/location-share/${token}/status/`);
+  return response.data;
+};
+
+/**
+ * Talep olusturmadan konum paylasim token'i al. Musteri konum ve gorselleri bu token'a gonderir;
+ * talep, form tamamlaninca konumla birlikte olusturulur.
+ */
+export const initLocationShare = async (payload: LocationShareInitPayload): Promise<LocationShareInitResponse> => {
+  const response = await insuranceApi.post('/location-share/init/', payload, {
+    headers: authHeader(),
+  });
   return response.data;
 };
 

@@ -3,7 +3,7 @@ import type { RequestFormState } from './types';
 export function buildServiceDetails(form: RequestFormState): Record<string, unknown> {
   switch (form.service_type) {
     case 'towTruck':
-      return { vehicle_type: form.tw_vehicle_type || 'sedan' };
+      return { vehicle_type: form.tw_vehicle_type || 'car' };
     case 'crane':
       return {
         ...(form.cr_load_type && { load_type: form.cr_load_type }),

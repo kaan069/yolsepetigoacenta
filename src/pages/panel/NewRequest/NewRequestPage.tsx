@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { createInsuranceRequest, sendLocationSms, getPricingQuestions } from '../../../api';
+import { createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQuestions, getApiError } from '../../../api';
 import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
@@ -59,13 +59,16 @@ export default function NewRequestPage() {
     });
   };
 
-  // Konum paylasimi (request-first: customer_share)
+  // Musteriden konum: once talepsiz paylasim token'i alinir ve SMS bu token'la gider. Talep burada
+  // OLUSTURULMAZ; form tamamlanip "Talep Olustur"a basilinca musterinin konumuyla birlikte olusturulur.
+  // (Talebi erken olusturmak, WS ile gelen konumun talebe islenmemesi sorununa yol aciyordu.)
   const [locationSmsLoading, setLocationSmsLoading] = useState(false);
   const [locationToken, setLocationToken] = useState<string | null>(null);
   const [locationWsUrl, setLocationWsUrl] = useState<string | null>(null);
   const [locationReceived, setLocationReceived] = useState(false);
   const [locationSmsError, setLocationSmsError] = useState('');
-  const [requestId, setRequestId] = useState<number | null>(null);
+  // Alis konumu musteriden mi geldi? Geldiyse talep icin musteriden arac gorseli de beklenir.
+  const [pickupFromCustomer, setPickupFromCustomer] = useState(false);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -76,19 +79,19 @@ export default function NewRequestPage() {
     onLocationReceived: useCallback((loc: { latitude: number; longitude: number; address: string }) => {
       setForm(prev => ({
         ...prev,
-        pickup_address: loc.address,
+        // Musteri sayfasi adresi bos gonderebiliyor; backend ise talepte adres istiyor
+        pickup_address: loc.address || `Müşteri konumu (${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)})`,
         pickup_latitude: loc.latitude,
         pickup_longitude: loc.longitude,
       }));
       setLocationReceived(true);
+      setPickupFromCustomer(true);
     }, []),
     onNotify: useCallback((severity: 'info' | 'success' | 'warning' | 'error', message: string) => {
       enqueueSnackbar(message, { variant: severity });
     }, [enqueueSnackbar]),
   });
 
-  // request-first: talebi customer_share ile olustur, donen ws_token ile paylasimi baslat.
-  // Boylece musterinin yukledigi gorseller talebe FK ile otomatik baglanir.
   const handleStartCustomerShare = async () => {
     if (!form.insured_name || !form.insured_phone) {
       setLocationSmsError('Lutfen once sigortali ad ve telefon bilgisini girin');
@@ -96,51 +99,40 @@ export default function NewRequestPage() {
     }
     setLocationSmsLoading(true);
     setLocationSmsError('');
-    setLocationReceived(false);
 
     try {
       let token = locationToken;
-
-      // Talep henuz olusturulmadiysa once olustur (konum opsiyonel)
-      if (!requestId) {
-        const res = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'customer_share', dispatchMode));
-        setRequestId(res.request_id);
-        token = res.ws_token ?? null;
+      // Ilk istek ya da suresi dolmus link: yeni token. Aksi halde ayni linke SMS yeniden gider.
+      if (!token || shareState.isExpired) {
+        const res = await initLocationShare({ insured_phone: form.insured_phone });
+        token = res.token;
         setLocationToken(token);
-        if (token) {
-          const accessToken = localStorage.getItem('access_token') || '';
-          setLocationWsUrl(`${WS_BASE_URL}/ws/location-share/${token}/?auth=${accessToken}`);
-        }
+        const accessToken = localStorage.getItem('access_token') || '';
+        setLocationWsUrl(`${WS_BASE_URL}/ws/location-share/${token}/?auth=${accessToken}`);
       }
-
-      // SMS gonder (token = ws_token; backend token'i de request_id'yi de kabul ediyor)
-      if (token) {
-        await sendLocationSms({ token });
-      }
+      await sendLocationSms({ token });
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { error?: string } } };
-        setLocationSmsError(axiosErr.response?.data?.error || 'Talep olusturulamadi veya SMS gonderilemedi');
-      } else {
-        setLocationSmsError('Talep olusturulamadi veya SMS gonderilemedi');
-      }
+      setLocationSmsError(getApiError(err).message || 'SMS gonderilemedi. Lutfen tekrar deneyin.');
     } finally {
       setLocationSmsLoading(false);
     }
   };
 
-  // Dogrudan atamada musteri konumu gelince harita ekranina gecilebilir
-  const canAssign = isDirect && (locationReceived || !!shareState.location || shareState.isSubmitted);
-  const createdRequestPath = canAssign ? `/panel/requests/${requestId}/assign` : `/panel/requests/${requestId}`;
-
-  // Musteri formu gonderip bitirince (fotograflar dahil) harita ekranina kendiliginden gec
-  useEffect(() => {
-    if (isDirect && requestId && shareState.isSubmitted) {
-      navigate(`/panel/requests/${requestId}/assign`);
-    }
-  }, [isDirect, requestId, shareState.isSubmitted, navigate]);
-
   const needsDropoff = NEEDS_DROPOFF.includes(form.service_type);
+
+  // "Talep Olustur" ancak bunlar tamamsa aktif; eksikler butonun ustunde listelenir
+  const hasPickup = !!form.pickup_address && !!form.pickup_latitude && !!form.pickup_longitude;
+  const missingItems: string[] = [];
+  if (!form.insured_name.trim()) missingItems.push('Sigortalı adını girin');
+  if (!form.insured_phone.trim()) missingItems.push('Sigortalı telefonunu girin');
+  if (!form.policy_number.trim()) missingItems.push('Poliçe numarasını girin');
+  if (!hasPickup) {
+    missingItems.push(locationToken ? 'Müşterinin konumu bekleniyor' : 'Alış konumunu seçin ya da müşteriden isteyin');
+  }
+  if (hasPickup && pickupFromCustomer && shareState.images.length === 0) {
+    missingItems.push('Müşteriden araç görseli bekleniyor');
+  }
+  if (form.service_type === ServiceType.TowTruck && !form.tw_vehicle_type) missingItems.push('Araç tipini seçin');
 
   const calculateDistance = useCallback((
     pickup: { lat: number; lng: number },
@@ -173,6 +165,8 @@ export default function NewRequestPage() {
   }, []);
 
   const handlePickupLocationSelect = (loc: LocationResult) => {
+    // Haritadan elle secilen konum musteriden gelmedi; musteri gorseli sart degil
+    setPickupFromCustomer(false);
     setForm((prev) => {
       const updated = {
         ...prev,
@@ -263,35 +257,30 @@ export default function NewRequestPage() {
     }));
   };
 
+  // Talep yalnizca burada, konumuyla birlikte olusturulur
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // customer_share ile talep zaten olusturulduysa tekrar olusturma, talebe git
-    if (requestId) {
-      navigate(createdRequestPath);
+    if (missingItems.length > 0) {
+      setError(missingItems[0]);
       return;
     }
     setError('');
 
-    if (!form.insured_name || !form.insured_phone || !form.pickup_address || !form.pickup_latitude || !form.pickup_longitude) {
-      setError('Lutfen zorunlu alanlari doldurun');
-      return;
-    }
-
     setLoading(true);
     try {
-      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, 'manual', dispatchMode));
+      const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode));
       // Dogrudan atamada konum hazir; dogrudan harita ekranina gidilir
       const path = isDirect ? `/panel/requests/${response.request_id}/assign` : `/panel/requests/${response.request_id}`;
       navigate(path, {
         state: { trackingToken: response.tracking_token },
       });
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { error?: string } } };
-        setError(axiosErr.response?.data?.error || 'Talep olusturulurken hata olustu');
-      } else {
-        setError('Bir hata olustu. Lutfen tekrar deneyin.');
-      }
+      const apiError = getApiError(err);
+      setError(
+        apiError.message
+        || Object.values(apiError.fieldErrors)[0]
+        || 'Talep olusturulurken hata olustu. Lutfen tekrar deneyin.',
+      );
     } finally {
       setLoading(false);
     }
@@ -329,12 +318,12 @@ export default function NewRequestPage() {
               {form.service_type !== ServiceType.Crane && (
                 <TextField fullWidth label="Plaka" value={form.insured_plate} onChange={handleChange('insured_plate')} />
               )}
-              <TextField fullWidth label="Police Numarasi" value={form.policy_number} onChange={handleChange('policy_number')} />
+              <TextField fullWidth label="Police Numarasi *" value={form.policy_number} onChange={handleChange('policy_number')} />
             </Box>
 
             <SectionLabel>Dağıtım Yöntemi</SectionLabel>
 
-            <DispatchModeSection value={dispatchMode} onChange={setDispatchMode} locked={!!requestId} />
+            <DispatchModeSection value={dispatchMode} onChange={setDispatchMode} />
 
             <SectionLabel>Alis Konumu</SectionLabel>
 
@@ -395,19 +384,24 @@ export default function NewRequestPage() {
               />
             )}
 
-            {requestId ? (
-              <Button
-                fullWidth type="button" variant="contained" size="large"
-                onClick={() => navigate(createdRequestPath)}
-                sx={{ mt: 1 }}
-              >
-                {canAssign ? 'Sürücü Ata' : shareState.isSubmitted ? 'Surucuye Yonlendir' : 'Talebi Goruntule'}
-              </Button>
-            ) : (
-              <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 1 }}>
-                {loading ? 'Olusturuluyor...' : 'Talep Olustur'}
-              </Button>
+            {missingItems.length > 0 && (
+              <Box sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 2, p: 1.5, mt: 1, mb: 1.5 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#64748b', mb: 0.5 }}>
+                  Talebi oluşturmak için:
+                </Typography>
+                {missingItems.map((item) => (
+                  <Typography key={item} sx={{ fontSize: 13, color: '#334155' }}>• {item}</Typography>
+                ))}
+              </Box>
             )}
+
+            <Button
+              fullWidth type="submit" variant="contained" size="large"
+              disabled={loading || missingItems.length > 0}
+              sx={{ mt: 1 }}
+            >
+              {loading ? 'Olusturuluyor...' : isDirect ? 'Talep Oluştur ve Sürücü Ata' : 'Talep Olustur'}
+            </Button>
           </Box>
         </CardContent>
       </Card>

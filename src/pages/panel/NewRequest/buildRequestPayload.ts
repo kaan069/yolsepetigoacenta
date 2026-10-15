@@ -3,27 +3,25 @@ import type { RequestFormState } from './types';
 import { NEEDS_DROPOFF } from './constants';
 import { buildServiceDetails } from './buildServiceDetails';
 
-// manual: alis konumu formdan gelir. customer_share: konum sonradan musteriden gelir, gonderilmez.
+// Talep her zaman alis konumuyla birlikte olusturulur ('manual'): konum haritadan secilmis ya da
+// musteriden paylasim linkiyle gelmis olabilir. Boylece backend konum detayini olusturma aninda yazar.
 export function buildRequestPayload(
   form: RequestFormState,
   questionAnswers: Record<number, number[]>,
-  locationMethod: 'manual' | 'customer_share',
   dispatchMode: DispatchMode,
 ): InsuranceRequestCreatePayload {
   const payload: InsuranceRequestCreatePayload = {
     service_type: form.service_type,
     insured_name: form.insured_name,
     insured_phone: form.insured_phone,
-    location_method: locationMethod,
+    policy_number: form.policy_number.trim(),
+    location_method: 'manual',
+    pickup_address: form.pickup_address,
+    pickup_latitude: parseFloat(form.pickup_latitude.toFixed(6)),
+    pickup_longitude: parseFloat(form.pickup_longitude.toFixed(6)),
     service_details: buildServiceDetails(form),
     dispatch_mode: dispatchMode,
   };
-
-  if (locationMethod === 'manual') {
-    payload.pickup_address = form.pickup_address;
-    payload.pickup_latitude = parseFloat(form.pickup_latitude.toFixed(6));
-    payload.pickup_longitude = parseFloat(form.pickup_longitude.toFixed(6));
-  }
 
   // Fiyatlandirma soru cevaplarini service_details icine ekle
   const answersArray = Object.entries(questionAnswers)
@@ -41,7 +39,6 @@ export function buildRequestPayload(
   }
 
   if (form.insured_plate) payload.insured_plate = form.insured_plate;
-  if (form.policy_number) payload.policy_number = form.policy_number;
   if (form.insurance_name) payload.insurance_name = form.insurance_name;
 
   return payload;
