@@ -5,6 +5,7 @@ import { ServiceType } from '../../../types';
 import type { RequestFormState } from './types';
 import { towTruckVehicleTypes, craneDurationOptions, problemTypeOptions, timeSlotOptions } from './constants';
 import SectionLabel from './SectionLabel';
+import { colors } from '../../../tokens';
 
 interface ServiceFieldsProps {
   form: RequestFormState;
@@ -76,7 +77,7 @@ function RoadAssistanceFields({ form, onChange, onToggleProblemType }: Pick<Serv
           <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
         ))}
       </TextField>
-      <Typography sx={{ fontSize: 13, color: '#64748b', mb: 1 }}>Sorun Tipi (birden fazla secilebilir)</Typography>
+      <Typography sx={{ fontSize: 13, color: colors.neutral[500], mb: 1 }}>Sorun Tipi (birden fazla secilebilir)</Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
         {problemTypeOptions.map((opt) => (
           <Chip
@@ -175,7 +176,7 @@ function CityToCityFields({ form, onChange }: Pick<ServiceFieldsProps, 'form' | 
         <TextField fullWidth label="Yuk Tipi" value={form.cc_load_type} onChange={onChange('cc_load_type')} placeholder="Orn: Mobilya, palet" />
         <TextField fullWidth label="Yuk Agirligi (kg)" value={form.cc_load_weight} onChange={onChange('cc_load_weight')} type="number" />
       </Box>
-      <Typography sx={{ fontSize: 13, color: '#64748b', mb: 1 }}>Yuk Boyutlari (cm)</Typography>
+      <Typography sx={{ fontSize: 13, color: colors.neutral[500], mb: 1 }}>Yuk Boyutlari (cm)</Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
         <TextField fullWidth label="En" value={form.cc_width} onChange={onChange('cc_width')} type="number" />
         <TextField fullWidth label="Boy" value={form.cc_length} onChange={onChange('cc_length')} type="number" />

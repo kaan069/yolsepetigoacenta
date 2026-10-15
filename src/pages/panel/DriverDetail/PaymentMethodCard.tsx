@@ -6,6 +6,7 @@ import type { DriverPaymentMethod, MissingStep } from '../../../types';
 import { SectionCard } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
 import { useDriverGoneRedirect } from './useDriverGoneRedirect';
+import { colors } from '../../../tokens';
 
 const FORM_FIELDS = ['account_holder_name', 'iban'];
 
@@ -68,10 +69,10 @@ export default function PaymentMethodCard({ driverId, paymentMethod, onSaved }: 
   return (
     <SectionCard id={CARD_IDS.payment} title="Ödeme bilgisi">
       {paymentMethod && (
-        <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 1.5, mb: 2 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{paymentMethod.account_holder_name}</Typography>
-          <Typography sx={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>{paymentMethod.iban_masked}</Typography>
-          <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>
+        <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 1.5, mb: 2 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900] }}>{paymentMethod.account_holder_name}</Typography>
+          <Typography sx={{ fontSize: 13, color: colors.neutral[700], fontFamily: 'monospace' }}>{paymentMethod.iban_masked}</Typography>
+          <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>
             Son güncelleme: {new Date(paymentMethod.updated_at).toLocaleString('tr-TR')}
           </Typography>
         </Box>

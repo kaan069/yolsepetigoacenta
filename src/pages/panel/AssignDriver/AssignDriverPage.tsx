@@ -20,6 +20,7 @@ import DriverList from './DriverList';
 import type { DriverListEmptyState } from './DriverList';
 import AssignmentStatusPanel from './AssignmentStatusPanel';
 import { MAP_ID, DEFAULT_RADIUS_KM, REFRESH_INTERVAL_MS, LOCATION_WAIT_REFRESH_MS, EXPIRY_GRACE_MS } from './constants';
+import { colors } from '../../../tokens';
 
 const ASSIGN_ERROR_MESSAGES: Record<string, string> = {
   DRIVER_BUSY: 'Sürücü şu an başka bir işte ya da başka bir atamada',
@@ -30,7 +31,7 @@ const ASSIGN_ERROR_MESSAGES: Record<string, string> = {
   LOCATION_REQUIRED: 'Müşterinin konumu bekleniyor',
 };
 
-const cardSx = { borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' };
+const cardSx = { borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` };
 
 // Atanabilir degilse (pazaryerinde, kapanmis ya da teklif gelmis) bu ekran yerine talep detayi gosterilir
 const isAssignable = (request: InsuranceRequestDetail) =>
@@ -337,27 +338,27 @@ function AssignDriverView() {
         to={`/panel/requests/${requestId}`}
         startIcon={<ArrowBack />}
         size="small"
-        sx={{ color: '#64748b', fontWeight: 500, mb: 1 }}
+        sx={{ color: colors.neutral[500], fontWeight: 500, mb: 1 }}
       >
         Talep detayı
       </Button>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-        <Typography sx={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>Sürücü Ata</Typography>
-        <Chip label={`Talep #${request.request_id}`} size="small" variant="outlined" sx={{ borderColor: '#e2e8f0', color: '#64748b' }} />
+        <Typography sx={{ fontSize: 22, fontWeight: 700, color: colors.neutral[900] }}>Sürücü Ata</Typography>
+        <Chip label={`Talep #${request.request_id}`} size="small" variant="outlined" sx={{ borderColor: colors.neutral[200], color: colors.neutral[500] }} />
         <Chip
           label={DriverServiceLabels[request.service_type] ?? request.service_type}
           size="small"
           variant="outlined"
-          sx={{ borderColor: '#e2e8f0', color: '#64748b' }}
+          sx={{ borderColor: colors.neutral[200], color: colors.neutral[500] }}
         />
         <Chip
           label={isConnected ? 'Canlı' : 'Bağlanıyor...'}
           size="small"
           sx={{
             fontSize: 10, height: 20,
-            bgcolor: isConnected ? '#dcfce7' : '#fef9c3',
-            color: isConnected ? '#16a34a' : '#ca8a04',
+            bgcolor: isConnected ? colors.success[100] : colors.warning[100],
+            color: isConnected ? colors.success[600] : colors.warning[600],
           }}
         />
       </Box>
@@ -367,7 +368,7 @@ function AssignDriverView() {
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
           gap: 2,
-          height: { md: 'calc(100vh - 210px)' },
+          height: { md: 'calc(100vh - 274px)' },
           minHeight: { md: 520 },
         }}
       >

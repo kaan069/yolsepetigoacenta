@@ -6,6 +6,7 @@ Typography, Card, CardContent, Box, TextField, Button, Alert,
 import { ContentCopy } from '@mui/icons-material';
 import { getProfile, updateWebhook } from '../../api';
 import type { CompanyProfile } from '../../types';
+import { colors } from '../../tokens';
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
@@ -91,8 +92,8 @@ export default function SettingsPage() {
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Ayarlar</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>Sirket bilgileriniz ve API ayarlari</Typography>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Ayarlar</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Sirket bilgileriniz ve API ayarlari</Typography>
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>

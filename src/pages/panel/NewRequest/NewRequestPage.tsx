@@ -21,6 +21,7 @@ import DropoffSection from './DropoffSection';
 import PricingQuestions from './PricingQuestions';
 import DispatchModeSection from './DispatchModeSection';
 import type { LocationResult } from '../../../components/MapPickerDialog';
+import { colors } from '../../../tokens';
 
 export default function NewRequestPage() {
   // Rota (km + sure) hesabi icin Google Maps sayfa acilir acilmaz yuklenir; harita dialoglari ayni anahtarla
@@ -303,13 +304,13 @@ function NewRequestForm() {
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Yeni Talep Olustur</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>Sigortali icin yeni hizmet talebi olusturun</Typography>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Yeni Talep Olustur</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Sigortali icin yeni hizmet talebi olusturun</Typography>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 3 }}>
           <Box component="form" onSubmit={handleSubmit}>
             <SectionLabel>Hizmet Bilgileri</SectionLabel>
@@ -400,12 +401,12 @@ function NewRequestForm() {
             )}
 
             {missingItems.length > 0 && (
-              <Box sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 2, p: 1.5, mt: 1, mb: 1.5 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#64748b', mb: 0.5 }}>
+              <Box sx={{ bgcolor: colors.neutral[50], border: `1px solid ${colors.neutral[200]}`, borderRadius: 2, p: 1.5, mt: 1, mb: 1.5 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: colors.neutral[500], mb: 0.5 }}>
                   Talebi oluşturmak için:
                 </Typography>
                 {missingItems.map((item) => (
-                  <Typography key={item} sx={{ fontSize: 13, color: '#334155' }}>• {item}</Typography>
+                  <Typography key={item} sx={{ fontSize: 13, color: colors.neutral[700] }}>• {item}</Typography>
                 ))}
               </Box>
             )}

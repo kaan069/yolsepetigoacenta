@@ -13,6 +13,7 @@ import {
 } from './vehicleConfig';
 import { otherFieldErrors } from './constants';
 import { useDriverGoneRedirect } from './useDriverGoneRedirect';
+import { colors } from '../../../tokens';
 
 interface VehicleFormState {
   brand: string;
@@ -292,7 +293,7 @@ export default function VehicleFormDialog({
     options: { value: string; label: string }[],
   ) => (
     <Box sx={{ mb: 2 }}>
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 1 }}>{title}</Typography>
+      <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[700], mb: 1 }}>{title}</Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {options.map((option) => (
           <Chip
@@ -425,7 +426,7 @@ export default function VehicleFormDialog({
             </Box>
             <FormControlLabel
               control={<Switch checked={form.has_helper} onChange={(e) => update({ has_helper: e.target.checked })} />}
-              label={<Typography sx={{ fontSize: 14, color: '#334155' }}>Yardımcı personel var</Typography>}
+              label={<Typography sx={{ fontSize: 14, color: colors.neutral[700] }}>Yardımcı personel var</Typography>}
               sx={{ mb: 2 }}
             />
           </>
@@ -463,7 +464,7 @@ export default function VehicleFormDialog({
         {notice && <Alert severity="error" sx={{ borderRadius: 2 }}>{notice}</Alert>}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={saving} sx={{ color: '#64748b' }}>Vazgeç</Button>
+        <Button onClick={onClose} disabled={saving} sx={{ color: colors.neutral[500] }}>Vazgeç</Button>
         <Button variant="contained" onClick={handleSubmit} disabled={saving} sx={{ borderRadius: 2 }}>
           {saving ? 'Kaydediliyor...' : editing ? 'Kaydet' : 'Aracı Ekle'}
         </Button>

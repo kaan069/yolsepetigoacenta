@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import type { AvailableDriver } from '../../../types';
 import { driverFullName, formatDistance, describeLocation, describeLastSeen } from '../../../utils/drivers';
 import { RADIUS_OPTIONS } from './constants';
+import { colors } from '../../../tokens';
 
 export type DriverListEmptyState = 'location_pending' | 'pool_empty' | 'no_available' | 'load_failed' | null;
 
@@ -34,9 +35,9 @@ function EmptyMessage({ icon, title, description, children }: {
 }) {
   return (
     <Box sx={{ py: 6, px: 3, textAlign: 'center' }}>
-      <Box sx={{ color: '#cbd5e1', mb: 1.5, '& svg': { fontSize: 48 } }}>{icon}</Box>
-      <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#334155', mb: 0.5 }}>{title}</Typography>
-      {description && <Typography sx={{ fontSize: 13, color: '#94a3b8', mb: 2 }}>{description}</Typography>}
+      <Box sx={{ color: colors.neutral[300], mb: 1.5, '& svg': { fontSize: 48 } }}>{icon}</Box>
+      <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[700], mb: 0.5 }}>{title}</Typography>
+      {description && <Typography sx={{ fontSize: 13, color: colors.neutral[400], mb: 2 }}>{description}</Typography>}
       {children && <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>{children}</Box>}
     </Box>
   );
@@ -100,29 +101,29 @@ export default function DriverList({
           onClick={() => onSelect(item)}
           sx={{
             px: 2, py: 1.5, cursor: 'pointer',
-            borderBottom: '1px solid #f1f5f9',
-            borderLeft: selected ? '3px solid #0ea5e9' : '3px solid transparent',
-            bgcolor: selected ? '#f0f9ff' : 'transparent',
-            '&:hover': { bgcolor: selected ? '#f0f9ff' : '#f8fafc' },
+            borderBottom: `1px solid ${colors.neutral[100]}`,
+            borderLeft: selected ? `3px solid ${colors.primary[500]}` : '3px solid transparent',
+            bgcolor: selected ? colors.primary[50] : 'transparent',
+            '&:hover': { bgcolor: selected ? colors.primary[50] : colors.neutral[50] },
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography noWrap sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                <Typography noWrap sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>
                   {driverFullName(driver)}
                 </Typography>
                 {!driver.is_online && (
-                  <Chip label="Çevrimdışı" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f1f5f9', color: '#64748b' }} />
+                  <Chip label="Çevrimdışı" size="small" sx={{ height: 18, fontSize: 10, bgcolor: colors.neutral[100], color: colors.neutral[500] }} />
                 )}
               </Box>
-              <Typography sx={{ fontSize: 12, color: location ? '#64748b' : '#f97316', mt: 0.25 }}>
+              <Typography sx={{ fontSize: 12, color: location ? colors.neutral[500] : colors.secondary[500], mt: 0.25 }}>
                 {distance_km != null && `${formatDistance(distance_km)} · `}
                 {describeLocation(location, loadedAt)}
               </Typography>
-              {lastSeen && <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>{lastSeen}</Typography>}
+              {lastSeen && <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>{lastSeen}</Typography>}
               {vehicles.map((vehicle) => (
-                <Typography key={vehicle.id} sx={{ fontSize: 12, color: '#94a3b8' }}>
+                <Typography key={vehicle.id} sx={{ fontSize: 12, color: colors.neutral[400] }}>
                   {vehicle.plate_number} · {vehicle.brand} {vehicle.model}
                 </Typography>
               ))}
@@ -148,9 +149,9 @@ export default function DriverList({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       {/* Filtreler */}
-      <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ p: 2, borderBottom: `1px solid ${colors.neutral[200]}`, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
             Müsait sürücüler{drivers.length > 0 && !emptyState ? ` (${drivers.length})` : ''}
           </Typography>
           <Tooltip title="Yenile">
@@ -174,7 +175,7 @@ export default function DriverList({
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <Typography sx={{ fontSize: 12, color: '#94a3b8' }}>
+        <Typography sx={{ fontSize: 12, color: colors.neutral[400] }}>
           Çevrimdışı sürücüler iş adreslerinde, gri olarak gösterilir.
         </Typography>
       </Box>

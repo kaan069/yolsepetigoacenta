@@ -9,6 +9,7 @@ import {
 import { Close, Search, LocationOn, MyLocation } from '@mui/icons-material';
 import { APIProvider, Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { GOOGLE_MAPS_API_KEY } from '../config';
+import { colors, alpha } from '../tokens';
 
 export interface LocationResult {
   address: string;
@@ -241,22 +242,22 @@ function MapPickerDialogContent({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid #e2e8f0',
+          borderBottom: `1px solid ${colors.neutral[200]}`,
           py: 1.5,
           px: 2.5,
         }}
       >
-        <Typography sx={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 700, color: colors.neutral[900] }}>
           {title}
         </Typography>
-        <IconButton onClick={onClose} size="small" sx={{ color: '#64748b' }}>
+        <IconButton onClick={onClose} size="small" sx={{ color: colors.neutral[500] }}>
           <Close />
         </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Search Bar */}
-        <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', position: 'relative', zIndex: 2 }}>
+        <Box sx={{ p: 2, borderBottom: `1px solid ${colors.neutral[200]}`, position: 'relative', zIndex: 2 }}>
           <TextField
             fullWidth
             placeholder="Adres veya konum ara..."
@@ -267,7 +268,7 @@ function MapPickerDialogContent({
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search sx={{ color: '#94a3b8', fontSize: 20 }} />
+                    <Search sx={{ color: colors.neutral[400], fontSize: 20 }} />
                   </InputAdornment>
                 ),
                 endAdornment: isSearching ? (
@@ -307,17 +308,17 @@ function MapPickerDialogContent({
                     onClick={() => handleSelectPrediction(prediction)}
                     sx={{
                       py: 1,
-                      '&:hover': { bgcolor: '#f0f9ff' },
+                      '&:hover': { bgcolor: colors.primary[50] },
                     }}
                   >
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <LocationOn sx={{ color: '#94a3b8', fontSize: 20 }} />
+                      <LocationOn sx={{ color: colors.neutral[400], fontSize: 20 }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={prediction.structured_formatting.main_text}
                       secondary={prediction.structured_formatting.secondary_text}
-                      primaryTypographyProps={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}
-                      secondaryTypographyProps={{ fontSize: 12, color: '#64748b' }}
+                      primaryTypographyProps={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900] }}
+                      secondaryTypographyProps={{ fontSize: 12, color: colors.neutral[500] }}
                     />
                   </ListItemButton>
                 ))}
@@ -345,7 +346,7 @@ function MapPickerDialogContent({
                   lng: selectedLocation.longitude,
                 }}
               >
-                <Pin background="#0ea5e9" borderColor="#0284c7" glyphColor="#ffffff" />
+                <Pin background={colors.primary[500]} borderColor={colors.primary[600]} glyphColor="#ffffff" />
               </AdvancedMarker>
             )}
           </Map>
@@ -358,7 +359,7 @@ function MapPickerDialogContent({
                 bottom: 16,
                 left: '50%',
                 transform: 'translateX(-50%)',
-                bgcolor: 'rgba(15, 23, 42, 0.85)',
+                bgcolor: `${alpha(colors.neutral[900], 0.85)}`,
                 color: 'white',
                 px: 2.5,
                 py: 1,
@@ -379,14 +380,14 @@ function MapPickerDialogContent({
 
         {/* Selected Location Info */}
         {selectedLocation && (
-          <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+          <Box sx={{ p: 2, borderTop: `1px solid ${colors.neutral[200]}`, bgcolor: colors.neutral[50] }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <LocationOn sx={{ color: '#0ea5e9', fontSize: 18 }} />
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a', flex: 1 }}>
+              <LocationOn sx={{ color: colors.primary[500], fontSize: 18 }} />
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900], flex: 1 }}>
                 {selectedLocation.address}
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 12, color: '#64748b', pl: 3.5 }}>
+            <Typography sx={{ fontSize: 12, color: colors.neutral[500], pl: 3.5 }}>
               Enlem: {selectedLocation.latitude.toFixed(4)} | Boylam: {selectedLocation.longitude.toFixed(4)}
             </Typography>
           </Box>
@@ -394,14 +395,14 @@ function MapPickerDialogContent({
       </DialogContent>
 
       {/* Actions */}
-      <DialogActions sx={{ borderTop: '1px solid #e2e8f0', px: 2.5, py: 1.5 }}>
+      <DialogActions sx={{ borderTop: `1px solid ${colors.neutral[200]}`, px: 2.5, py: 1.5 }}>
         <Button
           onClick={onClose}
           variant="outlined"
           sx={{
-            borderColor: '#e2e8f0',
-            color: '#64748b',
-            '&:hover': { borderColor: '#cbd5e1', bgcolor: '#f8fafc' },
+            borderColor: colors.neutral[200],
+            color: colors.neutral[500],
+            '&:hover': { borderColor: colors.neutral[300], bgcolor: colors.neutral[50] },
           }}
         >
           Iptal
@@ -411,11 +412,11 @@ function MapPickerDialogContent({
           variant="contained"
           disabled={!selectedLocation}
           sx={{
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            background: `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`,
             fontWeight: 600,
-            boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
+            boxShadow: `0 4px 14px ${alpha(colors.primary[500], 0.35)}`,
             '&:hover': {
-              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[700]} 100%)`,
             },
           }}
         >

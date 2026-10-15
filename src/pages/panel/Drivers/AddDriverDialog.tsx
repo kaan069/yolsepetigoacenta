@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import LinkDriverTab from './LinkDriverTab';
 import RegisterDriverTab from './RegisterDriverTab';
+import { colors } from '../../../tokens';
 
 type TabValue = 'link' | 'register';
 
@@ -54,7 +55,7 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600 }}>
         Sürücü Ekle
-        <IconButton onClick={onClose} size="small" sx={{ color: '#64748b' }}>
+        <IconButton onClick={onClose} size="small" sx={{ color: colors.neutral[500] }}>
           <Close />
         </IconButton>
       </DialogTitle>
@@ -68,7 +69,7 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
             </Alert>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={onClose} sx={{ color: '#64748b' }}>Kapat</Button>
+            <Button onClick={onClose} sx={{ color: colors.neutral[500] }}>Kapat</Button>
             <Button
               variant="contained"
               onClick={() => {
@@ -87,7 +88,7 @@ export default function AddDriverDialog({ onClose, onAdded }: AddDriverDialogPro
             value={tab}
             onChange={(_, value: TabValue) => setTab(value)}
             variant="fullWidth"
-            sx={{ borderBottom: '1px solid #e2e8f0' }}
+            sx={{ borderBottom: `1px solid ${colors.neutral[200]}` }}
           >
             <Tab value="link" label="Numarayla ekle" sx={{ textTransform: 'none', fontWeight: 600 }} />
             <Tab value="register" label="Yeni sürücü kaydet" sx={{ textTransform: 'none', fontWeight: 600 }} />

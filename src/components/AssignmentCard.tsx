@@ -10,16 +10,17 @@ import { driverFullName } from '../utils/drivers';
 import { ASSIGNABLE_STATUSES } from '../utils/assignments';
 import { useCountdown } from '../hooks/useCountdown';
 import OpenMarketplaceDialog from './OpenMarketplaceDialog';
+import { colors } from '../tokens';
 
 const statusColors: Record<AgencyAssignment['status'], { bg: string; color: string }> = {
-  pending: { bg: '#e0f2fe', color: '#0369a1' },
-  offered: { bg: '#dcfce7', color: '#16a34a' },
-  declined: { bg: '#fee2e2', color: '#dc2626' },
-  expired: { bg: '#f1f5f9', color: '#64748b' },
-  cancelled: { bg: '#f1f5f9', color: '#64748b' },
+  pending: { bg: colors.primary[100], color: colors.primary[700] },
+  offered: { bg: colors.success[100], color: colors.success[600] },
+  declined: { bg: colors.danger[100], color: colors.danger[600] },
+  expired: { bg: colors.neutral[100], color: colors.neutral[500] },
+  cancelled: { bg: colors.neutral[100], color: colors.neutral[500] },
 };
 
-const cardSx = { borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 3 };
+const cardSx = { borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 3 };
 
 interface AssignmentCardProps {
   request: InsuranceRequestDetail;
@@ -62,12 +63,12 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
     current = (
       <>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <HourglassTop sx={{ fontSize: 28, color: '#0ea5e9' }} />
+          <HourglassTop sx={{ fontSize: 28, color: colors.primary[500] }} />
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
               {driverFullName(active.driver)} · yanıt bekleniyor
             </Typography>
-            <Typography sx={{ fontSize: 13, color: countdown.isExpired ? '#ef4444' : '#64748b' }}>
+            <Typography sx={{ fontSize: 13, color: countdown.isExpired ? colors.danger[500] : colors.neutral[500] }}>
               {countdown.isExpired ? 'Süre doldu, sonuç bekleniyor' : `Yanıt için ${countdown.label}`}
             </Typography>
           </Box>
@@ -84,12 +85,12 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
     if (assignable) {
       current = (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <CheckCircle sx={{ fontSize: 28, color: '#16a34a' }} />
+          <CheckCircle sx={{ fontSize: 28, color: colors.success[600] }} />
           <Box>
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
               {driverFullName(active.driver)} teklif verdi
             </Typography>
-            <Typography sx={{ fontSize: 13, color: '#64748b' }}>Teklifi aşağıdaki listeden onaylayabilirsiniz.</Typography>
+            <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Teklifi aşağıdaki listeden onaylayabilirsiniz.</Typography>
           </Box>
         </Box>
       );
@@ -98,10 +99,10 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
     current = (
       <>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <PersonSearch sx={{ fontSize: 28, color: '#94a3b8' }} />
+          <PersonSearch sx={{ fontSize: 28, color: colors.neutral[400] }} />
           <Box>
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Sürücü atanmadı</Typography>
-            <Typography sx={{ fontSize: 13, color: '#64748b' }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>Sürücü atanmadı</Typography>
+            <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
               Talep yayınlanmadı. Haritadan kendi sürücünüzü seçin ya da talebi pazaryerine açın.
             </Typography>
           </Box>
@@ -126,32 +127,32 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
   return (
     <Card sx={cardSx}>
       <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
           Doğrudan Atama
         </Typography>
 
         {current}
 
         {history.length > 0 && (
-          <Box sx={{ mt: current ? 2.5 : 0, pt: current ? 2 : 0, borderTop: current ? '1px solid #e2e8f0' : 'none' }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#64748b', mb: 1 }}>Atama geçmişi</Typography>
+          <Box sx={{ mt: current ? 2.5 : 0, pt: current ? 2 : 0, borderTop: current ? `1px solid ${colors.neutral[200]}` : 'none' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: colors.neutral[500], mb: 1 }}>Atama geçmişi</Typography>
             {history.map((item) => {
-              const colors = statusColors[item.status] ?? statusColors.cancelled;
+              const tone = statusColors[item.status] ?? statusColors.cancelled;
               return (
               <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.75, flexWrap: 'wrap' }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: colors.color, flexShrink: 0 }} />
-                <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{driverFullName(item.driver)}</Typography>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: tone.color, flexShrink: 0 }} />
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>{driverFullName(item.driver)}</Typography>
                 <Chip
                   label={AssignmentStatusLabels[item.status] ?? item.status}
                   size="small"
-                  sx={{ height: 20, fontSize: 11, fontWeight: 600, bgcolor: colors.bg, color: colors.color }}
+                  sx={{ height: 20, fontSize: 11, fontWeight: 600, bgcolor: tone.bg, color: tone.color }}
                 />
                 {item.cancel_reason && (
-                  <Typography sx={{ fontSize: 12, color: '#64748b' }}>
+                  <Typography sx={{ fontSize: 12, color: colors.neutral[500] }}>
                     {AssignmentCancelReasonLabels[item.cancel_reason] ?? item.cancel_reason}
                   </Typography>
                 )}
-                <Typography sx={{ fontSize: 12, color: '#94a3b8', ml: 'auto' }}>
+                <Typography sx={{ fontSize: 12, color: colors.neutral[400], ml: 'auto' }}>
                   {new Date(item.created_at).toLocaleString('tr-TR')}
                 </Typography>
               </Box>

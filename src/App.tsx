@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { ThemeProvider, CssBaseline, Box, IconButton } from '@mui/material';
-import { WhatsApp, Email } from '@mui/icons-material';
+import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
 import { theme } from './theme';
@@ -8,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import PublicLayout from './layouts/PublicLayout';
 import PanelLayout from './layouts/PanelLayout';
 import PageLoader from './components/PageLoader';
+import ContactFab from './components/ContactFab';
 
 // Sayfalar ayri chunk'lara bolunur; harita kutuphanesi yalnizca gereken sayfada yuklenir
 const HomePage = lazy(() => import('./pages/public/HomePage'));
@@ -65,33 +65,7 @@ function App() {
         </Routes>
         </Suspense>
 
-        {/* Sabit iletisim butonlari */}
-        <Box sx={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 1.5, zIndex: 1300 }}>
-          <IconButton
-            component="a"
-            href="https://wa.me/905550103434"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              width: 48, height: 48, bgcolor: '#25D366', color: 'white',
-              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
-              '&:hover': { bgcolor: '#1da851' },
-            }}
-          >
-            <WhatsApp />
-          </IconButton>
-          <IconButton
-            component="a"
-            href="mailto:info@yolsepetigo.com"
-            sx={{
-              width: 48, height: 48, bgcolor: '#0ea5e9', color: 'white',
-              boxShadow: '0 4px 14px rgba(14, 165, 233, 0.4)',
-              '&:hover': { bgcolor: '#0284c7' },
-            }}
-          >
-            <Email />
-          </IconButton>
-        </Box>
+        <ContactFab />
       </AuthProvider>
       </SnackbarProvider>
     </ThemeProvider>

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
 import { MyLocation, CheckCircle } from '@mui/icons-material';
 import { submitSharedLocation } from '../../api';
+import { colors } from '../../tokens';
 
 type Status = 'idle' | 'locating' | 'submitting' | 'success' | 'error';
 
@@ -61,8 +62,8 @@ export default function LocationSharePage() {
 
   if (!token) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f8fafc', p: 3 }}>
-        <Typography sx={{ color: '#ef4444', fontSize: 16 }}>Gecersiz link</Typography>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: colors.neutral[50], p: 3 }}>
+        <Typography sx={{ color: colors.danger[500], fontSize: 16 }}>Gecersiz link</Typography>
       </Box>
     );
   }
@@ -70,7 +71,7 @@ export default function LocationSharePage() {
   return (
     <Box sx={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', bgcolor: '#f8fafc', p: 3,
+      alignItems: 'center', justifyContent: 'center', bgcolor: colors.neutral[50], p: 3,
     }}>
       <Box sx={{
         maxWidth: 400, width: '100%', textAlign: 'center',
@@ -78,20 +79,20 @@ export default function LocationSharePage() {
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}>
         {/* Logo / Baslik */}
-        <Typography sx={{ fontSize: 22, fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>
           Yol Sepeti Go
         </Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b', mb: 4 }}>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500], mb: 4 }}>
           Konumunuzu paylasin
         </Typography>
 
         {status === 'success' ? (
           <Box>
-            <CheckCircle sx={{ fontSize: 56, color: '#10b981', mb: 2 }} />
-            <Typography sx={{ fontSize: 18, fontWeight: 600, color: '#065f46', mb: 1 }}>
+            <CheckCircle sx={{ fontSize: 56, color: colors.success[500], mb: 2 }} />
+            <Typography sx={{ fontSize: 18, fontWeight: 600, color: colors.success[800], mb: 1 }}>
               Konumunuz iletildi
             </Typography>
-            <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+            <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
               Tesekkurler! Bu sayfayi kapatabilirsiniz.
             </Typography>
           </Box>
@@ -103,7 +104,7 @@ export default function LocationSharePage() {
               </Alert>
             )}
 
-            <Typography sx={{ fontSize: 14, color: '#475569', mb: 3, lineHeight: 1.6 }}>
+            <Typography sx={{ fontSize: 14, color: colors.neutral[600], mb: 3, lineHeight: 1.6 }}>
               Cekici hizmetinin size ulasabilmesi icin konumunuzu paylasmaniz gerekmektedir.
             </Typography>
 
@@ -120,7 +121,7 @@ export default function LocationSharePage() {
               }
               sx={{
                 py: 1.5, borderRadius: 2, fontSize: 16, fontWeight: 600,
-                bgcolor: '#0ea5e9', '&:hover': { bgcolor: '#0284c7' },
+                bgcolor: colors.primary[500], '&:hover': { bgcolor: colors.primary[600] },
                 textTransform: 'none',
               }}
             >
@@ -133,7 +134,7 @@ export default function LocationSharePage() {
                     : 'Konumumu Paylas'}
             </Button>
 
-            <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 2 }}>
+            <Typography sx={{ fontSize: 11, color: colors.neutral[400], mt: 2 }}>
               Butona bastiginizda tarayiciniz konum izni isteyecektir
             </Typography>
           </Box>

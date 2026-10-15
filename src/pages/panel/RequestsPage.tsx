@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { listInsuranceRequests } from '../../api';
 import { RequestStatus, RequestStatusLabels, RequestStatusColors, ServiceTypeLabels } from '../../types';
 import type { InsuranceRequestSummary } from '../../types';
+import { colors, alpha } from '../../tokens';
 
 const statusFilters = [
   { label: 'Tumu', value: '' },
@@ -56,8 +57,8 @@ export default function RequestsPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Talepler</Typography>
-          <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+          <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Talepler</Typography>
+          <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
             {totalCount > 0 ? `Toplam ${totalCount} talep` : 'Tum taleplerinizi buradan yonetin'}
           </Typography>
         </Box>
@@ -67,9 +68,9 @@ export default function RequestsPage() {
           component={Link}
           to="/panel/requests/new"
           sx={{
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-            boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
-            '&:hover': { boxShadow: '0 6px 20px rgba(14, 165, 233, 0.4)' },
+            background: `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`,
+            boxShadow: `0 4px 14px ${alpha(colors.primary[500], 0.35)}`,
+            '&:hover': { boxShadow: `0 6px 20px ${alpha(colors.primary[500], 0.4)}` },
           }}
         >
           Yeni Talep
@@ -86,12 +87,12 @@ export default function RequestsPage() {
             sx={{
               fontWeight: statusFilter === f.value ? 600 : 400,
               fontSize: 13,
-              bgcolor: statusFilter === f.value ? '#0ea5e9' : 'white',
-              color: statusFilter === f.value ? 'white' : '#64748b',
-              border: statusFilter === f.value ? 'none' : '1px solid #e2e8f0',
-              boxShadow: statusFilter === f.value ? '0 2px 8px rgba(14, 165, 233, 0.3)' : 'none',
+              bgcolor: statusFilter === f.value ? colors.primary[500] : 'white',
+              color: statusFilter === f.value ? 'white' : colors.neutral[500],
+              border: statusFilter === f.value ? 'none' : `1px solid ${colors.neutral[200]}`,
+              boxShadow: statusFilter === f.value ? `0 2px 8px ${alpha(colors.primary[500], 0.3)}` : 'none',
               '&:hover': {
-                bgcolor: statusFilter === f.value ? '#0284c7' : '#f8fafc',
+                bgcolor: statusFilter === f.value ? colors.primary[600] : colors.neutral[50],
               },
             }}
           />
@@ -101,7 +102,7 @@ export default function RequestsPage() {
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
       {/* Tablo */}
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 0 }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -109,9 +110,9 @@ export default function RequestsPage() {
             </Box>
           ) : requests.length === 0 ? (
             <Box sx={{ py: 10, textAlign: 'center' }}>
-              <ListAlt sx={{ fontSize: 56, color: '#e2e8f0', mb: 1.5 }} />
-              <Typography sx={{ color: '#94a3b8', fontSize: 15, mb: 0.5 }}>Talep bulunmuyor</Typography>
-              <Typography sx={{ color: '#cbd5e1', fontSize: 13 }}>
+              <ListAlt sx={{ fontSize: 56, color: colors.neutral[200], mb: 1.5 }} />
+              <Typography sx={{ color: colors.neutral[400], fontSize: 15, mb: 0.5 }}>Talep bulunmuyor</Typography>
+              <Typography sx={{ color: colors.neutral[300], fontSize: 13 }}>
                 {statusFilter ? 'Bu filtreye uygun talep yok' : 'Ilk talebi olusturmak icin "Yeni Talep" butonuna basin'}
               </Typography>
             </Box>
@@ -119,7 +120,7 @@ export default function RequestsPage() {
             <>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ '& th': { bgcolor: '#f8fafc', color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: '1px solid #e2e8f0' } }}>
+                  <TableRow sx={{ '& th': { bgcolor: colors.neutral[50], color: colors.neutral[500], fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: `1px solid ${colors.neutral[200]}` } }}>
                     <TableCell>Talep ID</TableCell>
                     <TableCell>Hizmet Tipi</TableCell>
                     <TableCell>Sigortali Adi</TableCell>
@@ -134,21 +135,21 @@ export default function RequestsPage() {
                     <TableRow
                       key={req.request_id}
                       hover
-                      sx={{ '& td': { py: 1.5, borderBottom: '1px solid #f1f5f9' }, '&:hover': { bgcolor: '#f8fafc' }, cursor: 'pointer', textDecoration: 'none' }}
+                      sx={{ '& td': { py: 1.5, borderBottom: `1px solid ${colors.neutral[100]}` }, '&:hover': { bgcolor: colors.neutral[50] }, cursor: 'pointer', textDecoration: 'none' }}
                       component={Link}
                       to={`/panel/requests/${req.request_id}`}
                     >
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>#{req.request_id}</Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900] }}>#{req.request_id}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{ServiceTypeLabels[req.service_type] || req.service_type}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{ServiceTypeLabels[req.service_type] || req.service_type}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{req.insured_name}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{req.insured_name}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#64748b', fontFamily: 'monospace' }}>{req.policy_number}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[500], fontFamily: 'monospace' }}>{req.policy_number}</Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -159,10 +160,10 @@ export default function RequestsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>{new Date(req.created_at).toLocaleDateString('tr-TR')}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[400] }}>{new Date(req.created_at).toLocaleDateString('tr-TR')}</Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <IconButton size="small" sx={{ color: '#cbd5e1' }}>
+                        <IconButton size="small" sx={{ color: colors.neutral[300] }}>
                           <ArrowForward sx={{ fontSize: 16 }} />
                         </IconButton>
                       </TableCell>
@@ -172,14 +173,14 @@ export default function RequestsPage() {
               </Table>
 
               {totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, py: 2, borderTop: '1px solid #e2e8f0' }}>
-                  <IconButton size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} sx={{ color: '#64748b' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, py: 2, borderTop: `1px solid ${colors.neutral[200]}` }}>
+                  <IconButton size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} sx={{ color: colors.neutral[500] }}>
                     <ChevronLeft />
                   </IconButton>
-                  <Typography sx={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500], fontWeight: 500 }}>
                     Sayfa {page} / {totalPages}
                   </Typography>
-                  <IconButton size="small" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ color: '#64748b' }}>
+                  <IconButton size="small" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ color: colors.neutral[500] }}>
                     <ChevronRight />
                   </IconButton>
                 </Box>

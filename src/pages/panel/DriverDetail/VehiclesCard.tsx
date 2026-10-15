@@ -9,6 +9,7 @@ import { SectionCard, VerificationChip } from './parts';
 import { CARD_IDS } from './constants';
 import VehicleFormDialog from './VehicleFormDialog';
 import VehicleDocumentsDialog from './VehicleDocumentsDialog';
+import { colors } from '../../../tokens';
 
 interface VehiclesCardProps {
   driverId: number;
@@ -68,7 +69,7 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved, on
       ) : addButton}
     >
       {vehicles.length === 0 ? (
-        <Typography sx={{ fontSize: 13, color: '#94a3b8', py: 1 }}>
+        <Typography sx={{ fontSize: 13, color: colors.neutral[400], py: 1 }}>
           Henüz araç yok. Sürücünün iş alabilmesi için hizmet verdiği tipte, belgeleri onaylı bir aracı olmalı.
         </Typography>
       ) : (
@@ -77,24 +78,24 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved, on
           return (
             <Box
               key={`${item.vehicle_type}-${vehicle.id}`}
-              sx={{ py: 1.5, borderBottom: '1px solid #f1f5f9', '&:last-of-type': { borderBottom: 'none' } }}
+              sx={{ py: 1.5, borderBottom: `1px solid ${colors.neutral[100]}`, '&:last-of-type': { borderBottom: 'none' } }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
                   label={DriverVehicleTypeLabels[item.vehicle_type] ?? item.vehicle_type}
                   size="small"
                   variant="outlined"
-                  sx={{ height: 22, fontSize: 11, borderColor: '#e2e8f0', color: '#64748b' }}
+                  sx={{ height: 22, fontSize: 11, borderColor: colors.neutral[200], color: colors.neutral[500] }}
                 />
-                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>
                   {vehicle.brand} {vehicle.model} · {vehicle.year}
                 </Typography>
-                <Typography sx={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>{vehicle.plate_number}</Typography>
+                <Typography sx={{ fontSize: 13, color: colors.neutral[700], fontFamily: 'monospace' }}>{vehicle.plate_number}</Typography>
                 <Box sx={{ flex: 1 }} />
                 <VerificationChip status={vehicle.verification_status} />
               </Box>
               {vehicle.verification_status === 'rejected' && vehicle.verification_rejection_reason && (
-                <Typography sx={{ fontSize: 12, color: '#dc2626', mt: 0.5 }}>
+                <Typography sx={{ fontSize: 12, color: colors.danger[600], mt: 0.5 }}>
                   Red sebebi: {vehicle.verification_rejection_reason}
                 </Typography>
               )}
@@ -107,7 +108,7 @@ export default function VehiclesCard({ driverId, services, vehicles, onSaved, on
         })
       )}
 
-      <Typography sx={{ fontSize: 12, color: '#94a3b8', mt: 1.5 }}>
+      <Typography sx={{ fontSize: 12, color: colors.neutral[400], mt: 1.5 }}>
         Yüklenen ya da değiştirilen her belge admin onayına düşer. Onaylı bir aracın plakası değiştirilirse
         belgeleri de yeniden onaya düşer; marka, model gibi diğer alanlar onayı bozmaz.
       </Typography>

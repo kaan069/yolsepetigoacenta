@@ -9,6 +9,7 @@ import { getProfile, listInsuranceRequests } from '../../api';
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
 import type { CompanyProfile, InsuranceRequestSummary } from '../../types';
 import { useAuth } from '../../contexts/auth';
+import { colors, alpha } from '../../tokens';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -50,21 +51,21 @@ export default function DashboardPage() {
   const stats = profile?.statistics;
 
   const statCards = [
-    { label: 'Toplam Talep', value: stats?.total_requests ?? 0, icon: <Assignment sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)', shadow: 'rgba(14, 165, 233, 0.3)' },
-    { label: 'Beklemede', value: stats?.pending_requests ?? 0, icon: <HourglassEmpty sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)', shadow: 'rgba(249, 115, 22, 0.3)' },
+    { label: 'Toplam Talep', value: stats?.total_requests ?? 0, icon: <Assignment sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[400]} 100%)`, shadow: `${alpha(colors.primary[500], 0.3)}` },
+    { label: 'Beklemede', value: stats?.pending_requests ?? 0, icon: <HourglassEmpty sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.secondary[500]} 0%, ${colors.secondary[400]} 100%)`, shadow: `${alpha(colors.secondary[500], 0.3)}` },
     { label: 'Devam Ediyor', value: stats?.in_progress_requests ?? 0, icon: <LocalShipping sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', shadow: 'rgba(139, 92, 246, 0.3)' },
-    { label: 'Tamamlanan', value: stats?.completed_requests ?? 0, icon: <CheckCircle sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)', shadow: 'rgba(34, 197, 94, 0.3)' },
-    { label: 'Iptal Edilen', value: stats?.cancelled_requests ?? 0, icon: <Cancel sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)', shadow: 'rgba(239, 68, 68, 0.3)' },
+    { label: 'Tamamlanan', value: stats?.completed_requests ?? 0, icon: <CheckCircle sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.success[500]} 0%, ${colors.success[400]} 100%)`, shadow: `${alpha(colors.success[500], 0.3)}` },
+    { label: 'Iptal Edilen', value: stats?.cancelled_requests ?? 0, icon: <Cancel sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.danger[500]} 0%, ${colors.danger[400]} 100%)`, shadow: `${alpha(colors.danger[500], 0.3)}` },
   ];
 
   return (
     <Box>
       {/* Baslik */}
       <Box sx={{ mb: 4 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>
           Hosgeldiniz, {user?.contact_person || user?.name}
         </Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
           Islemlerinizin ozeti asagida yer almaktadir
         </Typography>
       </Box>
@@ -84,12 +85,12 @@ export default function DashboardPage() {
                 }}>
                   {card.icon}
                 </Box>
-                <TrendingUp sx={{ color: '#cbd5e1', fontSize: 18 }} />
+                <TrendingUp sx={{ color: colors.neutral[300], fontSize: 18 }} />
               </Box>
-              <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+              <Typography sx={{ fontSize: 28, fontWeight: 700, color: colors.neutral[900], lineHeight: 1 }}>
                 {card.value}
               </Typography>
-              <Typography sx={{ fontSize: 13, color: '#94a3b8', mt: 0.5 }}>
+              <Typography sx={{ fontSize: 13, color: colors.neutral[400], mt: 0.5 }}>
                 {card.label}
               </Typography>
             </CardContent>
@@ -98,19 +99,19 @@ export default function DashboardPage() {
       </Box>
 
       {/* Son talepler */}
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 0 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 3, py: 2.5 }}>
             <Box>
-              <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>Son Talepler</Typography>
-              <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>Son 5 talep listelenmektedir</Typography>
+              <Typography sx={{ fontSize: 16, fontWeight: 600, color: colors.neutral[900] }}>Son Talepler</Typography>
+              <Typography sx={{ fontSize: 13, color: colors.neutral[400] }}>Son 5 talep listelenmektedir</Typography>
             </Box>
             <Button
               component={Link}
               to="/panel/requests"
               size="small"
               endIcon={<ArrowForward sx={{ fontSize: 16 }} />}
-              sx={{ color: '#0ea5e9', fontWeight: 600, fontSize: 13 }}
+              sx={{ color: colors.primary[500], fontWeight: 600, fontSize: 13 }}
             >
               Tumu
             </Button>
@@ -118,8 +119,8 @@ export default function DashboardPage() {
 
           {recentRequests.length === 0 ? (
             <Box sx={{ py: 8, textAlign: 'center' }}>
-              <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 1 }} />
-              <Typography sx={{ color: '#94a3b8', fontSize: 14 }}>Henuz talep bulunmuyor</Typography>
+              <Assignment sx={{ fontSize: 48, color: colors.neutral[200], mb: 1 }} />
+              <Typography sx={{ color: colors.neutral[400], fontSize: 14 }}>Henuz talep bulunmuyor</Typography>
               <Button component={Link} to="/panel/requests/new" variant="contained" size="small" sx={{ mt: 2 }}>
                 Ilk Talebi Olustur
               </Button>
@@ -127,7 +128,7 @@ export default function DashboardPage() {
           ) : (
             <Table>
               <TableHead>
-                <TableRow sx={{ '& th': { bgcolor: '#f8fafc', color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: '1px solid #e2e8f0' } }}>
+                <TableRow sx={{ '& th': { bgcolor: colors.neutral[50], color: colors.neutral[500], fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: `1px solid ${colors.neutral[200]}` } }}>
                   <TableCell>Talep ID</TableCell>
                   <TableCell>Hizmet Tipi</TableCell>
                   <TableCell>Sigortali</TableCell>
@@ -141,20 +142,20 @@ export default function DashboardPage() {
                   <TableRow
                     key={req.request_id}
                     hover
-                    sx={{ '& td': { py: 1.5, borderBottom: '1px solid #f1f5f9' }, '&:hover': { bgcolor: '#f8fafc' }, cursor: 'pointer', textDecoration: 'none' }}
+                    sx={{ '& td': { py: 1.5, borderBottom: `1px solid ${colors.neutral[100]}` }, '&:hover': { bgcolor: colors.neutral[50] }, cursor: 'pointer', textDecoration: 'none' }}
                     component={Link}
                     to={`/panel/requests/${req.request_id}`}
                   >
                     <TableCell>
-                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>#{req.request_id}</Typography>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900] }}>#{req.request_id}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography sx={{ fontSize: 13, color: '#334155' }}>
+                      <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>
                         {ServiceTypeLabels[req.service_type] || req.service_type}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography sx={{ fontSize: 13, color: '#334155' }}>{req.insured_name}</Typography>
+                      <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{req.insured_name}</Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -165,12 +166,12 @@ export default function DashboardPage() {
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>
+                      <Typography sx={{ fontSize: 13, color: colors.neutral[400] }}>
                         {new Date(req.created_at).toLocaleDateString('tr-TR')}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" sx={{ color: '#cbd5e1' }}>
+                      <IconButton size="small" sx={{ color: colors.neutral[300] }}>
                         <ArrowForward sx={{ fontSize: 16 }} />
                       </IconButton>
                     </TableCell>

@@ -5,6 +5,7 @@ import { DriverServiceLabels } from '../types';
 import type { DriverServiceType } from '../types';
 import { TURKEY_CITIES, filterCities } from '../data/turkeyCities';
 import MapPickerDialog, { type LocationResult } from './MapPickerDialog';
+import { colors } from '../tokens';
 
 // Surucu kaydi ve surucu bilgileri sayfasinda ortak kullanilan alanlar
 
@@ -21,7 +22,7 @@ export function ServiceTypeChips({ value, onChange, error }: {
 
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 1 }}>Hizmet tipleri *</Typography>
+      <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[700], mb: 1 }}>Hizmet tipleri *</Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {serviceOptions.map((service) => (
           <Chip
@@ -76,13 +77,13 @@ export function BusinessAddressField({ value, onChange, allowClear = true }: {
 
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 1 }}>İş adresi</Typography>
+      <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[700], mb: 1 }}>İş adresi</Typography>
       {value ? (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, mb: 1 }}>
-          <Place sx={{ color: '#0ea5e9', mt: 0.25 }} />
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5, border: `1px solid ${colors.neutral[200]}`, borderRadius: 2, mb: 1 }}>
+          <Place sx={{ color: colors.primary[500], mt: 0.25 }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{value.address}</Typography>
-            <Typography sx={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>{value.address}</Typography>
+            <Typography sx={{ fontSize: 11, color: colors.neutral[400], fontFamily: 'monospace' }}>
               {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
             </Typography>
           </Box>
@@ -98,7 +99,7 @@ export function BusinessAddressField({ value, onChange, allowClear = true }: {
           Haritadan seç
         </Button>
       )}
-      <Typography sx={{ fontSize: 12, color: '#94a3b8' }}>
+      <Typography sx={{ fontSize: 12, color: colors.neutral[400] }}>
         Sürücü uygulamadan konum göndermediği sürece haritada bu adreste görünür. Seçmeniz önerilir.
       </Typography>
 

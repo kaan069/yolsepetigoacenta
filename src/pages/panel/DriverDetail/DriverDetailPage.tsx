@@ -13,6 +13,7 @@ import CompanyInfoCard from './CompanyInfoCard';
 import PaymentMethodCard from './PaymentMethodCard';
 import VehiclesCard from './VehiclesCard';
 import { useDriverGoneRedirect } from './useDriverGoneRedirect';
+import { colors } from '../../../tokens';
 
 const isSameVehicle = (a: DriverVehicleEntry, b: DriverVehicleEntry) =>
   a.vehicle_type === b.vehicle_type && a.vehicle.id === b.vehicle.id;
@@ -73,7 +74,7 @@ export default function DriverDetailPage() {
   };
 
   const backButton = (
-    <Button component={Link} to="/panel/drivers" startIcon={<ArrowBack />} size="small" sx={{ color: '#64748b', fontWeight: 500, mb: 1 }}>
+    <Button component={Link} to="/panel/drivers" startIcon={<ArrowBack />} size="small" sx={{ color: colors.neutral[500], fontWeight: 500, mb: 1 }}>
       Sürücülerim
     </Button>
   );
@@ -98,8 +99,8 @@ export default function DriverDetailPage() {
       {backButton}
 
       <Box sx={{ mb: 2 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>{driverFullName(profile.driver)}</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>{driverFullName(profile.driver)}</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
           {profile.driver.phone_number} · Panelden kaydedildi
         </Typography>
       </Box>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { openToMarketplace, getApiError } from '../api';
+import { colors } from '../tokens';
 
 interface OpenMarketplaceDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ export default function OpenMarketplaceDialog({ open, requestId, onClose, onDone
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={loading} sx={{ color: '#64748b' }}>Vazgeç</Button>
+        <Button onClick={onClose} disabled={loading} sx={{ color: colors.neutral[500] }}>Vazgeç</Button>
         <Button onClick={handleConfirm} variant="contained" disabled={loading} sx={{ borderRadius: 2 }}>
           {loading ? 'Açılıyor...' : 'Pazaryerine Aç'}
         </Button>

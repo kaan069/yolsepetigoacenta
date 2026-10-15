@@ -12,6 +12,7 @@ import { documentFields } from './vehicleConfig';
 import { VerificationChip } from './parts';
 import { otherFieldErrors } from './constants';
 import { useDriverGoneRedirect } from './useDriverGoneRedirect';
+import { colors } from '../../../tokens';
 
 interface VehicleDocumentsDialogProps {
   driverId: number;
@@ -106,12 +107,12 @@ export default function VehicleDocumentsDialog({
       <DialogTitle sx={{ fontWeight: 600 }}>Araç Belgeleri</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>
             {DriverVehicleTypeLabels[vehicleType]} · {vehicle.brand} {vehicle.model} · {vehicle.plate_number}
           </Typography>
           {documentsStatus && <VerificationChip status={documentsStatus} />}
         </Box>
-        <Typography sx={{ fontSize: 12, color: '#64748b', mb: 1 }}>
+        <Typography sx={{ fontSize: 12, color: colors.neutral[500], mb: 1 }}>
           {isTransfer
             ? 'Belgeler parça parça yüklenebilir; en az bir dosya seçin.'
             : 'Araç fotoğrafı her yüklemede zorunludur, sigorta belgesi isteğe bağlıdır.'}
@@ -140,7 +141,7 @@ export default function VehicleDocumentsDialog({
         {notice && <Alert severity="error" sx={{ mt: 1, borderRadius: 2 }}>{notice}</Alert>}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={saving} sx={{ color: '#64748b' }}>Vazgeç</Button>
+        <Button onClick={onClose} disabled={saving} sx={{ color: colors.neutral[500] }}>Vazgeç</Button>
         <Button variant="contained" onClick={handleUpload} disabled={saving} sx={{ borderRadius: 2 }}>
           {saving ? 'Yükleniyor...' : 'Yükle'}
         </Button>

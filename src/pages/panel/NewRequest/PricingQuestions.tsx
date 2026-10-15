@@ -3,6 +3,7 @@ import {
 } from '@mui/material';
 import type { PricingQuestion } from '../../../types';
 import SectionLabel from './SectionLabel';
+import { colors } from '../../../tokens';
 
 interface PricingQuestionsProps {
   questions: PricingQuestion[];
@@ -16,7 +17,7 @@ export default function PricingQuestions({ questions, loading, answers, onChange
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, my: 2 }}>
         <CircularProgress size={18} />
-        <Typography sx={{ fontSize: 13, color: '#64748b' }}>Sorular yukleniyor...</Typography>
+        <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Sorular yukleniyor...</Typography>
       </Box>
     );
   }
@@ -27,8 +28,8 @@ export default function PricingQuestions({ questions, loading, answers, onChange
     <>
       <SectionLabel>Ek Bilgiler</SectionLabel>
       {questions.map((q) => (
-        <Box key={q.id} sx={{ mb: 2, p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a', mb: 1 }}>
+        <Box key={q.id} sx={{ mb: 2, p: 2, bgcolor: colors.neutral[50], borderRadius: 2 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900], mb: 1 }}>
             {q.question_text}
           </Typography>
 
@@ -44,9 +45,9 @@ export default function PricingQuestions({ questions, loading, answers, onChange
                   control={<Radio size="small" />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography sx={{ fontSize: 13, color: '#334155' }}>{opt.option_text}</Typography>
+                      <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{opt.option_text}</Typography>
                       {parseFloat(opt.surcharge_amount) > 0 && (
-                        <Typography sx={{ fontSize: 11, color: '#ef4444', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: 11, color: colors.danger[500], fontWeight: 600 }}>
                           +{parseFloat(opt.surcharge_amount).toLocaleString('tr-TR')} TL
                         </Typography>
                       )}
@@ -72,9 +73,9 @@ export default function PricingQuestions({ questions, loading, answers, onChange
                     }
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{opt.option_text}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{opt.option_text}</Typography>
                         {parseFloat(opt.surcharge_amount) > 0 && (
-                          <Typography sx={{ fontSize: 11, color: '#ef4444', fontWeight: 600 }}>
+                          <Typography sx={{ fontSize: 11, color: colors.danger[500], fontWeight: 600 }}>
                             +{parseFloat(opt.surcharge_amount).toLocaleString('tr-TR')} TL
                           </Typography>
                         )}

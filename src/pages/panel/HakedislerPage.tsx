@@ -11,6 +11,7 @@ import {
 import { listHakedisler } from '../../api';
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
 import type { HakedisListItem, HakedisListResponse } from '../../types';
+import { colors, alpha } from '../../tokens';
 
 const formatPrice = (price: string) =>
   new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(parseFloat(price));
@@ -51,18 +52,18 @@ export default function HakedislerPage() {
   const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
 
   const statCards = [
-    { label: 'Toplam Kazanc', value: summary ? `${formatPrice(summary.total_earnings)} TL` : '-', icon: <AccountBalanceWallet sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)', shadow: 'rgba(34, 197, 94, 0.3)' },
-    { label: 'Bu Ay Kazanc', value: summary ? `${formatPrice(summary.this_month_earnings)} TL` : '-', icon: <CalendarMonth sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)', shadow: 'rgba(14, 165, 233, 0.3)' },
+    { label: 'Toplam Kazanc', value: summary ? `${formatPrice(summary.total_earnings)} TL` : '-', icon: <AccountBalanceWallet sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.success[500]} 0%, ${colors.success[400]} 100%)`, shadow: `${alpha(colors.success[500], 0.3)}` },
+    { label: 'Bu Ay Kazanc', value: summary ? `${formatPrice(summary.this_month_earnings)} TL` : '-', icon: <CalendarMonth sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[400]} 100%)`, shadow: `${alpha(colors.primary[500], 0.3)}` },
     { label: 'Tamamlanan Is', value: summary?.total_completed ?? '-', icon: <CheckCircle sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', shadow: 'rgba(139, 92, 246, 0.3)' },
-    { label: 'Komisyon Orani', value: summary ? `%${summary.commission_rate}` : '-', icon: <Percent sx={{ fontSize: 24 }} />, gradient: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)', shadow: 'rgba(249, 115, 22, 0.3)' },
+    { label: 'Komisyon Orani', value: summary ? `%${summary.commission_rate}` : '-', icon: <Percent sx={{ fontSize: 24 }} />, gradient: `linear-gradient(135deg, ${colors.secondary[500]} 0%, ${colors.secondary[400]} 100%)`, shadow: `${alpha(colors.secondary[500], 0.3)}` },
   ];
 
   return (
     <Box>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Hakedisler</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Hakedisler</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
           Tamamlanan taleplerinizden elde ettiginiz kazanclar
         </Typography>
       </Box>
@@ -82,12 +83,12 @@ export default function HakedislerPage() {
                 }}>
                   {card.icon}
                 </Box>
-                <TrendingUp sx={{ color: '#cbd5e1', fontSize: 18 }} />
+                <TrendingUp sx={{ color: colors.neutral[300], fontSize: 18 }} />
               </Box>
-              <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+              <Typography sx={{ fontSize: 28, fontWeight: 700, color: colors.neutral[900], lineHeight: 1 }}>
                 {card.value}
               </Typography>
-              <Typography sx={{ fontSize: 13, color: '#94a3b8', mt: 0.5 }}>
+              <Typography sx={{ fontSize: 13, color: colors.neutral[400], mt: 0.5 }}>
                 {card.label}
               </Typography>
             </CardContent>
@@ -98,7 +99,7 @@ export default function HakedislerPage() {
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
       {/* Tablo */}
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 0 }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -106,9 +107,9 @@ export default function HakedislerPage() {
             </Box>
           ) : items.length === 0 ? (
             <Box sx={{ py: 10, textAlign: 'center' }}>
-              <AccountBalanceWallet sx={{ fontSize: 56, color: '#e2e8f0', mb: 1.5 }} />
-              <Typography sx={{ color: '#94a3b8', fontSize: 15, mb: 0.5 }}>Henuz hakedis bulunmuyor</Typography>
-              <Typography sx={{ color: '#cbd5e1', fontSize: 13 }}>
+              <AccountBalanceWallet sx={{ fontSize: 56, color: colors.neutral[200], mb: 1.5 }} />
+              <Typography sx={{ color: colors.neutral[400], fontSize: 15, mb: 0.5 }}>Henuz hakedis bulunmuyor</Typography>
+              <Typography sx={{ color: colors.neutral[300], fontSize: 13 }}>
                 Tamamlanan taleplerinizin hakedisleri burada listelenecek
               </Typography>
             </Box>
@@ -116,7 +117,7 @@ export default function HakedislerPage() {
             <>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ '& th': { bgcolor: '#f8fafc', color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: '1px solid #e2e8f0' } }}>
+                  <TableRow sx={{ '& th': { bgcolor: colors.neutral[50], color: colors.neutral[500], fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: `1px solid ${colors.neutral[200]}` } }}>
                     <TableCell>Talep ID</TableCell>
                     <TableCell>Hizmet Tipi</TableCell>
                     <TableCell>Musteri</TableCell>
@@ -132,25 +133,25 @@ export default function HakedislerPage() {
                       key={item.request_id}
                       hover
                       onClick={() => setSelectedItem(item)}
-                      sx={{ '& td': { py: 1.5, borderBottom: '1px solid #f1f5f9' }, '&:hover': { bgcolor: '#f8fafc' }, cursor: 'pointer' }}
+                      sx={{ '& td': { py: 1.5, borderBottom: `1px solid ${colors.neutral[100]}` }, '&:hover': { bgcolor: colors.neutral[50] }, cursor: 'pointer' }}
                     >
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>#{item.request_id}</Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900] }}>#{item.request_id}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{ServiceTypeLabels[item.service_type] || item.service_type}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{ServiceTypeLabels[item.service_type] || item.service_type}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{item.insured_name}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{item.insured_name}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>{formatDate(item.completed_at)}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[400] }}>{formatDate(item.completed_at)}</Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{formatPrice(item.estimated_price)} {item.currency}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{formatPrice(item.estimated_price)} {item.currency}</Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#22c55e' }}>{formatPrice(item.insurance_commission)} {item.currency}</Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 700, color: colors.success[500] }}>{formatPrice(item.insurance_commission)} {item.currency}</Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -166,14 +167,14 @@ export default function HakedislerPage() {
               </Table>
 
               {totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, py: 2, borderTop: '1px solid #e2e8f0' }}>
-                  <IconButton size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} sx={{ color: '#64748b' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, py: 2, borderTop: `1px solid ${colors.neutral[200]}` }}>
+                  <IconButton size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} sx={{ color: colors.neutral[500] }}>
                     <ChevronLeft />
                   </IconButton>
-                  <Typography sx={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500], fontWeight: 500 }}>
                     Sayfa {page} / {totalPages}
                   </Typography>
-                  <IconButton size="small" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ color: '#64748b' }}>
+                  <IconButton size="small" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ color: colors.neutral[500] }}>
                     <ChevronRight />
                   </IconButton>
                 </Box>
@@ -195,33 +196,33 @@ export default function HakedislerPage() {
           <>
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, color: colors.neutral[900] }}>
                   Hakedis Detay #{selectedItem.request_id}
                 </Typography>
                 <Chip
                   label={ServiceTypeLabels[selectedItem.service_type] || selectedItem.service_type}
                   variant="outlined"
                   size="small"
-                  sx={{ fontSize: 11, borderColor: '#e2e8f0', color: '#64748b' }}
+                  sx={{ fontSize: 11, borderColor: colors.neutral[200], color: colors.neutral[500] }}
                 />
               </Box>
-              <IconButton size="small" onClick={() => setSelectedItem(null)} sx={{ color: '#94a3b8' }}>
+              <IconButton size="small" onClick={() => setSelectedItem(null)} sx={{ color: colors.neutral[400] }}>
                 <Close fontSize="small" />
               </IconButton>
             </DialogTitle>
             <DialogContent>
               {/* Musteri bilgileri */}
-              <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2, mb: 2 }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1 }}>
+              <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 2, mb: 2 }}>
+                <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1 }}>
                   Musteri Bilgileri
                 </Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
                   <Box>
-                    <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>Ad Soyad</Typography>
-                    <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{selectedItem.insured_name}</Typography>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>Ad Soyad</Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>{selectedItem.insured_name}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>Durum</Typography>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>Durum</Typography>
                     <Chip
                       label={RequestStatusLabels[selectedItem.status] || selectedItem.status}
                       color={RequestStatusColors[selectedItem.status] || 'default'}
@@ -233,45 +234,45 @@ export default function HakedislerPage() {
               </Box>
 
               {/* Fiyatlandirma */}
-              <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2, mb: 2 }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+              <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 2, mb: 2 }}>
+                <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
                   Fiyatlandirma
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75 }}>
-                  <Typography sx={{ fontSize: 13, color: '#64748b' }}>Toplam Fiyat</Typography>
-                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Toplam Fiyat</Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>
                     {formatPrice(selectedItem.estimated_price)} {selectedItem.currency}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75 }}>
-                  <Typography sx={{ fontSize: 13, color: '#64748b' }}>Komisyon Orani</Typography>
-                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Komisyon Orani</Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>
                     %{summary?.commission_rate || '-'}
                   </Typography>
                 </Box>
-                <Box sx={{ borderTop: '1px solid #e2e8f0', mt: 1, pt: 1, display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>Hakedis (Kazanc)</Typography>
-                  <Typography sx={{ fontSize: 16, fontWeight: 700, color: '#22c55e' }}>
+                <Box sx={{ borderTop: `1px solid ${colors.neutral[200]}`, mt: 1, pt: 1, display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>Hakedis (Kazanc)</Typography>
+                  <Typography sx={{ fontSize: 16, fontWeight: 700, color: colors.success[500] }}>
                     {formatPrice(selectedItem.insurance_commission)} {selectedItem.currency}
                   </Typography>
                 </Box>
               </Box>
 
               {/* Zaman */}
-              <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2 }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1 }}>
+              <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 2 }}>
+                <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1 }}>
                   Zaman Bilgisi
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75 }}>
-                  <Typography sx={{ fontSize: 13, color: '#64748b' }}>Tamamlanma Tarihi</Typography>
-                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Tamamlanma Tarihi</Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>
                     {formatDateTime(selectedItem.completed_at)}
                   </Typography>
                 </Box>
               </Box>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
-              <Button onClick={() => setSelectedItem(null)} sx={{ color: '#64748b', fontWeight: 500 }}>Kapat</Button>
+              <Button onClick={() => setSelectedItem(null)} sx={{ color: colors.neutral[500], fontWeight: 500 }}>Kapat</Button>
             </DialogActions>
           </>
         )}

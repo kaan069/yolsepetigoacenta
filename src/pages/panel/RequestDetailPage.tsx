@@ -20,6 +20,7 @@ import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse, AgencyAss
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
 import { assignmentOutcomeMessage, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
 import AssignmentCard from '../../components/AssignmentCard';
+import { colors } from '../../tokens';
 
 // --- Animasyonlar ---
 
@@ -65,7 +66,7 @@ function ElapsedTimer({ since }: { since: string }) {
   }, [since]);
 
   return (
-    <Typography sx={{ fontSize: 14, color: '#64748b', fontFamily: 'monospace' }}>
+    <Typography sx={{ fontSize: 14, color: colors.neutral[500], fontFamily: 'monospace' }}>
       {elapsed}
     </Typography>
   );
@@ -75,32 +76,32 @@ function ElapsedTimer({ since }: { since: string }) {
 
 function MatchingView({ request }: { request: InsuranceRequestDetail }) {
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 3 }}>
       <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <Box sx={{ position: 'relative', width: 100, height: 100, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {[0, 0.5, 1].map((delay, i) => (
             <Box key={i} sx={{
               position: 'absolute', width: 100, height: 100, borderRadius: '50%',
-              bgcolor: '#0ea5e9', animation: `${pulse} 2s ease-out infinite ${delay}s`,
+              bgcolor: colors.primary[500], animation: `${pulse} 2s ease-out infinite ${delay}s`,
             }} />
           ))}
           <Box sx={{
             position: 'relative', width: 64, height: 64, borderRadius: '50%',
-            bgcolor: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
+            bgcolor: colors.primary[500], display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
           }}>
             <LocalShipping sx={{ color: 'white', fontSize: 32 }} />
           </Box>
         </Box>
 
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#0f172a', mb: 1 }}>
+        <Typography sx={{ fontSize: 20, fontWeight: 700, color: colors.neutral[900], mb: 1 }}>
           Surucu Araniyor...
         </Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b', mb: 3, maxWidth: 300 }}>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500], mb: 3, maxWidth: 300 }}>
           Yakininizdaki suruculer bilgilendiriliyor. Teklifler geldiginde burada listelenecek.
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f8fafc', px: 2.5, py: 1, borderRadius: 2 }}>
-          <Schedule sx={{ fontSize: 16, color: '#94a3b8' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: colors.neutral[50], px: 2.5, py: 1, borderRadius: 2 }}>
+          <Schedule sx={{ fontSize: 16, color: colors.neutral[400] }} />
           <ElapsedTimer since={request.timeline.created_at} />
         </Box>
       </CardContent>
@@ -123,12 +124,12 @@ function OffersView({
   return (
     <Box sx={{ mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 600, color: colors.neutral[900] }}>
           {pendingOffers.length} surucu teklif gonderdi
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f8fafc', px: 2, py: 0.75, borderRadius: 2 }}>
-          <Schedule sx={{ fontSize: 14, color: '#94a3b8' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: colors.neutral[50], px: 2, py: 0.75, borderRadius: 2 }}>
+          <Schedule sx={{ fontSize: 14, color: colors.neutral[400] }} />
           <ElapsedTimer since={request.timeline.created_at} />
         </Box>
       </Box>
@@ -138,7 +139,7 @@ function OffersView({
           key={offer.id}
           sx={{
             borderRadius: 3, boxShadow: 'none', mb: 2,
-            border: offer.estimated_price === lowestPrice ? '2px solid #0ea5e9' : '1px solid #e2e8f0',
+            border: offer.estimated_price === lowestPrice ? `2px solid ${colors.primary[500]}` : `1px solid ${colors.neutral[200]}`,
             animation: `${fadeIn} 0.4s ease-out`,
             animationDelay: `${index * 0.1}s`,
             animationFillMode: 'both',
@@ -151,7 +152,7 @@ function OffersView({
               size="small"
               sx={{
                 position: 'absolute', top: -10, right: 16,
-                bgcolor: '#0ea5e9', color: 'white', fontSize: 11, fontWeight: 600, height: 22,
+                bgcolor: colors.primary[500], color: 'white', fontSize: 11, fontWeight: 600, height: 22,
               }}
             />
           )}
@@ -159,14 +160,14 @@ function OffersView({
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <Box sx={{ flex: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Person sx={{ fontSize: 18, color: '#64748b' }} />
-                  <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+                  <Person sx={{ fontSize: 18, color: colors.neutral[500] }} />
+                  <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
                     {offer.driver_info.name}
                   </Typography>
                   {offer.driver_info.average_rating && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 0.5 }}>
-                      <Star sx={{ fontSize: 14, color: '#f59e0b' }} />
-                      <Typography sx={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
+                      <Star sx={{ fontSize: 14, color: colors.warning[500] }} />
+                      <Typography sx={{ fontSize: 12, color: colors.neutral[500], fontWeight: 500 }}>
                         {offer.driver_info.average_rating.toFixed(1)} ({offer.driver_info.total_ratings})
                       </Typography>
                     </Box>
@@ -174,26 +175,26 @@ function OffersView({
                 </Box>
                 {offer.vehicle_info && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <LocalShipping sx={{ fontSize: 16, color: '#94a3b8' }} />
-                    <Typography sx={{ fontSize: 13, color: '#64748b' }}>
+                    <LocalShipping sx={{ fontSize: 16, color: colors.neutral[400] }} />
+                    <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
                       {offer.vehicle_info.brand} {offer.vehicle_info.model} - {offer.vehicle_info.plate_number}
                     </Typography>
                   </Box>
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
-                  <Typography sx={{ fontSize: 12, color: '#94a3b8' }}>{offer.driver_info.phone}</Typography>
+                  <Phone sx={{ fontSize: 14, color: colors.neutral[400] }} />
+                  <Typography sx={{ fontSize: 12, color: colors.neutral[400] }}>{offer.driver_info.phone}</Typography>
                 </Box>
               </Box>
 
               <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
-                <Typography sx={{ fontSize: 22, fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+                <Typography sx={{ fontSize: 22, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>
                   {formatPrice(offer.estimated_price)} TRY
                 </Typography>
                 <Button
                   variant="contained" size="small"
                   onClick={() => onAccept(offer)}
-                  sx={{ bgcolor: '#0ea5e9', fontWeight: 600, fontSize: 13, px: 2.5, '&:hover': { bgcolor: '#0284c7' } }}
+                  sx={{ bgcolor: colors.primary[500], fontWeight: 600, fontSize: 13, px: 2.5, '&:hover': { bgcolor: colors.primary[600] } }}
                 >
                   Onayla
                 </Button>
@@ -218,49 +219,49 @@ function ActiveJobView({
 }) {
   const isPayment = request.status === 'awaiting_payment';
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 3 }}>
       <CardContent sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
           <Box sx={{
             width: 40, height: 40, borderRadius: 2,
-            bgcolor: isPayment ? '#f0f9ff' : '#ecfdf5',
+            bgcolor: isPayment ? colors.primary[50] : colors.success[50],
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <LocalShipping sx={{ fontSize: 22, color: isPayment ? '#0ea5e9' : '#10b981' }} />
+            <LocalShipping sx={{ fontSize: 22, color: isPayment ? colors.primary[500] : colors.success[500] }} />
           </Box>
           <Box>
-            <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 600, color: colors.neutral[900] }}>
               {isPayment ? 'Odeme Bekleniyor' : 'Hizmet Devam Ediyor'}
             </Typography>
-            <Typography sx={{ fontSize: 12, color: '#64748b' }}>
+            <Typography sx={{ fontSize: 12, color: colors.neutral[500] }}>
               {isPayment ? 'Surucu atandi, odeme bekleniyor' : 'Surucu yolda, hizmet devam ediyor'}
             </Typography>
           </Box>
         </Box>
         {request.driver?.name && (
-          <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2 }}>
+          <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Person sx={{ fontSize: 18, color: '#64748b' }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{request.driver.name}</Typography>
+              <Person sx={{ fontSize: 18, color: colors.neutral[500] }} />
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>{request.driver.name}</Typography>
             </Box>
             {request.driver.phone && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Phone sx={{ fontSize: 16, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: 13, color: '#64748b' }}>{request.driver.phone}</Typography>
+                <Phone sx={{ fontSize: 16, color: colors.neutral[400] }} />
+                <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>{request.driver.phone}</Typography>
               </Box>
             )}
           </Box>
         )}
         {request.pricing?.estimated_price && (
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography sx={{ fontSize: 13, color: '#64748b' }}>Kabul Edilen Fiyat</Typography>
-            <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+          <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${colors.neutral[200]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Kabul Edilen Fiyat</Typography>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: colors.neutral[900] }}>
               {request.pricing.estimated_price} {request.pricing.currency}
             </Typography>
           </Box>
         )}
         {isPayment && (
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e2e8f0' }}>
+          <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${colors.neutral[200]}` }}>
             {smsSuccess ? (
               <Alert severity="success" sx={{ borderRadius: 2 }}>
                 Odeme linki basariyla gonderildi
@@ -273,11 +274,11 @@ function ActiveJobView({
                 disabled={sendingSms}
                 startIcon={sendingSms ? <CircularProgress size={18} color="inherit" /> : <Sms />}
                 sx={{
-                  bgcolor: '#0ea5e9',
+                  bgcolor: colors.primary[500],
                   fontWeight: 600,
                   borderRadius: 2,
                   py: 1.2,
-                  '&:hover': { bgcolor: '#0284c7' },
+                  '&:hover': { bgcolor: colors.primary[600] },
                 }}
               >
                 {sendingSms ? 'Gonderiliyor...' : 'Odeme Linki Gonder'}
@@ -298,19 +299,19 @@ function CompletedView({ request, onViewInvoice, invoiceLoading }: {
   invoiceLoading: boolean;
 }) {
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #d1fae5', bgcolor: '#f0fdf4', mb: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.success[100]}`, bgcolor: colors.success[50], mb: 3 }}>
       <CardContent sx={{ p: 3, textAlign: 'center' }}>
-        <CheckCircle sx={{ fontSize: 56, color: '#10b981', mb: 1.5 }} />
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#0f172a', mb: 0.5 }}>Hizmet Tamamlandi</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b', mb: 2 }}>{formatDate(request.timeline.completed_at)}</Typography>
+        <CheckCircle sx={{ fontSize: 56, color: colors.success[500], mb: 1.5 }} />
+        <Typography sx={{ fontSize: 20, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>Hizmet Tamamlandi</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500], mb: 2 }}>{formatDate(request.timeline.completed_at)}</Typography>
         {request.driver?.name && (
           <Box sx={{ bgcolor: 'white', borderRadius: 2, p: 2, mb: 2, display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-            <Person sx={{ fontSize: 18, color: '#64748b' }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{request.driver.name}</Typography>
+            <Person sx={{ fontSize: 18, color: colors.neutral[500] }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900] }}>{request.driver.name}</Typography>
           </Box>
         )}
         {request.pricing && (request.pricing.total_with_vat || request.pricing.estimated_price) && (
-          <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a', mb: 2 }}>
+          <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900], mb: 2 }}>
             {request.pricing.total_with_vat || request.pricing.estimated_price} {request.pricing.currency}
           </Typography>
         )}
@@ -320,8 +321,8 @@ function CompletedView({ request, onViewInvoice, invoiceLoading }: {
           disabled={invoiceLoading}
           startIcon={invoiceLoading ? <CircularProgress size={16} color="inherit" /> : <Receipt />}
           sx={{
-            borderColor: '#10b981', color: '#10b981', fontWeight: 600, borderRadius: 2,
-            '&:hover': { borderColor: '#059669', bgcolor: '#ecfdf5' },
+            borderColor: colors.success[500], color: colors.success[500], fontWeight: 600, borderRadius: 2,
+            '&:hover': { borderColor: colors.success[600], bgcolor: colors.success[50] },
           }}
         >
           {invoiceLoading ? 'Yukleniyor...' : 'Faturayi Gor'}
@@ -335,11 +336,11 @@ function CompletedView({ request, onViewInvoice, invoiceLoading }: {
 
 function CancelledView() {
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #fecaca', bgcolor: '#fef2f2', mb: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.danger[200]}`, bgcolor: colors.danger[50], mb: 3 }}>
       <CardContent sx={{ p: 3, textAlign: 'center' }}>
-        <Cancel sx={{ fontSize: 56, color: '#ef4444', mb: 1.5 }} />
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#0f172a', mb: 0.5 }}>Talep Iptal Edildi</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>Bu talep iptal edilmistir</Typography>
+        <Cancel sx={{ fontSize: 56, color: colors.danger[500], mb: 1.5 }} />
+        <Typography sx={{ fontSize: 20, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>Talep Iptal Edildi</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Bu talep iptal edilmistir</Typography>
       </CardContent>
     </Card>
   );
@@ -350,8 +351,8 @@ function CancelledView() {
 function InfoItem({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <Box sx={{ py: 0.75 }}>
-      <Typography sx={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{label}</Typography>
-      <Typography sx={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>{value || '-'}</Typography>
+      <Typography sx={{ fontSize: 11, color: colors.neutral[400], fontWeight: 500 }}>{label}</Typography>
+      <Typography sx={{ fontSize: 13, color: colors.neutral[900], fontWeight: 500 }}>{value || '-'}</Typography>
     </Box>
   );
 }
@@ -363,9 +364,9 @@ function RequestInfoCard({ request, trackingToken }: {
 }) {
   return (
     <>
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 2 }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 2 }}>
         <CardContent sx={{ p: 2.5 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
             Sigortali Bilgileri
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
@@ -377,9 +378,9 @@ function RequestInfoCard({ request, trackingToken }: {
           </Box>
         </CardContent>
       </Card>
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 2 }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 2 }}>
         <CardContent sx={{ p: 2.5 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
             Zaman Cizelgesi
           </Typography>
           <InfoItem label="Olusturulma" value={formatDate(request.timeline.created_at)} />
@@ -388,9 +389,9 @@ function RequestInfoCard({ request, trackingToken }: {
         </CardContent>
       </Card>
       {request.pricing && request.pricing.base_price && (
-        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0', mb: 2 }}>
+        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}`, mb: 2 }}>
           <CardContent sx={{ p: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>
               Fiyatlandirma
             </Typography>
             <InfoItem label="Taban Fiyat" value={`${request.pricing.base_price} ${request.pricing.currency}`} />
@@ -400,14 +401,14 @@ function RequestInfoCard({ request, trackingToken }: {
             {request.pricing.vat_rate != null && request.pricing.total_with_vat && (
               <InfoItem label={`KDV (%${request.pricing.vat_rate})`} value={`${(parseFloat(request.pricing.total_with_vat) - parseFloat(request.pricing.total_amount || '0')).toFixed(2)} ${request.pricing.currency}`} />
             )}
-            <Box sx={{ borderTop: '1px solid #e2e8f0', mt: 1, pt: 1 }}>
+            <Box sx={{ borderTop: `1px solid ${colors.neutral[200]}`, mt: 1, pt: 1 }}>
               <InfoItem label="Toplam (KDV Dahil)" value={request.pricing.total_with_vat ? `${request.pricing.total_with_vat} ${request.pricing.currency}` : null} />
             </Box>
           </CardContent>
         </Card>
       )}
       {trackingToken && (
-        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
           <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, '&:last-child': { pb: 2 } }}>
             <Button
               variant="contained"
@@ -415,9 +416,9 @@ function RequestInfoCard({ request, trackingToken }: {
               href={`https://yolsepetigo.com/?live=${trackingToken}`}
               target="_blank"
               sx={{
-                bgcolor: '#0ea5e9', fontWeight: 600, fontSize: 14, borderRadius: 2,
+                bgcolor: colors.primary[500], fontWeight: 600, fontSize: 14, borderRadius: 2,
                 py: 1.2,
-                '&:hover': { bgcolor: '#0284c7' },
+                '&:hover': { bgcolor: colors.primary[600] },
               }}
             >
               Canli Takip
@@ -640,12 +641,12 @@ export default function RequestDetailPage() {
 
   return (
     <Box sx={{ maxWidth: 700, mx: 'auto' }}>
-      <Button component={Link} to="/panel/requests" startIcon={<ArrowBack />} size="small" sx={{ color: '#64748b', fontWeight: 500, mb: 1 }}>
+      <Button component={Link} to="/panel/requests" startIcon={<ArrowBack />} size="small" sx={{ color: colors.neutral[500], fontWeight: 500, mb: 1 }}>
         Geri
       </Button>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <Typography sx={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 700, color: colors.neutral[900] }}>
           Talep #{request.request_id}
         </Typography>
         <Chip
@@ -655,13 +656,13 @@ export default function RequestDetailPage() {
         />
         <Chip
           label={ServiceTypeLabels[request.service_type] || request.service_type}
-          variant="outlined" sx={{ fontSize: 12, borderColor: '#e2e8f0', color: '#64748b' }}
+          variant="outlined" sx={{ fontSize: 12, borderColor: colors.neutral[200], color: colors.neutral[500] }}
         />
         {isDirect && (
           <Chip
             label="Doğrudan atama"
             variant="outlined"
-            sx={{ fontSize: 12, borderColor: '#bae6fd', color: '#0369a1', bgcolor: '#f0f9ff' }}
+            sx={{ fontSize: 12, borderColor: colors.primary[200], color: colors.primary[700], bgcolor: colors.primary[50] }}
           />
         )}
         {wsEnabled && (
@@ -670,8 +671,8 @@ export default function RequestDetailPage() {
             size="small"
             sx={{
               fontSize: 10, height: 20,
-              bgcolor: isConnected ? '#dcfce7' : '#fef9c3',
-              color: isConnected ? '#16a34a' : '#ca8a04',
+              bgcolor: isConnected ? colors.success[100] : colors.warning[100],
+              color: isConnected ? colors.success[600] : colors.warning[600],
             }}
           />
         )}
@@ -718,7 +719,7 @@ export default function RequestDetailPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setCancelDialogOpen(false)} disabled={cancelling} sx={{ color: '#64748b' }}>Vazgec</Button>
+          <Button onClick={() => setCancelDialogOpen(false)} disabled={cancelling} sx={{ color: colors.neutral[500] }}>Vazgec</Button>
           <Button onClick={handleCancel} color="error" variant="contained" disabled={cancelling} sx={{ borderRadius: 2 }}>
             {cancelling ? 'Iptal ediliyor...' : 'Iptal Et'}
           </Button>
@@ -734,16 +735,16 @@ export default function RequestDetailPage() {
               <DialogContentText sx={{ fontSize: 14, mb: 2 }}>
                 Bu teklifi kabul etmek istediginize emin misiniz?
               </DialogContentText>
-              <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2 }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+              <Box sx={{ bgcolor: colors.neutral[50], borderRadius: 2, p: 2 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900], mb: 0.5 }}>
                   {selectedOffer.driver_info.name}
                 </Typography>
                 {selectedOffer.vehicle_info && (
-                  <Typography sx={{ fontSize: 13, color: '#64748b', mb: 1 }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[500], mb: 1 }}>
                     {selectedOffer.vehicle_info.brand} {selectedOffer.vehicle_info.model} - {selectedOffer.vehicle_info.plate_number}
                   </Typography>
                 )}
-                <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#0ea5e9' }}>
+                <Typography sx={{ fontSize: 20, fontWeight: 700, color: colors.primary[500] }}>
                   {formatPrice(selectedOffer.estimated_price)} TRY
                 </Typography>
               </Box>
@@ -752,10 +753,10 @@ export default function RequestDetailPage() {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setAcceptDialogOpen(false)} disabled={accepting} sx={{ color: '#64748b' }}>Vazgec</Button>
+          <Button onClick={() => setAcceptDialogOpen(false)} disabled={accepting} sx={{ color: colors.neutral[500] }}>Vazgec</Button>
           <Button
             onClick={handleAcceptOffer} variant="contained" disabled={accepting}
-            sx={{ borderRadius: 2, bgcolor: '#0ea5e9', '&:hover': { bgcolor: '#0284c7' } }}
+            sx={{ borderRadius: 2, bgcolor: colors.primary[500], '&:hover': { bgcolor: colors.primary[600] } }}
           >
             {accepting ? 'Onaylaniyor...' : 'Onayla'}
           </Button>

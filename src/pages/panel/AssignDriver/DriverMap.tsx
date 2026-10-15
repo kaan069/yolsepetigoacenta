@@ -5,16 +5,17 @@ import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import type { AvailableDriver } from '../../../types';
 import { driverFullName } from '../../../utils/drivers';
 import { MAP_ID } from './constants';
+import { colors, alpha } from '../../../tokens';
 
 const TURKEY_CENTER = { lat: 39.0, lng: 35.0 };
 const MAX_FIT_ZOOM = 15;
 
 const COLORS = {
-  customer: '#ef4444',
-  live: '#16a34a',
-  lastKnown: '#f97316',
-  business: '#2563eb',
-  offline: '#94a3b8',
+  customer: colors.danger[500],
+  live: colors.success[600],
+  lastKnown: colors.secondary[500],
+  business: colors.info[600],
+  offline: colors.neutral[400],
 };
 
 type LatLng = { latitude: number; longitude: number };
@@ -45,7 +46,7 @@ function MarkerBadge({ color, icon, label, selected, faded }: MarkerBadgeProps) 
           sx={{
             bgcolor: 'white', color, fontSize: 10, fontWeight: 700, lineHeight: 1.4,
             px: 0.75, py: 0.25, mb: 0.5, borderRadius: 1, whiteSpace: 'nowrap',
-            boxShadow: '0 1px 4px rgba(15, 23, 42, 0.25)',
+            boxShadow: `0 1px 4px ${alpha(colors.neutral[900], 0.25)}`,
           }}
         >
           {label}
@@ -56,8 +57,8 @@ function MarkerBadge({ color, icon, label, selected, faded }: MarkerBadgeProps) 
           width: 32, height: 32, borderRadius: '50%', bgcolor: color, color: 'white',
           border: '2px solid white',
           boxShadow: selected
-            ? `0 0 0 4px ${color}55, 0 2px 6px rgba(15, 23, 42, 0.35)`
-            : '0 2px 6px rgba(15, 23, 42, 0.35)',
+            ? `0 0 0 4px ${color}55, 0 2px 6px ${alpha(colors.neutral[900], 0.35)}`
+            : `0 2px 6px ${alpha(colors.neutral[900], 0.35)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >

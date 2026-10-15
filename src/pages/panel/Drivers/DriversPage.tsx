@@ -13,12 +13,13 @@ import type { PoolDriver } from '../../../types';
 import { driverFullName, describeLocation, describeLastSeen, getPoolDriverStatus } from '../../../utils/drivers';
 import type { PoolDriverStatus } from '../../../utils/drivers';
 import AddDriverDialog from './AddDriverDialog';
+import { colors, alpha } from '../../../tokens';
 
 const statusChips: Record<PoolDriverStatus, { label: string; bg: string; color: string }> = {
-  pending_approval: { label: 'Eksik / onay bekliyor', bg: '#f1f5f9', color: '#64748b' },
-  busy: { label: 'Meşgul', bg: '#ffedd5', color: '#c2410c' },
-  offline: { label: 'Çevrimdışı', bg: '#f1f5f9', color: '#64748b' },
-  available: { label: 'Müsait', bg: '#dcfce7', color: '#16a34a' },
+  pending_approval: { label: 'Eksik / onay bekliyor', bg: colors.neutral[100], color: colors.neutral[500] },
+  busy: { label: 'Meşgul', bg: colors.secondary[100], color: colors.secondary[700] },
+  offline: { label: 'Çevrimdışı', bg: colors.neutral[100], color: colors.neutral[500] },
+  available: { label: 'Müsait', bg: colors.success[100], color: colors.success[600] },
 };
 
 function StatusCell({ poolDriver }: { poolDriver: PoolDriver }) {
@@ -59,7 +60,7 @@ function StatusCell({ poolDriver }: { poolDriver: PoolDriver }) {
           Belgeleri tamamla
         </Button>
       ) : (
-        <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5 }}>Sürücü kendi uygulamasından tamamlamalı.</Typography>
+        <Typography sx={{ fontSize: 11, color: colors.neutral[400], mt: 0.5 }}>Sürücü kendi uygulamasından tamamlamalı.</Typography>
       )}
     </Box>
   );
@@ -122,8 +123,8 @@ export default function DriversPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2, flexWrap: 'wrap' }}>
         <Box>
-          <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Sürücülerim</Typography>
-          <Typography sx={{ fontSize: 14, color: '#64748b' }}>
+          <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Sürücülerim</Typography>
+          <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>
             {drivers.length > 0 ? `Listenizde ${drivers.length} sürücü var` : 'Taleplerinizi atayabileceğiniz sürücüler'}
           </Typography>
         </Box>
@@ -132,9 +133,9 @@ export default function DriversPage() {
           startIcon={<PersonAdd />}
           onClick={() => setAddOpen(true)}
           sx={{
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-            boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
-            '&:hover': { boxShadow: '0 6px 20px rgba(14, 165, 233, 0.4)' },
+            background: `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`,
+            boxShadow: `0 4px 14px ${alpha(colors.primary[500], 0.35)}`,
+            '&:hover': { boxShadow: `0 6px 20px ${alpha(colors.primary[500], 0.4)}` },
           }}
         >
           Sürücü Ekle
@@ -143,7 +144,7 @@ export default function DriversPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
-      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -151,9 +152,9 @@ export default function DriversPage() {
             </Box>
           ) : drivers.length === 0 ? (
             <Box sx={{ py: 10, textAlign: 'center', px: 2 }}>
-              <Groups sx={{ fontSize: 56, color: '#e2e8f0', mb: 1.5 }} />
-              <Typography sx={{ color: '#94a3b8', fontSize: 15, mb: 0.5 }}>Henüz sürücünüz yok</Typography>
-              <Typography sx={{ color: '#cbd5e1', fontSize: 13, mb: 2 }}>
+              <Groups sx={{ fontSize: 56, color: colors.neutral[200], mb: 1.5 }} />
+              <Typography sx={{ color: colors.neutral[400], fontSize: 15, mb: 0.5 }}>Henüz sürücünüz yok</Typography>
+              <Typography sx={{ color: colors.neutral[300], fontSize: 13, mb: 2 }}>
                 Kayıtlı sürücüleri numarasıyla ekleyin ya da yeni sürücü kaydedin
               </Typography>
               <Button variant="contained" size="small" startIcon={<PersonAdd />} onClick={() => setAddOpen(true)}>
@@ -164,7 +165,7 @@ export default function DriversPage() {
             <TableContainer>
               <Table sx={{ minWidth: 900 }}>
                 <TableHead>
-                  <TableRow sx={{ '& th': { bgcolor: '#f8fafc', color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: '1px solid #e2e8f0' } }}>
+                  <TableRow sx={{ '& th': { bgcolor: colors.neutral[50], color: colors.neutral[500], fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, py: 1.5, borderBottom: `1px solid ${colors.neutral[200]}` } }}>
                     <TableCell>Ad Soyad</TableCell>
                     <TableCell>Telefon</TableCell>
                     <TableCell>Hizmetler</TableCell>
@@ -176,15 +177,15 @@ export default function DriversPage() {
                 </TableHead>
                 <TableBody>
                   {drivers.map((item) => (
-                    <TableRow key={item.membership_id} sx={{ '& td': { py: 1.5, borderBottom: '1px solid #f1f5f9' } }}>
+                    <TableRow key={item.membership_id} sx={{ '& td': { py: 1.5, borderBottom: `1px solid ${colors.neutral[100]}` } }}>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{driverFullName(item.driver)}</Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900] }}>{driverFullName(item.driver)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>{item.driver.phone_number}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700], fontFamily: 'monospace' }}>{item.driver.phone_number}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>
                           {item.driver.user_type.map((type) => DriverServiceLabels[type] ?? type).join(', ') || '-'}
                         </Typography>
                       </TableCell>
@@ -192,21 +193,21 @@ export default function DriversPage() {
                         <StatusCell poolDriver={item} />
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>{describeLocation(item.location, loadedAt)}</Typography>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>{describeLocation(item.location, loadedAt)}</Typography>
                         {item.location?.source === 'business' && item.business_address && (
-                          <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>{item.business_address}</Typography>
+                          <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>{item.business_address}</Typography>
                         )}
                         {describeLastSeen(item.location, item.app_location, loadedAt) && (
-                          <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>
+                          <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>
                             {describeLastSeen(item.location, item.app_location, loadedAt)}
                           </Typography>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 13, color: '#334155' }}>
+                        <Typography sx={{ fontSize: 13, color: colors.neutral[700] }}>
                           {item.source === 'registered' ? 'Kaydedildi' : 'Eklendi'}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: '#94a3b8' }}>
+                        <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>
                           {new Date(item.added_at).toLocaleDateString('tr-TR')}
                         </Typography>
                       </TableCell>
@@ -243,7 +244,7 @@ export default function DriversPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setRemoveTarget(null)} disabled={removing} sx={{ color: '#64748b' }}>Vazgeç</Button>
+          <Button onClick={() => setRemoveTarget(null)} disabled={removing} sx={{ color: colors.neutral[500] }}>Vazgeç</Button>
           <Button onClick={handleRemove} color="error" variant="contained" disabled={removing} sx={{ borderRadius: 2 }}>
             {removing ? 'Çıkarılıyor...' : 'Listeden Çıkar'}
           </Button>

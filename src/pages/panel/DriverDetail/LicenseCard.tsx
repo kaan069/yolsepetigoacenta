@@ -8,6 +8,7 @@ import FileField from '../../../components/FileField';
 import { SectionCard, VerificationChip } from './parts';
 import { CARD_IDS, otherFieldErrors } from './constants';
 import { useDriverGoneRedirect } from './useDriverGoneRedirect';
+import { colors } from '../../../tokens';
 
 const FORM_FIELDS = ['license_photo', 'tax_plate_photo', 'k_document_photo'];
 
@@ -97,7 +98,7 @@ export default function LicenseCard({ driverId, license, onSaved }: LicenseCardP
         error={fieldErrors.k_document_photo}
       />
 
-      <Typography sx={{ fontSize: 12, color: '#94a3b8', mt: 1 }}>
+      <Typography sx={{ fontSize: 12, color: colors.neutral[400], mt: 1 }}>
         Ehliyet ve vergi levhası birlikte yüklenmelidir. JPG, PNG, WEBP ya da PDF; en fazla 5 MB.
       </Typography>
 

@@ -10,6 +10,7 @@ import { estimatePrice } from '../../api';
 import { GOOGLE_MAPS_API_KEY } from '../../config';
 import type { ServiceTypeValue, PricingEstimatePayload, PricingEstimateResponse } from '../../types';
 import MapPickerDialog, { type LocationResult } from '../../components/MapPickerDialog';
+import { colors } from '../../tokens';
 
 // useMapsLibrary yalnizca APIProvider icinde calisir; disarida hep null doner ve mesafe hic hesaplanmiyordu
 export default function PricingPage() {
@@ -156,62 +157,62 @@ function PricingForm() {
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Fiyat Hesapla</Typography>
-        <Typography sx={{ fontSize: 14, color: '#64748b' }}>Cekici hizmeti icin tahmini fiyat hesaplayin</Typography>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Fiyat Hesapla</Typography>
+        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Cekici hizmeti icin tahmini fiyat hesaplayin</Typography>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
         <CardContent sx={{ p: 3 }}>
           <Box component="form" onSubmit={handleSubmit}>
             {/* Hizmet Tipi - sabit Cekici */}
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>Hizmet Tipi</Typography>
-            <Box sx={{ mb: 2, p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>Cekici</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5 }}>Hizmet Tipi</Typography>
+            <Box sx={{ mb: 2, p: 1.5, bgcolor: colors.neutral[50], borderRadius: 2, border: `1px solid ${colors.neutral[200]}` }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900] }}>Cekici</Typography>
             </Box>
 
             {/* Alis Konumu */}
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, mt: 1 }}>Alis Konumu</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, mt: 1 }}>Alis Konumu</Typography>
 
             <Box
               onClick={() => setPickupDialogOpen(true)}
               sx={{
                 mb: 2, p: 2, border: '1px solid',
-                borderColor: pickupAddress ? '#0ea5e9' : '#e2e8f0',
+                borderColor: pickupAddress ? colors.primary[500] : colors.neutral[200],
                 borderRadius: 2, cursor: 'pointer',
-                bgcolor: pickupAddress ? '#f0f9ff' : 'transparent',
+                bgcolor: pickupAddress ? colors.primary[50] : 'transparent',
                 display: 'flex', alignItems: 'flex-start', gap: 1.5,
                 transition: 'all 0.2s ease',
-                '&:hover': { borderColor: '#0ea5e9', bgcolor: '#f0f9ff' },
+                '&:hover': { borderColor: colors.primary[500], bgcolor: colors.primary[50] },
               }}
             >
               <Box sx={{
                 width: 40, height: 40, borderRadius: 2, flexShrink: 0, mt: 0.25,
-                bgcolor: pickupAddress ? '#0ea5e9' : '#f1f5f9',
+                bgcolor: pickupAddress ? colors.primary[500] : colors.neutral[100],
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <MyLocation sx={{ color: pickupAddress ? 'white' : '#94a3b8', fontSize: 20 }} />
+                <MyLocation sx={{ color: pickupAddress ? 'white' : colors.neutral[400], fontSize: 20 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 {pickupAddress ? (
                   <>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.primary[500], textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
                       Alis Adresi
                     </Typography>
-                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a', lineHeight: 1.4 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900], lineHeight: 1.4 }}>
                       {pickupAddress}
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[400], mt: 0.5, fontFamily: 'monospace' }}>
                       {form.pickup_latitude.toFixed(4)}, {form.pickup_longitude.toFixed(4)}
                     </Typography>
                   </>
                 ) : (
                   <>
-                    <Typography sx={{ fontSize: 14, color: '#94a3b8' }}>
+                    <Typography sx={{ fontSize: 14, color: colors.neutral[400] }}>
                       Alis konumunu secmek icin tiklayin *
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[300], mt: 0.25 }}>
                       Haritadan konum secin veya adres arayin
                     </Typography>
                   </>
@@ -231,46 +232,46 @@ function PricingForm() {
             />
 
             {/* Birakis Konumu */}
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, mt: 1 }}>Birakis Konumu (opsiyonel)</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: colors.neutral[400], textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, mt: 1 }}>Birakis Konumu (opsiyonel)</Typography>
 
             <Box
               onClick={() => setDropoffDialogOpen(true)}
               sx={{
                 mb: 2, p: 2, border: '1px solid',
-                borderColor: dropoffAddress ? '#ef4444' : '#e2e8f0',
+                borderColor: dropoffAddress ? colors.danger[500] : colors.neutral[200],
                 borderRadius: 2, cursor: 'pointer',
-                bgcolor: dropoffAddress ? '#fef2f2' : 'transparent',
+                bgcolor: dropoffAddress ? colors.danger[50] : 'transparent',
                 display: 'flex', alignItems: 'flex-start', gap: 1.5,
                 transition: 'all 0.2s ease',
-                '&:hover': { borderColor: dropoffAddress ? '#ef4444' : '#0ea5e9', bgcolor: dropoffAddress ? '#fef2f2' : '#f0f9ff' },
+                '&:hover': { borderColor: dropoffAddress ? colors.danger[500] : colors.primary[500], bgcolor: dropoffAddress ? colors.danger[50] : colors.primary[50] },
               }}
             >
               <Box sx={{
                 width: 40, height: 40, borderRadius: 2, flexShrink: 0, mt: 0.25,
-                bgcolor: dropoffAddress ? '#ef4444' : '#f1f5f9',
+                bgcolor: dropoffAddress ? colors.danger[500] : colors.neutral[100],
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <LocationOn sx={{ color: dropoffAddress ? 'white' : '#94a3b8', fontSize: 20 }} />
+                <LocationOn sx={{ color: dropoffAddress ? 'white' : colors.neutral[400], fontSize: 20 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 {dropoffAddress ? (
                   <>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.danger[500], textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
                       Teslim Adresi
                     </Typography>
-                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a', lineHeight: 1.4 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900], lineHeight: 1.4 }}>
                       {dropoffAddress}
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[400], mt: 0.5, fontFamily: 'monospace' }}>
                       {(form.dropoff_latitude || 0).toFixed(4)}, {(form.dropoff_longitude || 0).toFixed(4)}
                     </Typography>
                   </>
                 ) : (
                   <>
-                    <Typography sx={{ fontSize: 14, color: '#94a3b8' }}>
+                    <Typography sx={{ fontSize: 14, color: colors.neutral[400] }}>
                       Birakis konumunu secmek icin tiklayin (opsiyonel)
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, color: colors.neutral[300], mt: 0.25 }}>
                       Haritadan konum secin veya adres arayin
                     </Typography>
                   </>
@@ -283,7 +284,7 @@ function PricingForm() {
                     e.stopPropagation();
                     clearDropoffLocation();
                   }}
-                  sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444' }, mt: 0.25 }}
+                  sx={{ color: colors.neutral[400], '&:hover': { color: colors.danger[500] }, mt: 0.25 }}
                 >
                   <Close fontSize="small" />
                 </IconButton>
@@ -303,16 +304,16 @@ function PricingForm() {
 
             {/* Mesafe bilgisi */}
             {dropoffAddress && (
-              <Box sx={{ mb: 2, p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ mb: 2, p: 1.5, bgcolor: colors.neutral[50], borderRadius: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 {distanceLoading ? (
                   <>
                     <CircularProgress size={16} />
-                    <Typography sx={{ fontSize: 13, color: '#64748b' }}>Mesafe hesaplaniyor...</Typography>
+                    <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>Mesafe hesaplaniyor...</Typography>
                   </>
                 ) : estimatedKm ? (
-                  <Typography sx={{ fontSize: 13, color: '#0f172a' }}>
+                  <Typography sx={{ fontSize: 13, color: colors.neutral[900] }}>
                     <strong>{estimatedKm} km</strong>
-                    <Typography component="span" sx={{ fontSize: 12, color: '#94a3b8', ml: 1 }}>
+                    <Typography component="span" sx={{ fontSize: 12, color: colors.neutral[400], ml: 1 }}>
                       {pickupAddress?.split(',')[0]} → {dropoffAddress?.split(',')[0]}
                     </Typography>
                   </Typography>
@@ -328,7 +329,7 @@ function PricingForm() {
       </Card>
 
       {result && (
-        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+        <Card sx={{ borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` }}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Sonuc</Typography>
 

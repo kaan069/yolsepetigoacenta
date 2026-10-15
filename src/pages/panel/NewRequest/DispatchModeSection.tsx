@@ -1,5 +1,6 @@
 import { Box, Radio, RadioGroup, FormControlLabel, Typography } from '@mui/material';
 import type { DispatchMode } from '../../../types';
+import { colors } from '../../../tokens';
 
 interface DispatchModeSectionProps {
   value: DispatchMode;
@@ -36,8 +37,8 @@ export default function DispatchModeSection({ value, onChange }: DispatchModeSec
               control={<Radio size="small" />}
               label={(
                 <Box>
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{option.title}</Typography>
-                  <Typography sx={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{option.description}</Typography>
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.neutral[900] }}>{option.title}</Typography>
+                  <Typography sx={{ fontSize: 12, color: colors.neutral[500], lineHeight: 1.5 }}>{option.description}</Typography>
                 </Box>
               )}
               sx={{
@@ -45,8 +46,8 @@ export default function DispatchModeSection({ value, onChange }: DispatchModeSec
                 p: 1.5,
                 alignItems: 'flex-start',
                 borderRadius: 2,
-                border: selected ? '2px solid #0ea5e9' : '1px solid #e2e8f0',
-                bgcolor: selected ? '#f0f9ff' : 'white',
+                border: selected ? `2px solid ${colors.primary[500]}` : `1px solid ${colors.neutral[200]}`,
+                bgcolor: selected ? colors.primary[50] : 'white',
                 '& .MuiRadio-root': { p: 0.25, mr: 1 },
               }}
             />

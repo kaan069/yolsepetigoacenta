@@ -6,6 +6,7 @@ import { MyLocation, Sms, CheckCircle, PhotoLibrary, WarningAmber, SupportAgent,
 import MapPickerDialog, { type LocationResult } from '../../../components/MapPickerDialog';
 import ImageLightbox from '../../../components/ImageLightbox';
 import type { LocationShareImage } from '../../../types';
+import { colors, alpha } from '../../../tokens';
 
 interface PickupSectionProps {
   pickupAddress: string;
@@ -69,40 +70,40 @@ export default function PickupSection({
         onClick={onDialogOpen}
         sx={{
           mb: 2, p: 2, border: '1px solid',
-          borderColor: pickupAddress ? '#0ea5e9' : '#e2e8f0',
+          borderColor: pickupAddress ? colors.primary[500] : colors.neutral[200],
           borderRadius: 2, cursor: 'pointer',
-          bgcolor: pickupAddress ? '#f0f9ff' : 'transparent',
+          bgcolor: pickupAddress ? colors.primary[50] : 'transparent',
           display: 'flex', alignItems: 'flex-start', gap: 1.5,
           transition: 'all 0.2s ease',
-          '&:hover': { borderColor: '#0ea5e9', bgcolor: '#f0f9ff' },
+          '&:hover': { borderColor: colors.primary[500], bgcolor: colors.primary[50] },
         }}
       >
         <Box sx={{
           width: 40, height: 40, borderRadius: 2, flexShrink: 0, mt: 0.25,
-          bgcolor: pickupAddress ? '#0ea5e9' : '#f1f5f9',
+          bgcolor: pickupAddress ? colors.primary[500] : colors.neutral[100],
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <MyLocation sx={{ color: pickupAddress ? 'white' : '#94a3b8', fontSize: 20 }} />
+          <MyLocation sx={{ color: pickupAddress ? 'white' : colors.neutral[400], fontSize: 20 }} />
         </Box>
         <Box sx={{ flex: 1 }}>
           {pickupAddress ? (
             <>
-              <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 600, color: colors.primary[500], textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.25 }}>
                 Alis Adresi
               </Typography>
-              <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#0f172a', lineHeight: 1.4 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: colors.neutral[900], lineHeight: 1.4 }}>
                 {pickupAddress}
               </Typography>
-              <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 0.5, fontFamily: 'monospace' }}>
+              <Typography sx={{ fontSize: 11, color: colors.neutral[400], mt: 0.5, fontFamily: 'monospace' }}>
                 {(pickupLatitude || 0).toFixed(4)}, {(pickupLongitude || 0).toFixed(4)}
               </Typography>
             </>
           ) : (
             <>
-              <Typography sx={{ fontSize: 14, color: '#94a3b8' }}>
+              <Typography sx={{ fontSize: 14, color: colors.neutral[400] }}>
                 Alis konumunu secmek icin tiklayin
               </Typography>
-              <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.25 }}>
+              <Typography sx={{ fontSize: 11, color: colors.neutral[300], mt: 0.25 }}>
                 Haritadan konum secin veya adres arayin
               </Typography>
             </>
@@ -123,21 +124,21 @@ export default function PickupSection({
 
       {/* Musteriden konum al */}
       {locationWaiting ? (
-        <Box sx={{ mb: 2, p: 2, border: '1px solid #f59e0b', borderRadius: 2, bgcolor: '#fffbeb' }}>
+        <Box sx={{ mb: 2, p: 2, border: `1px solid ${colors.warning[500]}`, borderRadius: 2, bgcolor: colors.warning[50] }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-            <CircularProgress size={18} sx={{ color: '#f59e0b' }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#92400e' }}>
+            <CircularProgress size={18} sx={{ color: colors.warning[500] }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.warning[800] }}>
               Musteri konumu bekleniyor...
             </Typography>
           </Box>
-          <Typography sx={{ fontSize: 12, color: '#a16207', mb: 1.5 }}>
+          <Typography sx={{ fontSize: 12, color: colors.warning[700], mb: 1.5 }}>
             {insuredPhone} numarasina SMS gonderildi
           </Typography>
           <Box sx={{
-            mb: 1.5, bgcolor: 'white', border: '2px solid #f59e0b', borderRadius: 2,
-            overflow: 'hidden', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.18)',
+            mb: 1.5, bgcolor: 'white', border: `2px solid ${colors.warning[500]}`, borderRadius: 2,
+            overflow: 'hidden', boxShadow: `0 4px 14px ${alpha(colors.warning[500], 0.18)}`,
           }}>
-            <Box sx={{ bgcolor: '#f59e0b', px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ bgcolor: colors.warning[500], px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
               <SupportAgent sx={{ fontSize: 20, color: 'white' }} />
               <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', letterSpacing: 0.3 }}>
                 Müşteriyi telefonda adım adım yönlendirin
@@ -149,31 +150,31 @@ export default function PickupSection({
                   component="li" key={step.title}
                   sx={{
                     display: 'flex', alignItems: 'flex-start', gap: 1.25,
-                    ...(step.photo && { bgcolor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 1.5, p: 1, mx: -0.5 }),
+                    ...(step.photo && { bgcolor: colors.primary[50], border: `1px solid ${colors.primary[200]}`, borderRadius: 1.5, p: 1, mx: -0.5 }),
                   }}
                 >
                   <Box sx={{
                     width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                    bgcolor: step.photo ? '#0ea5e9' : '#f59e0b', color: 'white',
+                    bgcolor: step.photo ? colors.primary[500] : colors.warning[500], color: 'white',
                     fontSize: 12, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {i + 1}
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.4 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[900], lineHeight: 1.4 }}>
                       {step.title}
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: '#64748b', lineHeight: 1.4, mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 12, color: colors.neutral[500], lineHeight: 1.4, mt: 0.25 }}>
                       {step.detail}
                     </Typography>
                   </Box>
-                  {step.photo && <PhotoCamera sx={{ fontSize: 18, color: '#0ea5e9', mt: 0.25 }} />}
+                  {step.photo && <PhotoCamera sx={{ fontSize: 18, color: colors.primary[500], mt: 0.25 }} />}
                 </Box>
               ))}
             </Box>
-            <Box sx={{ px: 1.5, py: 1, bgcolor: '#fffbeb', borderTop: '1px solid #fde68a' }}>
-              <Typography sx={{ fontSize: 12, color: '#92400e' }}>
+            <Box sx={{ px: 1.5, py: 1, bgcolor: colors.warning[50], borderTop: `1px solid ${colors.warning[200]}` }}>
+              <Typography sx={{ fontSize: 12, color: colors.warning[800] }}>
                 Konum ve fotoğraflar geldikçe bu alan otomatik güncellenir.
               </Typography>
             </Box>
@@ -182,23 +183,23 @@ export default function PickupSection({
             size="small" variant="text"
             onClick={onSendLocationSms}
             disabled={locationSmsLoading}
-            sx={{ fontSize: 12, color: '#92400e', fontWeight: 600 }}
+            sx={{ fontSize: 12, color: colors.warning[800], fontWeight: 600 }}
           >
             Tekrar Gonder
           </Button>
         </Box>
       ) : locationReceived ? (
-        <Box sx={{ mb: 2, p: 2, border: '1px solid #10b981', borderRadius: 2, bgcolor: '#ecfdf5' }}>
+        <Box sx={{ mb: 2, p: 2, border: `1px solid ${colors.success[500]}`, borderRadius: 2, bgcolor: colors.success[50] }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#065f46' }}>
+            <CheckCircle sx={{ fontSize: 18, color: colors.success[500] }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.success[800] }}>
               Musteri konumu alindi
             </Typography>
           </Box>
           {!isSubmitted && (
-            <Box sx={{ mt: 1.25, p: 1.25, borderRadius: 1.5, bgcolor: 'white', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-              <PhotoCamera sx={{ fontSize: 18, color: '#0ea5e9', mt: 0.1 }} />
-              <Typography sx={{ fontSize: 12.5, color: '#0f172a', lineHeight: 1.5 }}>
+            <Box sx={{ mt: 1.25, p: 1.25, borderRadius: 1.5, bgcolor: 'white', border: `1px solid ${colors.success[200]}`, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <PhotoCamera sx={{ fontSize: 18, color: colors.primary[500], mt: 0.1 }} />
+              <Typography sx={{ fontSize: 12.5, color: colors.neutral[900], lineHeight: 1.5 }}>
                 <b>Sırada fotoğraflar var:</b> Müşteriden aynı sayfada aracın fotoğraflarını
                 yükleyip <b>"Gönder"</b> butonuna basmasını isteyin.
               </Typography>
@@ -216,7 +217,7 @@ export default function PickupSection({
             onClick={onSendLocationSms}
             disabled={locationSmsLoading}
             startIcon={locationSmsLoading ? <CircularProgress size={16} /> : <Sms />}
-            sx={{ borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600, borderRadius: 2 }}
+            sx={{ borderColor: colors.neutral[200], color: colors.neutral[500], fontWeight: 600, borderRadius: 2 }}
           >
             {locationSmsLoading ? 'Gonderiliyor...' : 'Musteriden Konum Al'}
           </Button>
@@ -227,14 +228,14 @@ export default function PickupSection({
       {sessionActive && (
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <PhotoLibrary sx={{ fontSize: 18, color: '#0ea5e9' }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+            <PhotoLibrary sx={{ fontSize: 18, color: colors.primary[500] }} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: colors.neutral[900] }}>
               Araç Görselleri {maxImages > 0 ? `(${imageCount}/${maxImages})` : `(${imageCount})`}
             </Typography>
           </Box>
           {images.length === 0 ? (
-            <Box sx={{ p: 2, border: '1px dashed #cbd5e1', borderRadius: 2, textAlign: 'center' }}>
-              <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>
+            <Box sx={{ p: 2, border: `1px dashed ${colors.neutral[300]}`, borderRadius: 2, textAlign: 'center' }}>
+              <Typography sx={{ fontSize: 13, color: colors.neutral[400] }}>
                 Müşteri henüz görsel yüklemedi
               </Typography>
             </Box>
@@ -246,9 +247,9 @@ export default function PickupSection({
                   onClick={() => setLightboxIndex(i)}
                   sx={{
                     aspectRatio: '1', borderRadius: 2, overflow: 'hidden',
-                    border: '1px solid #e2e8f0', cursor: 'pointer',
+                    border: `1px solid ${colors.neutral[200]}`, cursor: 'pointer',
                     transition: 'border-color 0.2s ease',
-                    '&:hover': { borderColor: '#0ea5e9' },
+                    '&:hover': { borderColor: colors.primary[500] },
                   }}
                 >
                   <img
@@ -266,25 +267,25 @@ export default function PickupSection({
 
       {/* Durum gostergeleri */}
       {isSubmitted && (
-        <Box sx={{ mb: 2, p: 2, border: '1px solid #10b981', borderRadius: 2, bgcolor: '#ecfdf5', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#065f46' }}>
+        <Box sx={{ mb: 2, p: 2, border: `1px solid ${colors.success[500]}`, borderRadius: 2, bgcolor: colors.success[50], display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CheckCircle sx={{ fontSize: 18, color: colors.success[500] }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.success[800] }}>
             Müşteri gönderdi
           </Typography>
         </Box>
       )}
 
       {isExpired && !isSubmitted && (
-        <Box sx={{ mb: 2, p: 2, border: '1px solid #ef4444', borderRadius: 2, bgcolor: '#fef2f2' }}>
+        <Box sx={{ mb: 2, p: 2, border: `1px solid ${colors.danger[500]}`, borderRadius: 2, bgcolor: colors.danger[50] }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <WarningAmber sx={{ fontSize: 18, color: '#ef4444' }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#991b1b' }}>
+            <WarningAmber sx={{ fontSize: 18, color: colors.danger[500] }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: colors.danger[800] }}>
               Link süresi doldu
             </Typography>
           </Box>
           <Button
             size="small" variant="outlined" onClick={onResendLink}
-            sx={{ borderColor: '#ef4444', color: '#ef4444', fontWeight: 600, borderRadius: 2, '&:hover': { borderColor: '#dc2626', bgcolor: '#fef2f2' } }}
+            sx={{ borderColor: colors.danger[500], color: colors.danger[500], fontWeight: 600, borderRadius: 2, '&:hover': { borderColor: colors.danger[600], bgcolor: colors.danger[50] } }}
           >
             Yeni SMS Gönder
           </Button>

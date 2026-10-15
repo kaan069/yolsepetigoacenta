@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography, Button, IconButton, Link as MuiLink } from '@mui/material';
 import { AttachFile, Close, OpenInNew } from '@mui/icons-material';
+import { colors } from '../tokens';
 
 // Backend kurali (core/validators.py): uzantiya bakilir; jpg, jpeg, png, webp ya da pdf, en fazla 5 MB
 const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
@@ -46,7 +47,7 @@ export default function FileField({ label, required, file, onChange, currentUrl,
   return (
     <Box sx={{ py: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', flex: 1, minWidth: 160 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.neutral[700], flex: 1, minWidth: 160 }}>
           {label}{required ? ' *' : ''}
         </Typography>
         {currentUrl && !file && (
@@ -61,7 +62,7 @@ export default function FileField({ label, required, file, onChange, currentUrl,
       </Box>
       {file && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-          <Typography noWrap sx={{ fontSize: 12, color: '#0369a1' }}>{file.name}</Typography>
+          <Typography noWrap sx={{ fontSize: 12, color: colors.primary[700] }}>{file.name}</Typography>
           <IconButton size="small" onClick={() => onChange(null)} title="Kaldır">
             <Close sx={{ fontSize: 16 }} />
           </IconButton>
