@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, Box, Typography, Button, Chip } from '@mui/material';
-import { PersonSearch, HourglassTop, CheckCircle } from '@mui/icons-material';
+import { PersonSearch, HourglassTop, CheckCircle, Campaign } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { cancelAssignment, getApiError } from '../api';
@@ -10,6 +10,7 @@ import { driverFullName } from '../utils/drivers';
 import { ASSIGNABLE_STATUSES } from '../utils/assignments';
 import { useCountdown } from '../hooks/useCountdown';
 import OpenMarketplaceDialog from './OpenMarketplaceDialog';
+import BroadcastDialog from './BroadcastDialog';
 import { colors } from '../tokens';
 
 const statusColors: Record<AgencyAssignment['status'], { bg: string; color: string }> = {
@@ -33,8 +34,12 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
   const { enqueueSnackbar } = useSnackbar();
   const [cancelling, setCancelling] = useState(false);
   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
 
   const active = request.agency_assignment ?? null;
+  // "Tum suruculere gonder" davetleri (pending: teklif bekleniyor, offered: teklif verdi)
+  const invites = request.broadcast_invites ?? [];
+  const offeredInvites = invites.filter((invite) => invite.status === 'offered').length;
   const history = request.assignment_history ?? [];
   const assignable = ASSIGNABLE_STATUSES.includes(request.status);
   const countdown = useCountdown(active?.status === 'pending' ? active.expires_at : null);
@@ -43,7 +48,7 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
     setCancelling(true);
     try {
       await cancelAssignment(request.request_id);
-      enqueueSnackbar('Atama iptal edildi', { variant: 'info' });
+      enqueueSnackbar(invites.length > 0 ? 'Davetler iptal edildi' : 'Atama iptal edildi', { variant: 'info' });
     } catch (err) {
       enqueueSnackbar(getApiError(err).message || 'Atama iptal edilemedi', { variant: 'error' });
     } finally {
@@ -58,8 +63,66 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
     </Button>
   );
 
+  const broadcastButton = (
+    <Button variant="outlined" startIcon={<Campaign />} onClick={() => setBroadcastOpen(true)} sx={{ borderRadius: 2, fontWeight: 600 }}>
+      {invites.length > 0 ? 'Yeni sürücüleri davet et' : 'Tüm sürücülere gönder'}
+    </Button>
+  );
+
   let current: React.ReactNode = null;
-  if (active?.status === 'pending') {
+  if (invites.length > 0 && assignable) {
+    current = (
+      <>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Campaign sx={{ fontSize: 28, color: colors.primary[500] }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
+              {invites.length} sürücüye gönderildi · {offeredInvites} teklif
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
+              Gelen teklifler aşağıda listelenir. Birini onaylayınca diğer davetler kapanır.
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ mb: 2, border: `1px solid ${colors.neutral[200]}`, borderRadius: 2 }}>
+          {invites.map((invite, index) => {
+            const offered = invite.status === 'offered';
+            return (
+              <Box
+                key={invite.id}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1, flexWrap: 'wrap',
+                  borderTop: index === 0 ? 'none' : `1px solid ${colors.neutral[100]}`,
+                }}
+              >
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>{driverFullName(invite.driver)}</Typography>
+                <Typography sx={{ fontSize: 12, color: colors.neutral[500] }}>{invite.driver.phone_number}</Typography>
+                <Chip
+                  label={offered ? 'Teklif verdi' : 'Teklif bekleniyor'}
+                  size="small"
+                  sx={{
+                    ml: 'auto', height: 20, fontSize: 11, fontWeight: 600,
+                    bgcolor: offered ? colors.success[100] : colors.primary[50],
+                    color: offered ? colors.success[700] : colors.primary[700],
+                  }}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" color="error" onClick={handleCancel} disabled={cancelling} sx={{ borderRadius: 2, fontWeight: 600 }}>
+            {cancelling ? 'İptal ediliyor...' : 'Davetleri iptal et'}
+          </Button>
+          {broadcastButton}
+          <Button component={Link} to={`/panel/requests/${request.request_id}/assign`} sx={{ borderRadius: 2, fontWeight: 600 }}>
+            Tek sürücüye ata
+          </Button>
+          {marketplaceButton}
+        </Box>
+      </>
+    );
+  } else if (active?.status === 'pending') {
     current = (
       <>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
@@ -77,6 +140,7 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
           <Button variant="outlined" color="error" onClick={handleCancel} disabled={cancelling} sx={{ borderRadius: 2, fontWeight: 600 }}>
             {cancelling ? 'İptal ediliyor...' : 'Atamayı iptal et'}
           </Button>
+          {assignable && broadcastButton}
           {assignable && marketplaceButton}
         </Box>
       </>
@@ -103,7 +167,7 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
           <Box>
             <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>Sürücü atanmadı</Typography>
             <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
-              Talep yayınlanmadı. Haritadan kendi sürücünüzü seçin ya da talebi pazaryerine açın.
+              Talep yayınlanmadı. Haritadan kendi sürücünüzü seçin, tüm sürücülerinize gönderin ya da talebi pazaryerine açın.
             </Typography>
           </Box>
         </Box>
@@ -116,6 +180,7 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
           >
             Sürücü Ata
           </Button>
+          {broadcastButton}
           {marketplaceButton}
         </Box>
       </>
@@ -142,6 +207,9 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
               <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.75, flexWrap: 'wrap' }}>
                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: tone.color, flexShrink: 0 }} />
                 <Typography sx={{ fontSize: 13, fontWeight: 500, color: colors.neutral[900] }}>{driverFullName(item.driver)}</Typography>
+                {item.mode === 'broadcast' && (
+                  <Typography sx={{ fontSize: 11, color: colors.neutral[400] }}>toplu davet</Typography>
+                )}
                 <Chip
                   label={AssignmentStatusLabels[item.status] ?? item.status}
                   size="small"
@@ -168,6 +236,18 @@ export default function AssignmentCard({ request, onChanged }: AssignmentCardPro
         onClose={() => setMarketplaceOpen(false)}
         onDone={() => {
           setMarketplaceOpen(false);
+          onChanged();
+        }}
+      />
+
+      <BroadcastDialog
+        open={broadcastOpen}
+        requestId={request.request_id}
+        hasPendingAssignment={active?.status === 'pending'}
+        alreadyBroadcast={invites.length > 0}
+        onClose={() => setBroadcastOpen(false)}
+        onDone={() => {
+          setBroadcastOpen(false);
           onChanged();
         }}
       />

@@ -19,10 +19,11 @@ interface AssignmentStatusPanelProps {
   onCancel: () => void;
   onChooseAnother: () => void;
   onOpenMarketplace: () => void;
+  onBroadcast: () => void;
 }
 
 export default function AssignmentStatusPanel({
-  assignment, resultMessage, vehicles, cancelling, onCancel, onChooseAnother, onOpenMarketplace,
+  assignment, resultMessage, vehicles, cancelling, onCancel, onChooseAnother, onOpenMarketplace, onBroadcast,
 }: AssignmentStatusPanelProps) {
   const waiting = !resultMessage;
   const countdown = useCountdown(waiting ? assignment.expires_at : null);
@@ -92,6 +93,9 @@ export default function AssignmentStatusPanel({
             <Button variant="outlined" color="error" onClick={onCancel} disabled={cancelling} sx={{ borderRadius: 2, fontWeight: 600 }}>
               {cancelling ? 'İptal ediliyor...' : 'Atamayı iptal et'}
             </Button>
+            <Button variant="outlined" onClick={onBroadcast} disabled={cancelling} sx={{ borderRadius: 2, fontWeight: 600 }}>
+              Beklemeden tüm sürücülere gönder
+            </Button>
             <Button onClick={onChooseAnother} disabled={cancelling} sx={{ borderRadius: 2, color: colors.neutral[500] }}>
               Başka sürücü seç
             </Button>
@@ -103,12 +107,15 @@ export default function AssignmentStatusPanel({
             <ErrorOutline sx={{ fontSize: 48, color: colors.secondary[500], mb: 1 }} />
             <Typography sx={{ fontSize: 17, fontWeight: 700, color: colors.neutral[900], mb: 0.5 }}>{resultMessage}</Typography>
             <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
-              Başka bir sürücü seçebilir ya da talebi pazaryerine açabilirsiniz.
+              Başka bir sürücü seçebilir, tüm sürücülerinize gönderebilir ya da talebi pazaryerine açabilirsiniz.
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Button variant="contained" onClick={onChooseAnother} sx={{ borderRadius: 2, fontWeight: 600 }}>
               Başka sürücü seç
+            </Button>
+            <Button variant="outlined" onClick={onBroadcast} sx={{ borderRadius: 2, fontWeight: 600 }}>
+              Tüm sürücülere gönder
             </Button>
             <Button variant="outlined" onClick={onOpenMarketplace} sx={{ borderRadius: 2, fontWeight: 600 }}>
               Pazaryerine aç

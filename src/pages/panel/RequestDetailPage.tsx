@@ -18,7 +18,8 @@ import {
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
 import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse, AgencyAssignmentEvent } from '../../types';
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
-import { assignmentOutcomeMessage, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
+import { assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
+import { driverFullName } from '../../utils/drivers';
 import AssignmentCard from '../../components/AssignmentCard';
 import { colors } from '../../tokens';
 
@@ -523,7 +524,8 @@ export default function RequestDetailPage() {
     onAgencyAssignment: useCallback((event: AgencyAssignmentEvent) => {
       const reason = event.reason || event.assignment.cancel_reason;
       if (event.event === 'assignment_offered') {
-        enqueueSnackbar(offeredMessage(event.estimated_price), { variant: 'success' });
+        const name = isBroadcast(event.assignment) ? driverFullName(event.assignment.driver) : undefined;
+        enqueueSnackbar(offeredMessage(event.estimated_price, name), { variant: 'success' });
       } else if (!isOwnCancelReason(reason)) {
         enqueueSnackbar(assignmentOutcomeMessage(event.assignment.status, reason), { variant: 'info' });
       }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Typography, Button, Card, Chip, Alert } from '@mui/material';
+import {
+  Box, Typography, Button, Card, Chip, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+} from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -12,9 +14,11 @@ import { DriverServiceLabels } from '../../../types';
 import type { AgencyAssignment, AvailableDriver, AvailableDriversResponse, InsuranceRequestDetail } from '../../../types';
 import { useRequestWebSocket } from '../../../hooks/useRequestWebSocket';
 import { GOOGLE_MAPS_API_KEY } from '../../../config';
-import { ASSIGNABLE_STATUSES, assignmentOutcomeMessage, isOwnCancelReason, offeredMessage } from '../../../utils/assignments';
+import { ASSIGNABLE_STATUSES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../../utils/assignments';
+import { driverFullName } from '../../../utils/drivers';
 import PageLoader from '../../../components/PageLoader';
 import OpenMarketplaceDialog from '../../../components/OpenMarketplaceDialog';
+import BroadcastDialog from '../../../components/BroadcastDialog';
 import DriverMap from './DriverMap';
 import DriverList from './DriverList';
 import type { DriverListEmptyState } from './DriverList';
@@ -81,6 +85,10 @@ function AssignDriverView() {
   const [assigningId, setAssigningId] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  // "Tum suruculere gonder" ile acilan aktif davetler; varken tekil atama onay ister
+  const [broadcastInvites, setBroadcastInvites] = useState<AgencyAssignment[]>([]);
+  const [confirmAssign, setConfirmAssign] = useState<AvailableDriver | null>(null);
 
   const ready = !initializing && request !== null && !fatalError;
 
@@ -100,6 +108,7 @@ function AssignDriverView() {
           return;
         }
         setRequest(req);
+        setBroadcastInvites(state.broadcast ?? []);
         if (state.active?.status === 'pending') {
           setAssignment(state.active);
           setPhase('waiting');
@@ -166,16 +175,34 @@ function AssignDriverView() {
 
   // --- Atama sonucu ---
 
+  const refreshBroadcast = async () => {
+    try {
+      const state = await getAssignment(requestId);
+      setBroadcastInvites(state.broadcast ?? []);
+    } catch {
+      // Bir sonraki olayda tekrar denenir
+    }
+  };
+
   // Kapanan atamayi (WS olayi ya da sunucu durumu) ekrana yansit
   const applyOutcome = (closed: AgencyAssignment, reason: string | null) => {
     const why = reason || closed.cancel_reason;
     // Baska surucu secildi / acente iptal etti: panelin kendi islemi, eski atamanin olayi yeni beklemeyi bozmasin
-    if (isOwnCancelReason(why)) return;
+    if (isOwnCancelReason(why)) {
+      if (isBroadcast(closed)) refreshBroadcast();
+      return;
+    }
 
     const message = assignmentOutcomeMessage(closed.status, why);
     if (why === 'request_cancelled' || why === 'opened_to_marketplace') {
       enqueueSnackbar(message, { variant: 'warning' });
       goToDetail();
+      return;
+    }
+    // Toplu davetteki bir surucu reddetti ya da daveti kapandi: sayaci tazele
+    if (isBroadcast(closed)) {
+      enqueueSnackbar(`${driverFullName(closed.driver)}: ${message}`, { variant: 'info' });
+      refreshBroadcast();
       return;
     }
     if (phase === 'waiting' && assignment?.id === closed.id) {
@@ -220,7 +247,7 @@ function AssignDriverView() {
 
   // Geri sayim bitti ama olay gelmediyse kisa bir sure sonra durumu sunucudan tazele
   useEffect(() => {
-    if (phase !== 'waiting' || !assignment) return;
+    if (phase !== 'waiting' || !assignment?.expires_at) return;
     const delay = Math.max(new Date(assignment.expires_at).getTime() - Date.now(), 0) + EXPIRY_GRACE_MS;
     const timeout = setTimeout(() => syncRef.current(), delay);
     return () => clearTimeout(timeout);
@@ -240,8 +267,10 @@ function AssignDriverView() {
       verifyRequest();
     },
     onAgencyAssignment: (event) => {
+      // Teklif geldi: teklifler talep detayinda listelenir ve oradan secilir
       if (event.event === 'assignment_offered') {
-        enqueueSnackbar(offeredMessage(event.estimated_price), { variant: 'success' });
+        const name = isBroadcast(event.assignment) ? driverFullName(event.assignment.driver) : undefined;
+        enqueueSnackbar(offeredMessage(event.estimated_price, name), { variant: 'success' });
         goToDetail();
         return;
       }
@@ -268,11 +297,19 @@ function AssignDriverView() {
     document.getElementById(`driver-row-${driverId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
-  const handleAssign = async (driver: AvailableDriver) => {
+  // Toplu davet aktifken tekil atama butun davetleri kapatir ve gelen teklifleri reddeder; once onay alinir
+  const handleAssign = (driver: AvailableDriver) => {
+    if (broadcastInvites.length > 0) setConfirmAssign(driver);
+    else assign(driver);
+  };
+
+  const assign = async (driver: AvailableDriver) => {
+    setConfirmAssign(null);
     setAssigningId(driver.driver.id);
     setSelectedDriverId(driver.driver.id);
     try {
       const res = await assignDriver(requestId, driver.driver.id);
+      setBroadcastInvites([]);
       setAssignment(res.assignment);
       setResultMessage('');
       setPhase('waiting');
@@ -392,6 +429,7 @@ function AssignDriverView() {
               onCancel={handleCancelAssignment}
               onChooseAnother={backToList}
               onOpenMarketplace={() => setMarketplaceOpen(true)}
+              onBroadcast={() => setBroadcastOpen(true)}
             />
           ) : (
             <DriverList
@@ -407,6 +445,10 @@ function AssignDriverView() {
               onSelect={handleSelectDriver}
               onAssign={handleAssign}
               onOpenMarketplace={() => setMarketplaceOpen(true)}
+              onBroadcast={() => setBroadcastOpen(true)}
+              broadcastInviteCount={broadcastInvites.length}
+              broadcastOfferCount={broadcastInvites.filter((invite) => invite.status === 'offered').length}
+              onViewOffers={goToDetail}
             />
           )}
         </Card>
@@ -418,6 +460,31 @@ function AssignDriverView() {
         onClose={() => setMarketplaceOpen(false)}
         onDone={goToDetail}
       />
+
+      {/* Gonderimden sonra davetler ve gelen teklifler talep detayinda izlenir */}
+      <BroadcastDialog
+        open={broadcastOpen}
+        requestId={requestId}
+        hasPendingAssignment={phase === 'waiting'}
+        alreadyBroadcast={broadcastInvites.length > 0}
+        onClose={() => setBroadcastOpen(false)}
+        onDone={goToDetail}
+      />
+
+      <Dialog open={confirmAssign !== null} onClose={() => setConfirmAssign(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Tek sürücüye ata</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ fontSize: 14 }}>
+            Talep şu an {broadcastInvites.length} sürücüye gönderilmiş durumda.
+            {confirmAssign ? ` ${driverFullName(confirmAssign.driver)} sürücüsüne atarsanız ` : ' Bu sürücüye atarsanız '}
+            bütün davetler kapanır ve gelen teklifler reddedilir.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmAssign(null)} sx={{ color: colors.neutral[500] }}>Vazgeç</Button>
+          <Button variant="contained" onClick={() => confirmAssign && assign(confirmAssign)}>Yine de ata</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -4,6 +4,8 @@
 > **Öncelik:** Yüksek. Acentenin pazaryerine açtığı ve sürücü beklediği talepler kendiliğinden iptal oluyor.
 > **İncelenen kod:** `main` @ `379cf04`.
 
+> **Durum:** Çözüldü (`2406ec9`). Acente talepleri artık WebSocket kopmasıyla iptal edilmiyor. "Yan etki: yarım iptal" bölümündeki öneri (müşteri otomatik iptalinin `cancel_unpaid_request` üzerinden yapılması) uygulanmadı; acente talebini etkilemiyor.
+
 ## Sorun
 
 Acente panelinde "Pazaryerine aç"a basılınca talep birkaç saniye içinde **iptal** durumuna düşüyor. Aynı şey, talep `pending` durumundayken panelde talebin ekranından ayrılınca da oluyor:

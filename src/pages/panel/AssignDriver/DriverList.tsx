@@ -1,8 +1,8 @@
 import {
   Box, Typography, Button, Chip, IconButton, ToggleButton, ToggleButtonGroup,
-  CircularProgress, Tooltip,
+  CircularProgress, Tooltip, Alert,
 } from '@mui/material';
-import { Refresh, MyLocation, Groups, PersonOff } from '@mui/icons-material';
+import { Refresh, MyLocation, Groups, PersonOff, Campaign, Storefront } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import type { AvailableDriver } from '../../../types';
 import { driverFullName, formatDistance, describeLocation, describeLastSeen } from '../../../utils/drivers';
@@ -25,6 +25,11 @@ interface DriverListProps {
   onSelect: (driver: AvailableDriver) => void;
   onAssign: (driver: AvailableDriver) => void;
   onOpenMarketplace: () => void;
+  onBroadcast: () => void;
+  // Aktif toplu davet sayisi (0: gonderilmedi)
+  broadcastInviteCount: number;
+  broadcastOfferCount: number;
+  onViewOffers: () => void;
 }
 
 function EmptyMessage({ icon, title, description, children }: {
@@ -46,7 +51,10 @@ function EmptyMessage({ icon, title, description, children }: {
 export default function DriverList({
   drivers, loadedAt, loading, emptyState, radiusKm, selectedDriverId, assigningId,
   onRadiusChange, onRefresh, onSelect, onAssign, onOpenMarketplace,
+  onBroadcast, broadcastInviteCount, broadcastOfferCount, onViewOffers,
 }: DriverListProps) {
+  const broadcastActive = broadcastInviteCount > 0;
+
   const renderBody = () => {
     if (emptyState === 'location_pending') {
       return (
@@ -180,8 +188,45 @@ export default function DriverList({
         </Typography>
       </Box>
 
+      {broadcastActive && (
+        <Alert
+          severity="info"
+          sx={{ m: 2, mb: 0 }}
+          action={<Button size="small" onClick={onViewOffers}>Teklifler</Button>}
+        >
+          Talep {broadcastInviteCount} sürücüye gönderildi, {broadcastOfferCount} teklif geldi.
+          Tek sürücüye atarsanız davetler kapanır.
+        </Alert>
+      )}
+
       {/* Liste */}
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>{renderBody()}</Box>
+
+      {/* Tek tek atamak yerine: acentenin butun suruculerine ya da pazaryerine */}
+      {!emptyState && drivers.length > 0 && (
+        <Box sx={{ p: 1.5, borderTop: `1px solid ${colors.neutral[200]}`, display: 'flex', gap: 1, bgcolor: colors.neutral[50] }}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<Campaign />}
+            onClick={onBroadcast}
+            disabled={assigningId !== null}
+            sx={{ fontSize: 13, px: 1 }}
+          >
+            {broadcastActive ? 'Yeni sürücüleri davet et' : 'Tüm sürücülere gönder'}
+          </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<Storefront />}
+            onClick={onOpenMarketplace}
+            disabled={assigningId !== null}
+            sx={{ fontSize: 13, px: 1, bgcolor: colors.white }}
+          >
+            Pazaryerine aç
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

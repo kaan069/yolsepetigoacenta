@@ -33,6 +33,7 @@ import {
   AssignDriverResponse,
   AssignmentStateResponse,
   AgencyAssignment,
+  BroadcastResponse,
   OpenToMarketplaceResponse,
   DriverProfile,
   UpdateDriverInfoPayload,
@@ -416,6 +417,14 @@ export const getAssignment = async (requestId: number): Promise<AssignmentStateR
 
 export const cancelAssignment = async (requestId: number): Promise<{ message: string; assignment: AgencyAssignment }> => {
   const response = await insuranceApi.delete(`/requests/${requestId}/assignment/`, {
+    headers: authHeader(),
+  });
+  return response.data;
+};
+
+// "Tum suruculere gonder": havuzdaki, musteriye 50 km icindeki uygun ve bos suruculere toplu davet
+export const broadcastToPool = async (requestId: number): Promise<BroadcastResponse> => {
+  const response = await insuranceApi.post(`/requests/${requestId}/broadcast/`, {}, {
     headers: authHeader(),
   });
   return response.data;

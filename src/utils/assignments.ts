@@ -4,8 +4,12 @@ import type { AgencyAssignment, RequestStatusValue } from '../types';
 export const ASSIGNABLE_STATUSES: RequestStatusValue[] = ['pending_location', 'pending', 'awaiting_approval'];
 
 // Panelin kendi isleminden dogan iptaller; kullaniciya ayrica mesaj gosterilmez
+// (other_selected: acente toplu davetteki tekliflerden birini secti, digerleri kapandi)
+const OWN_CANCEL_REASONS = ['reassigned', 'agency_cancelled', 'switched_to_broadcast', 'other_selected'];
 export const isOwnCancelReason = (reason: string | null | undefined) =>
-  reason === 'reassigned' || reason === 'agency_cancelled';
+  !!reason && OWN_CANCEL_REASONS.includes(reason);
+
+export const isBroadcast = (assignment: AgencyAssignment | null | undefined) => assignment?.mode === 'broadcast';
 
 const CANCEL_MESSAGES: Record<string, string> = {
   offer_withdrawn: 'Sürücü teklifini geri çekti',
@@ -24,9 +28,11 @@ export const assignmentOutcomeMessage = (status: AgencyAssignment['status'], rea
   return (reason && CANCEL_MESSAGES[reason]) || 'Atama iptal edildi';
 };
 
-export const offeredMessage = (estimatedPrice: string | null | undefined) => {
+// Toplu davette surucu adiyla ("Ali Kaya teklif verdi: 1.250 TL"), tekil atamada "Sürücü kabul etti..."
+export const offeredMessage = (estimatedPrice: string | null | undefined, driverName?: string) => {
   const price = estimatedPrice ? parseFloat(estimatedPrice) : NaN;
+  const subject = driverName ? `${driverName} teklif verdi` : 'Sürücü kabul etti, teklif verdi';
   return Number.isFinite(price)
-    ? `Sürücü kabul etti, teklif verdi: ${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(price)} TL`
-    : 'Sürücü kabul etti, teklif verdi';
+    ? `${subject}: ${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(price)} TL`
+    : subject;
 };

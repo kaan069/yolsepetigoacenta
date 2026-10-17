@@ -238,7 +238,10 @@ export interface InsuranceRequestDetail {
     completed_at: string | null;
   };
   dispatch_mode?: DispatchMode;
+  // Aktif tekil atama (toplu davetler broadcast_invites'ta)
   agency_assignment?: AgencyAssignment | null;
+  agency_assignment_mode?: AssignmentMode | null;
+  broadcast_invites?: AgencyAssignment[];
   // En yeni basta
   assignment_history?: AgencyAssignment[];
 }
@@ -574,6 +577,8 @@ export interface AppLocation {
 }
 
 export type AssignmentStatus = 'pending' | 'offered' | 'declined' | 'expired' | 'cancelled';
+// single: tek surucuye sureli atama; broadcast: "Tum suruculere gonder" toplu daveti (suresiz)
+export type AssignmentMode = 'single' | 'broadcast';
 
 export const AssignmentStatusLabels: Record<AssignmentStatus, string> = {
   pending: 'Yanıt bekleniyor',
@@ -593,6 +598,8 @@ export const AssignmentCancelReasonLabels: Record<string, string> = {
   admin_reverted: 'Yönetici geri aldı',
   timeout: 'Süre doldu',
   driver_declined: 'Sürücü reddetti',
+  switched_to_broadcast: 'Tüm sürücülere gönderildi',
+  other_selected: 'Başka teklif seçildi',
 };
 
 export interface AgencyDriverInfo {
@@ -700,8 +707,11 @@ export interface AgencyAssignment {
   id: number;
   request_id: number;
   status: AssignmentStatus;
+  // Eski backend gondermez; yoksa single sayilir
+  mode?: AssignmentMode;
   driver: AgencyDriverInfo;
-  expires_at: string;
+  // Toplu davette null (suresiz)
+  expires_at: string | null;
   responded_at: string | null;
   // Bos ya da AssignmentCancelReasonLabels anahtarlarindan biri
   cancel_reason: string;
@@ -716,8 +726,21 @@ export interface AssignDriverResponse {
 export interface AssignmentStateResponse {
   request_id: number;
   dispatch_mode: DispatchMode;
+  // Sadece tekil atama
   active: AgencyAssignment | null;
+  assignment_mode?: AssignmentMode | null;
+  // Aktif toplu davetler (pending: teklif bekleniyor, offered: teklif verdi)
+  broadcast?: AgencyAssignment[];
   history: AgencyAssignment[];
+}
+
+export interface BroadcastResponse {
+  message: string;
+  request_id: number;
+  radius_km: number;
+  // Bu cagride yeni davet edilenler; invites ise butun aktif davetler
+  invited_count: number;
+  invites: AgencyAssignment[];
 }
 
 export interface OpenToMarketplaceResponse {
