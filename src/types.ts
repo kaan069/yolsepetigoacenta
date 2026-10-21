@@ -271,6 +271,8 @@ export interface DriverOfferInfo {
     vehicle_type: string;
   } | null;
   estimated_price: number;
+  // Surucunun teklif anindaki musteriye uzakligi (km); cekici ve yol yardimda dolu, bilinmiyorsa null
+  distance_to_customer_km?: number | null;
   driver_earnings: number;
   platform_commission: number;
   pricing_breakdown: Record<string, unknown>;

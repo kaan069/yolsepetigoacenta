@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
   ArrowBack, Person, Schedule, LocalShipping,
-  Star, CheckCircle, Cancel, Phone, Sms, Receipt,
+  Star, CheckCircle, Cancel, Phone, Sms, Receipt, NearMe,
 } from '@mui/icons-material';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -19,7 +19,7 @@ import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../
 import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse, AgencyAssignmentEvent } from '../../types';
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
 import { assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
-import { driverFullName } from '../../utils/drivers';
+import { driverFullName, formatDistance } from '../../utils/drivers';
 import AssignmentCard from '../../components/AssignmentCard';
 import { colors } from '../../tokens';
 
@@ -165,7 +165,8 @@ function OffersView({
                   <Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.neutral[900] }}>
                     {offer.driver_info.name}
                   </Typography>
-                  {offer.driver_info.average_rating && (
+                  {/* Puani olmayan suruculerde 0 yazilmasin */}
+                  {offer.driver_info.total_ratings > 0 && offer.driver_info.average_rating != null && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 0.5 }}>
                       <Star sx={{ fontSize: 14, color: colors.warning[500] }} />
                       <Typography sx={{ fontSize: 12, color: colors.neutral[500], fontWeight: 500 }}>
@@ -179,6 +180,14 @@ function OffersView({
                     <LocalShipping sx={{ fontSize: 16, color: colors.neutral[400] }} />
                     <Typography sx={{ fontSize: 13, color: colors.neutral[500] }}>
                       {offer.vehicle_info.brand} {offer.vehicle_info.model} - {offer.vehicle_info.plate_number}
+                    </Typography>
+                  </Box>
+                )}
+                {offer.distance_to_customer_km != null && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <NearMe sx={{ fontSize: 16, color: colors.primary[500] }} />
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: colors.primary[700] }}>
+                      Müşteriye {formatDistance(offer.distance_to_customer_km)}
                     </Typography>
                   </Box>
                 )}
