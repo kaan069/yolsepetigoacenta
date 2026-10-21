@@ -9,11 +9,13 @@ import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
-import { WS_BASE_URL, GOOGLE_MAPS_API_KEY } from '../../../config';
+import { WS_BASE_URL, GOOGLE_MAPS_API_KEY, TEST_FILL_ENABLED } from '../../../config';
+import { Science } from '@mui/icons-material';
 import type { RequestFormState } from './types';
 import { initialFormState } from './types';
 import { serviceTypeOptions, NEEDS_DROPOFF } from './constants';
 import { buildRequestPayload } from './buildRequestPayload';
+import { fillTestData } from './testData';
 import SectionLabel from './SectionLabel';
 import ServiceFields from './ServiceFields';
 import PickupSection from './PickupSection';
@@ -273,6 +275,14 @@ function NewRequestForm() {
     }));
   };
 
+  // Test: formu ornek bilgilerle doldurur (konumlar haritadan secilmis gibi); sadece "Talep Oluştur" kalir
+  const handleFillTestData = () => {
+    setPickupFromCustomer(false);
+    setError('');
+    setForm(fillTestData);
+    enqueueSnackbar('Test bilgileri dolduruldu', { variant: 'info' });
+  };
+
   // Talep yalnizca burada, konumuyla birlikte olusturulur
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,9 +314,23 @@ function NewRequestForm() {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Yeni Talep Olustur</Typography>
-        <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Sigortali icin yeni hizmet talebi olusturun</Typography>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box>
+          <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Yeni Talep Olustur</Typography>
+          <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Sigortali icin yeni hizmet talebi olusturun</Typography>
+        </Box>
+        {TEST_FILL_ENABLED && (
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="small"
+            startIcon={<Science />}
+            onClick={handleFillTestData}
+            sx={{ borderStyle: 'dashed' }}
+          >
+            Test bilgilerini doldur
+          </Button>
+        )}
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

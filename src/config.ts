@@ -7,6 +7,12 @@ export const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
 // Harita, adres arama ve mesafe hesabi
 export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
+// Yeni talep formundaki "Test bilgilerini doldur" butonu: yerelde (npm run dev) hep acik,
+// yayindaki surumde sadece VITE_ENABLE_TEST_FILL=true ise. Gercek acentelere gosterilmemeli.
+export const TEST_FILL_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_FILL === 'true';
+// Test sigortali telefonu; musteriden konum (SMS) denenecekse kendi numaranizi yazin
+export const TEST_PHONE = (import.meta.env.VITE_TEST_PHONE || '5330933572').replace(/\D/g, '');
+
 // Backend dosya adreslerini goreli ("/media/...") dondurebilir; API adresiyle tamamlanir
 export const toMediaUrl = (path: string) =>
   /^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
