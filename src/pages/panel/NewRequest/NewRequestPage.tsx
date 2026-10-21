@@ -9,7 +9,7 @@ import { ServiceType } from '../../../types';
 import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
-import { WS_BASE_URL, GOOGLE_MAPS_API_KEY, TEST_FILL_ENABLED } from '../../../config';
+import { WS_BASE_URL, GOOGLE_MAPS_API_KEY } from '../../../config';
 import { Science } from '@mui/icons-material';
 import type { RequestFormState } from './types';
 import { initialFormState } from './types';
@@ -319,18 +319,17 @@ function NewRequestForm() {
           <Typography sx={{ fontSize: 24, fontWeight: 700, color: colors.neutral[900] }}>Yeni Talep Olustur</Typography>
           <Typography sx={{ fontSize: 14, color: colors.neutral[500] }}>Sigortali icin yeni hizmet talebi olusturun</Typography>
         </Box>
-        {TEST_FILL_ENABLED && (
-          <Button
-            variant="outlined"
-            color="secondary"
-            size="small"
-            startIcon={<Science />}
-            onClick={handleFillTestData}
-            sx={{ borderStyle: 'dashed' }}
-          >
-            Test bilgilerini doldur
-          </Button>
-        )}
+        {/* Test icin; canliya cikmadan once kaldirilmali (gercek acenteler de goruyor) */}
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          startIcon={<Science />}
+          onClick={handleFillTestData}
+          sx={{ borderStyle: 'dashed' }}
+        >
+          Test bilgilerini doldur
+        </Button>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
