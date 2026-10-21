@@ -12,6 +12,8 @@ import { Outlet, Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/auth';
 import PageLoader from '../components/PageLoader';
 import BrandLogo from '../components/BrandLogo';
+import NotificationBell from '../components/NotificationBell';
+import NotificationsProvider from '../notifications/NotificationsProvider';
 import { colors, gradients, shadows } from '../tokens';
 
 const DRAWER_WIDTH = 264;
@@ -200,6 +202,7 @@ export default function PanelLayout() {
   );
 
   return (
+    <NotificationsProvider>
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Yan menu - masaustu */}
       {!isMobile && (
@@ -262,6 +265,8 @@ export default function PanelLayout() {
           )}
 
           <Box sx={{ flex: 1 }} />
+
+          <NotificationBell />
 
           {!onNewRequestPage && (
             isMobile ? (
@@ -335,5 +340,6 @@ export default function PanelLayout() {
         </Box>
       </Box>
     </Box>
+    </NotificationsProvider>
   );
 }

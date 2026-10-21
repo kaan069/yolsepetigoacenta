@@ -18,7 +18,7 @@ import { useRequestWebSocket } from '../../../hooks/useRequestWebSocket';
 import { useAgencyDriversWebSocket } from '../../../hooks/useAgencyDriversWebSocket';
 import { GOOGLE_MAPS_API_KEY } from '../../../config';
 import {
-  ASSIGNABLE_STATUSES, ASSIGN_ERROR_MESSAGES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage,
+  ASSIGNABLE_STATUSES, ASSIGN_ERROR_MESSAGES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason,
 } from '../../../utils/assignments';
 import { driverFullName, haversineKm } from '../../../utils/drivers';
 import PageLoader from '../../../components/PageLoader';
@@ -219,24 +219,21 @@ function AssignDriverView() {
       return;
     }
 
-    const message = assignmentOutcomeMessage(closed.status, why);
+    // Red, sure dolmasi ve iptal panel genelindeki bildirimlerle (sag ust, sesli) duyurulur; burada ekran guncellenir
     if (why === 'request_cancelled' || why === 'opened_to_marketplace') {
-      enqueueSnackbar(message, { variant: 'warning' });
       goToDetail();
       return;
     }
     // Toplu davetteki bir surucu reddetti ya da daveti kapandi: sayaci tazele
     if (isBroadcast(closed)) {
-      enqueueSnackbar(`${driverFullName(closed.driver)}: ${message}`, { variant: 'info' });
       refreshBroadcast();
       return;
     }
     if (phase === 'waiting' && assignment?.id === closed.id) {
-      setResultMessage(message);
+      setResultMessage(assignmentOutcomeMessage(closed.status, why));
       setPhase('result');
-    } else {
-      enqueueSnackbar(message, { variant: 'info' });
-      if (phase === 'list') loadDrivers({ silent: true });
+    } else if (phase === 'list') {
+      loadDrivers({ silent: true });
     }
   };
 
@@ -293,10 +290,8 @@ function AssignDriverView() {
       verifyRequest();
     },
     onAgencyAssignment: (event) => {
-      // Teklif geldi: teklifler talep detayinda listelenir ve oradan secilir
+      // Teklif geldi (bildirim panel genelinde cikar): teklifler talep detayinda listelenir ve oradan secilir
       if (event.event === 'assignment_offered') {
-        const name = isBroadcast(event.assignment) ? driverFullName(event.assignment.driver) : undefined;
-        enqueueSnackbar(offeredMessage(event.estimated_price, name), { variant: 'success' });
         goToDetail();
         return;
       }

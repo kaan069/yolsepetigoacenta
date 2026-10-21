@@ -37,12 +37,3 @@ export const assignmentOutcomeMessage = (status: AgencyAssignment['status'], rea
   if (status === 'expired') return 'Sürücü süresi içinde yanıt vermedi';
   return (reason && CANCEL_MESSAGES[reason]) || 'Atama iptal edildi';
 };
-
-// Toplu davette surucu adiyla ("Ali Kaya teklif verdi: 1.250 TL"), tekil atamada "Sürücü kabul etti..."
-export const offeredMessage = (estimatedPrice: string | null | undefined, driverName?: string) => {
-  const price = estimatedPrice ? parseFloat(estimatedPrice) : NaN;
-  const subject = driverName ? `${driverName} teklif verdi` : 'Sürücü kabul etti, teklif verdi';
-  return Number.isFinite(price)
-    ? `${subject}: ${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(price)} TL`
-    : subject;
-};

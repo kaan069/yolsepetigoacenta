@@ -16,10 +16,9 @@ import {
   createPaymentLink, getInvoice, getApiError,
 } from '../../api';
 import { ServiceTypeLabels, RequestStatusLabels, RequestStatusColors } from '../../types';
-import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse, AgencyAssignmentEvent } from '../../types';
+import type { InsuranceRequestDetail, DriverOfferInfo, OffersResponse } from '../../types';
 import { useRequestWebSocket } from '../../hooks/useRequestWebSocket';
-import { assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../utils/assignments';
-import { driverFullName, formatDistance } from '../../utils/drivers';
+import { formatDistance } from '../../utils/drivers';
 import AssignmentCard from '../../components/AssignmentCard';
 import { colors } from '../../tokens';
 
@@ -530,16 +529,10 @@ export default function RequestDetailPage() {
       fetchRequest();
       if (trackingToken) fetchOffers(trackingToken);
     }, [fetchRequest, fetchOffers, trackingToken]),
-    onAgencyAssignment: useCallback((event: AgencyAssignmentEvent) => {
-      const reason = event.reason || event.assignment.cancel_reason;
-      if (event.event === 'assignment_offered') {
-        const name = isBroadcast(event.assignment) ? driverFullName(event.assignment.driver) : undefined;
-        enqueueSnackbar(offeredMessage(event.estimated_price, name), { variant: 'success' });
-      } else if (!isOwnCancelReason(reason)) {
-        enqueueSnackbar(assignmentOutcomeMessage(event.assignment.status, reason), { variant: 'info' });
-      }
+    // Atama olaylari panel genelindeki bildirimlerle (sag ust, sesli) duyurulur; burada sadece ekran tazelenir
+    onAgencyAssignment: useCallback(() => {
       fetchRequest();
-    }, [enqueueSnackbar, fetchRequest]),
+    }, [fetchRequest]),
   });
 
   // --- Handlers ---
