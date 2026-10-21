@@ -3,6 +3,16 @@ import type { AgencyAssignment, RequestStatusValue } from '../types';
 // Dogrudan atamali talep bu durumlardayken surucu atanabilir ya da pazaryerine acilabilir
 export const ASSIGNABLE_STATUSES: RequestStatusValue[] = ['pending_location', 'pending', 'awaiting_approval'];
 
+// assign-driver hata kodlari
+export const ASSIGN_ERROR_MESSAGES: Record<string, string> = {
+  DRIVER_BUSY: 'Sürücü şu an başka bir işte ya da başka bir atamada',
+  DRIVER_NOT_ELIGIBLE: 'Sürücünün belgeleri veya profili eksik',
+  DRIVER_NOT_IN_POOL: 'Sürücü listenizde değil',
+  INVALID_STATUS: 'Talep artık atanabilir durumda değil',
+  NOT_DIRECT: 'Bu talep pazaryerinde',
+  LOCATION_REQUIRED: 'Müşterinin konumu bekleniyor',
+};
+
 // Panelin kendi isleminden dogan iptaller; kullaniciya ayrica mesaj gosterilmez
 // (other_selected: acente toplu davetteki tekliflerden birini secti, digerleri kapandi)
 const OWN_CANCEL_REASONS = ['reassigned', 'agency_cancelled', 'switched_to_broadcast', 'other_selected'];

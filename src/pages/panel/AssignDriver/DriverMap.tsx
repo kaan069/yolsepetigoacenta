@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { LocalShipping, Person, Phone } from '@mui/icons-material';
 import { Map, AdvancedMarker, AdvancedMarkerAnchorPoint, useMap } from '@vis.gl/react-google-maps';
-import type { AgencyDriverInfo, AvailableDriver } from '../../../types';
+import type { AgencyDriverInfo } from '../../../types';
 import { driverFullName } from '../../../utils/drivers';
 import { MAP_ID } from './constants';
 import { groupDrivers, fanOffsets } from './markerGroups';
-import type { LocatedDriver, MarkerGroup } from './markerGroups';
+import type { LocatedDriver, MapDriver, MarkerGroup } from './markerGroups';
 import { colors, alpha } from '../../../tokens';
 
 const TURKEY_CENTER = { lat: 39.0, lng: 35.0 };
@@ -27,11 +27,13 @@ type LatLng = { latitude: number; longitude: number };
 
 // live: yesil, business: mavi + "İş adresi", last_known (ve tanimsiz degerler): turuncu + "Son konum".
 // Cevrimdisi surucu gri; rank grup pininin rengini secmek icin (kucuk = daha iyi).
-function markerStyle({ driver, location }: LocatedDriver) {
+function markerStyle({ driver, location, busy }: LocatedDriver) {
   const source =
-    location.source === 'live' ? { color: COLORS.live, label: undefined, rank: 0 }
+    location.source === 'live' ? { color: COLORS.live, label: undefined as string | undefined, rank: 0 }
     : location.source === 'business' ? { color: COLORS.business, label: 'İş adresi', rank: 2 }
     : { color: COLORS.lastKnown, label: 'Son konum', rank: 1 };
+  // Aktif isteki surucu atanamaz; konum rengi korunur, etiket durumu soyler
+  if (busy) return { ...source, label: 'Meşgul', rank: source.rank + 0.5, faded: !driver.is_online };
   if (!driver.is_online) return { ...source, color: COLORS.offline, rank: 3, faded: true };
   return { ...source, faded: false };
 }
@@ -170,24 +172,26 @@ function SpiderLines({ offsets }: { offsets: { x: number; y: number }[] }) {
 
 // fitKey degistiginde (ilk yukleme, filtre degisimi) tum pinleri sigdirir.
 // Otomatik yenilemede fitKey ayni kaldigi icin acentenin kaydirdigi harita sifirlanmaz.
-function FitBounds({ customer, drivers, fitKey }: { customer: LatLng | null; drivers: AvailableDriver[]; fitKey: number }) {
+// Musteri yoksa (Surucu Haritasi) sadece suruculer sigdirilir.
+function FitBounds({ customer, drivers, fitKey }: { customer: LatLng | null; drivers: MapDriver[]; fitKey: number }) {
   const map = useMap();
   const fittedKeyRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!map || !customer || fittedKeyRef.current === fitKey) return;
+    if (!map || fittedKeyRef.current === fitKey) return;
+
+    const points = drivers.flatMap(({ location }) => (location ? [{ lat: location.latitude, lng: location.longitude }] : []));
+    if (customer) points.unshift({ lat: customer.latitude, lng: customer.longitude });
+    if (points.length === 0) return;
     fittedKeyRef.current = fitKey;
 
-    const center = { lat: customer.latitude, lng: customer.longitude };
-    const points = drivers.flatMap(({ location }) => (location ? [{ lat: location.latitude, lng: location.longitude }] : []));
-    if (points.length === 0) {
-      map.setCenter(center);
+    if (points.length === 1) {
+      map.setCenter(points[0]);
       map.setZoom(13);
       return;
     }
 
     const bounds = new google.maps.LatLngBounds();
-    bounds.extend(center);
     points.forEach((point) => bounds.extend(point));
     map.fitBounds(bounds, 64);
     // Birbirine cok yakin pinlerde asiri yakinlasmayi engelle
@@ -201,7 +205,7 @@ function FitBounds({ customer, drivers, fitKey }: { customer: LatLng | null; dri
 
 interface DriverMapProps {
   customer: LatLng | null;
-  drivers: AvailableDriver[];
+  drivers: MapDriver[];
   selectedDriverId: number | null;
   onSelectDriver: (driverId: number) => void;
   fitKey: number;

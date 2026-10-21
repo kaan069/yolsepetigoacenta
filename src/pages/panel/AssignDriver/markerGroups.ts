@@ -1,6 +1,14 @@
-import type { AvailableDriver, DriverLocation } from '../../../types';
+import type { AgencyDriverInfo, DriverLocation } from '../../../types';
 
-export type LocatedDriver = AvailableDriver & { location: DriverLocation };
+// Haritada cizilebilen surucu: Surucu Ata ekranindaki AvailableDriver ya da Surucu Haritasindaki havuz surucusu
+export interface MapDriver {
+  driver: AgencyDriverInfo;
+  location: DriverLocation | null;
+  // Aktif isi var (Surucu Haritasi); pin "Meşgul" etiketiyle cizilir
+  busy?: boolean;
+}
+
+export type LocatedDriver = MapDriver & { location: DriverLocation };
 
 export interface MarkerGroup {
   // Uye id'leri sirali; ayni uyeler ayni anahtari uretir
@@ -28,7 +36,7 @@ function distanceMeters(a: google.maps.LatLngLiteral, b: google.maps.LatLngLiter
  * Ekranda birbirine thresholdPx'ten yakin duran suruculeri gruplar (ayni is adresi, ayni garaj).
  * Backend sirasi (en yakin once) korunur; her surucu, ilk uyesine yeterince yakin olan ilk gruba girer.
  */
-export function groupDrivers(drivers: AvailableDriver[], zoom: number, thresholdPx = 44): MarkerGroup[] {
+export function groupDrivers(drivers: MapDriver[], zoom: number, thresholdPx = 44): MarkerGroup[] {
   const groups: { anchor: google.maps.LatLngLiteral; members: LocatedDriver[] }[] = [];
 
   for (const item of drivers) {

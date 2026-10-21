@@ -1,4 +1,5 @@
 import type { AgencyDriverInfo, AppLocation, DriverLocation, PoolDriver } from '../types';
+import { colors } from '../tokens';
 
 export const driverFullName = (driver: AgencyDriverInfo) => `${driver.first_name} ${driver.last_name}`.trim();
 
@@ -61,4 +62,19 @@ export const getPoolDriverStatus = (poolDriver: PoolDriver): PoolDriverStatus =>
   if (poolDriver.is_busy) return 'busy';
   if (!poolDriver.driver.is_online) return 'offline';
   return 'available';
+};
+
+export const POOL_STATUS_CHIPS: Record<PoolDriverStatus, { label: string; bg: string; color: string }> = {
+  pending_approval: { label: 'Eksik / onay bekliyor', bg: colors.neutral[100], color: colors.neutral[500] },
+  busy: { label: 'Meşgul', bg: colors.secondary[100], color: colors.secondary[700] },
+  offline: { label: 'Çevrimdışı', bg: colors.neutral[100], color: colors.neutral[500] },
+  available: { label: 'Müsait', bg: colors.success[100], color: colors.success[600] },
+};
+
+// Surucu Haritasinda "İş aç": belgeleri tamam ve aktif isi olmayan surucu (cevrimdisi da atanabilir)
+export const openJobBlockReason = (poolDriver: PoolDriver): string | null => {
+  const status = getPoolDriverStatus(poolDriver);
+  if (status === 'pending_approval') return 'Belgeleri eksik ya da onay bekliyor';
+  if (status === 'busy') return 'Sürücünün aktif bir işi var';
+  return null;
 };

@@ -17,7 +17,9 @@ import type {
 import { useRequestWebSocket } from '../../../hooks/useRequestWebSocket';
 import { useAgencyDriversWebSocket } from '../../../hooks/useAgencyDriversWebSocket';
 import { GOOGLE_MAPS_API_KEY } from '../../../config';
-import { ASSIGNABLE_STATUSES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../../utils/assignments';
+import {
+  ASSIGNABLE_STATUSES, ASSIGN_ERROR_MESSAGES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage,
+} from '../../../utils/assignments';
 import { driverFullName, haversineKm } from '../../../utils/drivers';
 import PageLoader from '../../../components/PageLoader';
 import OpenMarketplaceDialog from '../../../components/OpenMarketplaceDialog';
@@ -28,15 +30,6 @@ import type { DriverListEmptyState } from './DriverList';
 import AssignmentStatusPanel from './AssignmentStatusPanel';
 import { MAP_ID, DEFAULT_RADIUS_KM, REFRESH_INTERVAL_MS, LOCATION_WAIT_REFRESH_MS, EXPIRY_GRACE_MS } from './constants';
 import { colors } from '../../../tokens';
-
-const ASSIGN_ERROR_MESSAGES: Record<string, string> = {
-  DRIVER_BUSY: 'Sürücü şu an başka bir işte ya da başka bir atamada',
-  DRIVER_NOT_ELIGIBLE: 'Sürücünün belgeleri veya profili eksik',
-  DRIVER_NOT_IN_POOL: 'Sürücü listenizde değil',
-  INVALID_STATUS: 'Talep artık atanabilir durumda değil',
-  NOT_DIRECT: 'Bu talep pazaryerinde',
-  LOCATION_REQUIRED: 'Müşterinin konumu bekleniyor',
-};
 
 const cardSx = { borderRadius: 3, boxShadow: 'none', border: `1px solid ${colors.neutral[200]}` };
 

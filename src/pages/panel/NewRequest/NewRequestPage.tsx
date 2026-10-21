@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Typography, Card, CardContent, Box, TextField, Button, Alert, MenuItem,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQuestions, getApiError } from '../../../api';
-import { ServiceType } from '../../../types';
-import type { ServiceTypeValue, PricingQuestion, DispatchMode } from '../../../types';
+import {
+  createInsuranceRequest, initLocationShare, sendLocationSms, getPricingQuestions, assignDriver, getApiError,
+} from '../../../api';
+import { ServiceType, DriverServiceLabels } from '../../../types';
+import type { ServiceTypeValue, PricingQuestion, DispatchMode, NewRequestPresetDriver } from '../../../types';
+import { ASSIGN_ERROR_MESSAGES } from '../../../utils/assignments';
 import { useLocationShareWebSocket } from '../../../hooks/useLocationShareWebSocket';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { WS_BASE_URL, GOOGLE_MAPS_API_KEY } from '../../../config';
@@ -35,11 +38,24 @@ export default function NewRequestPage() {
   );
 }
 
+const PANEL_SERVICE_TYPES = Object.values(ServiceType) as string[];
+
 function NewRequestForm() {
-  const [form, setForm] = useState<RequestFormState>(initialFormState);
-  const [dispatchMode, setDispatchMode] = useState<DispatchMode>('marketplace');
-  const isDirect = dispatchMode === 'agency_direct';
   const navigate = useNavigate();
+  const routerLocation = useLocation();
+  // Surucu Haritasindan "İş aç" ile gelindiyse talep olusunca is dogrudan bu surucuye atanir
+  const [presetDriver, setPresetDriver] = useState<NewRequestPresetDriver | null>(
+    () => (routerLocation.state as { presetDriver?: NewRequestPresetDriver } | null)?.presetDriver ?? null,
+  );
+  // Varsayilan hizmeti (cekici) vermiyorsa surucunun ilk hizmetiyle baslanir
+  const [form, setForm] = useState<RequestFormState>(() => {
+    const services = presetDriver?.services.filter((service) => PANEL_SERVICE_TYPES.includes(service)) ?? [];
+    if (services.length === 0 || services.includes(initialFormState.service_type)) return initialFormState;
+    return { ...initialFormState, service_type: services[0] as ServiceTypeValue };
+  });
+  const [dispatchMode, setDispatchMode] = useState<DispatchMode>(presetDriver ? 'agency_direct' : 'marketplace');
+  const isDirect = dispatchMode === 'agency_direct';
+  const assignPreset = isDirect && presetDriver !== null;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pickupDialogOpen, setPickupDialogOpen] = useState(false);
@@ -295,6 +311,18 @@ function NewRequestForm() {
     setLoading(true);
     try {
       const response = await createInsuranceRequest(buildRequestPayload(form, questionAnswers, dispatchMode, routeInfo, locationToken));
+      if (assignPreset) {
+        // Haritadan secilen surucuye hemen ata; Surucu Ata ekrani bekleyen atamayi gorup bekleme durumunda acilir.
+        // Atanamazsa (mesgul, bu ise uygun degil) talep yine olusmustur; ekranda listeden secilir.
+        try {
+          await assignDriver(response.request_id, presetDriver.id);
+          enqueueSnackbar(`İş ${presetDriver.name} sürücüsüne atandı, yanıtı bekleniyor`, { variant: 'success' });
+        } catch (assignErr) {
+          const assignError = getApiError(assignErr);
+          const reason = ASSIGN_ERROR_MESSAGES[assignError.code ?? ''] || assignError.message || 'atama yapılamadı';
+          enqueueSnackbar(`Talep oluşturuldu ama ${presetDriver.name} atanamadı: ${reason}. Listeden sürücü seçebilirsiniz.`, { variant: 'warning' });
+        }
+      }
       // Dogrudan atamada konum hazir; dogrudan harita ekranina gidilir
       const path = isDirect ? `/panel/requests/${response.request_id}/assign` : `/panel/requests/${response.request_id}`;
       navigate(path, {
@@ -331,6 +359,30 @@ function NewRequestForm() {
           Test bilgilerini doldur
         </Button>
       </Box>
+
+      {presetDriver && (
+        <Alert
+          severity={assignPreset && presetDriver.services.includes(form.service_type) ? 'info' : 'warning'}
+          sx={{ mb: 2 }}
+          action={(
+            <Button
+              size="small"
+              onClick={() => {
+                setPresetDriver(null);
+                navigate(routerLocation.pathname, { replace: true, state: null });
+              }}
+            >
+              Kaldır
+            </Button>
+          )}
+        >
+          {!isDirect
+            ? `Dağıtım yöntemi pazaryeri seçili; iş ${presetDriver.name} sürücüsüne atanmayacak.`
+            : !presetDriver.services.includes(form.service_type)
+              ? `${presetDriver.name} bu hizmeti vermiyor (${presetDriver.services.map((s) => DriverServiceLabels[s] ?? s).join(', ')}). Talep oluşunca listeden başka sürücü seçebilirsiniz.`
+              : `Talep oluşturulunca iş doğrudan ${presetDriver.name} sürücüsüne atanacak.`}
+        </Alert>
+      )}
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -440,7 +492,7 @@ function NewRequestForm() {
               disabled={loading || missingItems.length > 0}
               sx={{ mt: 1 }}
             >
-              {loading ? 'Olusturuluyor...' : isDirect ? 'Talep Oluştur ve Sürücü Ata' : 'Talep Olustur'}
+              {loading ? 'Olusturuluyor...' : assignPreset ? 'Talep Oluştur ve Sürücüye Ata' : isDirect ? 'Talep Oluştur ve Sürücü Ata' : 'Talep Olustur'}
             </Button>
           </Box>
         </CardContent>

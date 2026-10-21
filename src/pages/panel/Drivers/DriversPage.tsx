@@ -4,27 +4,19 @@ import {
   Table, TableContainer, TableHead, TableBody, TableRow, TableCell,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
-import { PersonAdd, Groups } from '@mui/icons-material';
+import { PersonAdd, Groups, MapOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { listPoolDrivers, removeDriver, getApiError } from '../../../api';
 import { DriverServiceLabels } from '../../../types';
 import type { PoolDriver } from '../../../types';
-import { driverFullName, describeLocation, describeLastSeen, getPoolDriverStatus } from '../../../utils/drivers';
-import type { PoolDriverStatus } from '../../../utils/drivers';
+import { driverFullName, describeLocation, describeLastSeen, getPoolDriverStatus, POOL_STATUS_CHIPS } from '../../../utils/drivers';
 import AddDriverDialog from './AddDriverDialog';
 import { colors, alpha } from '../../../tokens';
 
-const statusChips: Record<PoolDriverStatus, { label: string; bg: string; color: string }> = {
-  pending_approval: { label: 'Eksik / onay bekliyor', bg: colors.neutral[100], color: colors.neutral[500] },
-  busy: { label: 'Meşgul', bg: colors.secondary[100], color: colors.secondary[700] },
-  offline: { label: 'Çevrimdışı', bg: colors.neutral[100], color: colors.neutral[500] },
-  available: { label: 'Müsait', bg: colors.success[100], color: colors.success[600] },
-};
-
 function StatusCell({ poolDriver }: { poolDriver: PoolDriver }) {
   const statusKey = getPoolDriverStatus(poolDriver);
-  const status = statusChips[statusKey];
+  const status = POOL_STATUS_CHIPS[statusKey];
   const chip = (
     <Chip
       label={status.label}
@@ -128,6 +120,10 @@ export default function DriversPage() {
             {drivers.length > 0 ? `Listenizde ${drivers.length} sürücü var` : 'Taleplerinizi atayabileceğiniz sürücüler'}
           </Typography>
         </Box>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Button component={Link} to="/panel/drivers/map" variant="outlined" startIcon={<MapOutlined />} sx={{ bgcolor: colors.white }}>
+          Haritada gör
+        </Button>
         <Button
           variant="contained"
           startIcon={<PersonAdd />}
@@ -140,6 +136,7 @@ export default function DriversPage() {
         >
           Sürücü Ekle
         </Button>
+        </Box>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}

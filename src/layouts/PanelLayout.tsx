@@ -4,7 +4,7 @@ import {
   ListItemText, Divider, Button, Menu, MenuItem, useMediaQuery, useTheme,
 } from '@mui/material';
 import {
-  SpaceDashboardOutlined, ListAltOutlined, GroupsOutlined, CalculateOutlined,
+  SpaceDashboardOutlined, ListAltOutlined, GroupsOutlined, MapOutlined, CalculateOutlined,
   AccountBalanceWalletOutlined, SettingsOutlined, Logout, Add, Close, WhatsApp, MailOutline,
   Menu as MenuIcon, KeyboardArrowDown, ChevronRight,
 } from '@mui/icons-material';
@@ -25,6 +25,7 @@ const navSections = [
       { label: 'Kontrol Paneli', path: '/panel', icon: <SpaceDashboardOutlined /> },
       { label: 'Talepler', path: '/panel/requests', icon: <ListAltOutlined /> },
       { label: 'Sürücülerim', path: '/panel/drivers', icon: <GroupsOutlined /> },
+      { label: 'Sürücü Haritası', path: '/panel/drivers/map', icon: <MapOutlined /> },
     ],
   },
   {
@@ -51,12 +52,17 @@ export default function PanelLayout() {
     return <Navigate to="/panel/login" replace />;
   }
 
-  // "Yeni Talep" kendi butonuyla vurgulanir; o sayfada "Talepler" aktif gorunmez
-  const isActive = (path: string) => {
+  // "Yeni Talep" kendi butonuyla vurgulanir; o sayfada "Talepler" aktif gorunmez.
+  // Ic ice yollarda en uzun eslesen secilir ("/panel/drivers/map" -> "Sürücülerim" degil "Sürücü Haritası")
+  const matches = (path: string) => {
     if (pathname === path) return true;
     if (path === '/panel' || pathname === NEW_REQUEST_PATH) return false;
     return pathname.startsWith(`${path}/`);
   };
+  const activePath = navItems
+    .filter((item) => matches(item.path))
+    .sort((a, b) => b.path.length - a.path.length)[0]?.path;
+  const isActive = (path: string) => path === activePath;
 
   const onNewRequestPage = pathname === NEW_REQUEST_PATH;
   const currentLabel = onNewRequestPage ? 'Yeni Talep' : navItems.find((item) => isActive(item.path))?.label;

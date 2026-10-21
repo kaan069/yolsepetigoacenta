@@ -751,6 +751,14 @@ export interface OpenToMarketplaceResponse {
   dispatch_mode: DispatchMode;
 }
 
+// Surucu Haritasindan "İş aç": Yeni Talep formuna router state ile gelir; talep olusunca is bu surucuye atanir
+export interface NewRequestPresetDriver {
+  id: number;
+  name: string;
+  // Surucunun atanabildigi hizmetler (eligible_services)
+  services: DriverServiceType[];
+}
+
 // ws/agency/drivers/ kanali: havuzdaki surucunun yeni konumu (available-drivers satiriyla ayni bicim, distance_km yok)
 export interface AgencyDriverLocationEvent {
   type: 'driver_location';
