@@ -30,6 +30,8 @@ interface DriverListProps {
   broadcastInviteCount: number;
   broadcastOfferCount: number;
   onViewOffers: () => void;
+  // Konumlar WebSocket ile anlik guncelleniyor mu
+  liveLocations: boolean;
 }
 
 function EmptyMessage({ icon, title, description, children }: {
@@ -51,7 +53,7 @@ function EmptyMessage({ icon, title, description, children }: {
 export default function DriverList({
   drivers, loadedAt, loading, emptyState, radiusKm, selectedDriverId, assigningId,
   onRadiusChange, onRefresh, onSelect, onAssign, onOpenMarketplace,
-  onBroadcast, broadcastInviteCount, broadcastOfferCount, onViewOffers,
+  onBroadcast, broadcastInviteCount, broadcastOfferCount, onViewOffers, liveLocations,
 }: DriverListProps) {
   const broadcastActive = broadcastInviteCount > 0;
 
@@ -186,6 +188,12 @@ export default function DriverList({
         <Typography sx={{ fontSize: 12, color: colors.neutral[400] }}>
           Çevrimdışı sürücüler iş adreslerinde, gri olarak gösterilir.
         </Typography>
+        {liveLocations && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: colors.success[500] }} />
+            <Typography sx={{ fontSize: 12, color: colors.success[700] }}>Konumlar anlık güncelleniyor</Typography>
+          </Box>
+        )}
       </Box>
 
       {broadcastActive && (

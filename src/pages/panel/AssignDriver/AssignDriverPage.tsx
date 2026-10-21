@@ -11,11 +11,14 @@ import {
   extractTrackingToken, getApiError,
 } from '../../../api';
 import { DriverServiceLabels } from '../../../types';
-import type { AgencyAssignment, AvailableDriver, AvailableDriversResponse, InsuranceRequestDetail } from '../../../types';
+import type {
+  AgencyAssignment, AgencyDriverLocationEvent, AvailableDriver, AvailableDriversResponse, InsuranceRequestDetail,
+} from '../../../types';
 import { useRequestWebSocket } from '../../../hooks/useRequestWebSocket';
+import { useAgencyDriversWebSocket } from '../../../hooks/useAgencyDriversWebSocket';
 import { GOOGLE_MAPS_API_KEY } from '../../../config';
 import { ASSIGNABLE_STATUSES, assignmentOutcomeMessage, isBroadcast, isOwnCancelReason, offeredMessage } from '../../../utils/assignments';
-import { driverFullName } from '../../../utils/drivers';
+import { driverFullName, haversineKm } from '../../../utils/drivers';
 import PageLoader from '../../../components/PageLoader';
 import OpenMarketplaceDialog from '../../../components/OpenMarketplaceDialog';
 import BroadcastDialog from '../../../components/BroadcastDialog';
@@ -172,6 +175,36 @@ function AssignDriverView() {
     );
     return () => clearInterval(interval);
   }, [ready, phase, locationPending, loadDrivers]);
+
+  // --- Anlik surucu konumu (ws/agency/drivers/) ---
+
+  // Sadece listedeki surucunun pini guncellenir; listede olmayan (baska hizmet, mesgul, yaricap disi) yok sayilir.
+  // Siralama korunur (backend mesafeye gore siralar); bir sonraki yenilemede yeniden siralanir.
+  const handleDriverLocation = (event: AgencyDriverLocationEvent) => {
+    setDriversData((prev) => {
+      if (!prev) return prev;
+      const index = prev.drivers.findIndex((item) => item.driver.id === event.driver.id);
+      if (index === -1) return prev;
+      const drivers = [...prev.drivers];
+      const current = drivers[index];
+      drivers[index] = {
+        ...current,
+        driver: { ...current.driver, ...event.driver },
+        location: event.location,
+        app_location: event.app_location,
+        distance_km: event.location ? haversineKm(prev.customer_location, event.location) : null,
+      };
+      return { ...prev, drivers };
+    });
+    // "2 dk önce" gibi sureler bu ana gore hesaplanir
+    setLoadedAt(Date.now());
+  };
+
+  const { isConnected: liveLocations } = useAgencyDriversWebSocket({
+    enabled: ready && !locationPending,
+    onDriverLocation: handleDriverLocation,
+    onReconnected: () => loadDrivers({ silent: true }),
+  });
 
   // --- Atama sonucu ---
 
@@ -449,6 +482,7 @@ function AssignDriverView() {
               broadcastInviteCount={broadcastInvites.length}
               broadcastOfferCount={broadcastInvites.filter((invite) => invite.status === 'offered').length}
               onViewOffers={goToDetail}
+              liveLocations={liveLocations}
             />
           )}
         </Card>

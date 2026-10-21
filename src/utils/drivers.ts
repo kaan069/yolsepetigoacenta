@@ -3,6 +3,19 @@ import type { AgencyDriverInfo, AppLocation, DriverLocation, PoolDriver } from '
 export const driverFullName = (driver: AgencyDriverInfo) => `${driver.first_name} ${driver.last_name}`.trim();
 
 // 0.71 -> "0,7 km"
+// Iki nokta arasi kus ucusu mesafe (km); backend'in distance_km hesabiyla ayni (haversine, 2 ondalik)
+export const haversineKm = (
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+) => {
+  const toRad = Math.PI / 180;
+  const dLat = (b.latitude - a.latitude) * toRad;
+  const dLng = (b.longitude - a.longitude) * toRad;
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(a.latitude * toRad) * Math.cos(b.latitude * toRad) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * 6371 * Math.asin(Math.sqrt(h)) * 100) / 100;
+};
+
 export const formatDistance = (km: number) =>
   `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(km)} km`;
 

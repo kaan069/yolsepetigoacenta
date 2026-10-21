@@ -751,6 +751,14 @@ export interface OpenToMarketplaceResponse {
   dispatch_mode: DispatchMode;
 }
 
+// ws/agency/drivers/ kanali: havuzdaki surucunun yeni konumu (available-drivers satiriyla ayni bicim, distance_km yok)
+export interface AgencyDriverLocationEvent {
+  type: 'driver_location';
+  driver: AgencyDriverInfo;
+  location: DriverLocation | null;
+  app_location: AppLocation | null;
+}
+
 // ws/requests/{tracking_token}/ kanalindaki atama olayi
 export interface AgencyAssignmentEvent {
   type: 'agency_assignment';

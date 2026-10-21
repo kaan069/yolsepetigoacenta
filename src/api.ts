@@ -108,18 +108,39 @@ const authHeader = () => ({
 // Bu uclardaki 401 "oturum dustu" degil "bilgiler hatali" demektir; refresh denenmez
 const AUTH_ENDPOINTS = ['/login/', '/register/'];
 
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
+const clearSessionAndRedirect = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  window.location.href = '/panel/login';
+};
 
-const processQueue = (error: unknown, token: string | null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
-    }
-  });
-  failedQueue = [];
+let refreshPromise: Promise<string> | null = null;
+
+// Access token'i yeniler; ayni anda gelen 401'ler ve WebSocket (4001) tek yenilemeyi bekler.
+// Yenileme basarisizsa oturum kapatilip giris sayfasina gidilir.
+export const refreshAccessToken = (): Promise<string> => {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const refreshTokenStr = localStorage.getItem('refresh_token');
+        if (!refreshTokenStr) throw new Error('Refresh token bulunamadi');
+        // Interceptor'suz axios: refresh 401 donerse kendi yenilemesini beklemesin
+        const { data } = await axios.post<TokenRefreshResponse>(`${INSURANCE_BASE_URL}/token/refresh/`, {
+          refresh_token: refreshTokenStr,
+        });
+        localStorage.setItem('access_token', data.tokens.access_token);
+        localStorage.setItem('refresh_token', data.tokens.refresh_token);
+        return data.tokens.access_token;
+      } catch (err) {
+        clearSessionAndRedirect();
+        throw err;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
 };
 
 insuranceApi.interceptors.response.use(
@@ -128,49 +149,10 @@ insuranceApi.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry && !AUTH_ENDPOINTS.includes(originalRequest.url)) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
-          return insuranceApi(originalRequest);
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshTokenStr = localStorage.getItem('refresh_token');
-      if (!refreshTokenStr) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/panel/login';
-        return Promise.reject(error);
-      }
-
-      try {
-        // Interceptor'suz axios: refresh 401 donerse kuyruga girip kendini beklemesin
-        const { data } = await axios.post<TokenRefreshResponse>(`${INSURANCE_BASE_URL}/token/refresh/`, {
-          refresh_token: refreshTokenStr,
-        });
-        const newAccessToken = data.tokens.access_token;
-        localStorage.setItem('access_token', newAccessToken);
-        localStorage.setItem('refresh_token', data.tokens.refresh_token);
-
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-        processQueue(null, newAccessToken);
-        return insuranceApi(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/panel/login';
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      const newAccessToken = await refreshAccessToken();
+      originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+      return insuranceApi(originalRequest);
     }
 
     return Promise.reject(error);
